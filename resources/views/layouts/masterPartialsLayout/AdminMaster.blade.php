@@ -1,0 +1,6 @@
+@include('layouts.partials.menuUserSettingPartials')
+@include('layouts.partials.menuCpSettingPartials')
+@include('layouts.partials.menuProductPartials')
+@include('layouts.partials.menuInventoryPartials')
+@include('layouts.partials.modals.menuAdminSetting')
+@include('layouts.partials.menuFundSetting')
