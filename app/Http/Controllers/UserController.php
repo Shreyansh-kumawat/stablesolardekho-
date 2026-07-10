@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Models\UserQuery;
 use App\Models\UserRole;
 use App\Models\UserSolarQuotation;
+use App\Models\CpInterest;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -38,6 +39,34 @@ class UserController extends Controller
         return view('publicPages.channelPartnerEnrollment')
             ->with('states', $states)
             ->with('cities', $cities);
+    }
+
+    public function QueryCpInterest(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'companyName' => 'required|string|max:255',
+            'contactPerson' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'mobile' => 'required|string|size:10',
+            'state' => 'required|string',
+            'city' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        CpInterest::create([
+            'company_name' => $request->companyName,
+            'contact_person' => $request->contactPerson,
+            'email' => $request->email,
+            'mobile' => $request->mobile,
+            'state' => $request->state,
+            'city' => $request->city,
+            'message' => $request->message,
+        ]);
+
+        return redirect()->back()->with('success', 'Your interest has been submitted! Our team will contact you soon.');
     }
 
     public function installationPartner()
