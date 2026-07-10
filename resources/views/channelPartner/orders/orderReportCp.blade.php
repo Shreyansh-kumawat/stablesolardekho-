@@ -53,8 +53,8 @@
                             </svg>
                         </div>
                         <div>
-                            <h1 class="text-2xl font-bold text-slate-900">Order Management</h1>
-                            <p class="text-sm text-slate-600">Manage orders placed for solar products</p>
+                            <h1 class="text-2xl font-bold text-slate-900">My Inventory Requests</h1>
+                            <p class="text-sm text-slate-600">Track your inventory requests and their status</p>
                         </div>
                     </div>
 
@@ -89,12 +89,9 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>Order ID</th>
-                                    <th>Order Date</th>
+                                    <th>Request ID</th>
+                                    <th>Request Date</th>
                                     <th>Status</th>
-                                    <th>Quote Date</th>
-                                    <th>Quote Amount</th>
-                                    <th>Valid Till</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -103,19 +100,23 @@
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $order->order_id }}</td>
-                                        <td>{{ $order->order_date }}</td>
-                                        <td>{{ $order->status }}</td>
-                                        <td>{{ $order->quote_date }}</td>
-                                        <td>{{ $order->quote_amount }}</td>
-                                        <td>{{ $order->quote_validity_date }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($order->order_date)->format('d M Y') }}</td>
                                         <td>
-                                            <div class="d-flex flex-wrap gap-2">
-                                                <a href="{{ route('viewSingleOrderCp', ['id' => $order->id]) }}"
-                                                    class="btn btn-sm btn-primary-theme d-inline-flex align-items-center gap-1">
-                                                    <i class="bi bi-pencil-square"></i><span>View/Action</span>
-                                                </a>
-
-                                            </div>
+                                            @if($order->status == 'pending')
+                                                <span class="badge bg-warning text-dark">Pending</span>
+                                            @elseif($order->status == 'completed')
+                                                <span class="badge bg-success">Approved</span>
+                                            @elseif($order->status == 'cancelled')
+                                                <span class="badge bg-danger">Cancelled</span>
+                                            @else
+                                                <span class="badge bg-secondary">{{ ucfirst($order->status) }}</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('viewSingleOrderCp', ['id' => $order->id]) }}"
+                                                class="btn btn-sm btn-primary-theme d-inline-flex align-items-center gap-1">
+                                                <i class="bi bi-eye"></i><span>View</span>
+                                            </a>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -136,9 +137,9 @@
                     <div>
                         <h4 class="text-sm font-semibold text-blue-900">Tips</h4>
                         <ul class="text-sm text-blue-800 space-y-1 list-disc list-inside mt-1">
-                            <li>Use search box to quickly find orders by Order ID, Partner Name, or Date</li>
-                            <li>Export order data in Excel or CSV format</li>
-                            <li>You can view and check orders from the action menu</li>
+                            <li>Use search box to quickly find requests by Request ID or Date</li>
+                            <li>Export data in Excel or CSV format</li>
+                            <li>Pending requests are awaiting admin approval</li>
                         </ul>
                     </div>
                 </div>

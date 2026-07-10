@@ -158,8 +158,8 @@
 @section('content')
     <div class="page-header">
         <div class="container-fluid">
-            <h1><i class="fas fa-box me-2"></i>New Order Request</h1>
-            <p>Add products to your order</p>
+            <h1><i class="fas fa-box me-2"></i>New Inventory Request</h1>
+            <p>Select products and quantities to raise an inventory request</p>
         </div>
     </div>
 
@@ -223,7 +223,7 @@
 
             <div class="btn-group-compact mt-3">
                 <button type="submit" class="btn btn-success">
-                    <i class="fas fa-check me-1"></i> Submit Order
+                    <i class="fas fa-check me-1"></i> Submit Inventory Request
                 </button>
                 <a href="{{ route('newOrderCp') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-1"></i> Back
@@ -356,11 +356,11 @@ $(document).ready(function() {
             data: JSON.stringify(orderData),
             contentType: 'application/json',
             success: function(response) {
-                alert('Order submitted successfully!');
-                window.location.href = '{{ route("newOrderCp") }}';
+                alert('Inventory request submitted successfully!');
+                window.location.href = '{{ route("orderReportCp") }}';
             },
             error: function(xhr) {
-                alert('Error: ' + (xhr.responseJSON?.message || 'Failed to submit order'));
+                alert('Error: ' + (xhr.responseJSON?.message || 'Failed to submit request'));
             }
         });
     });
@@ -405,7 +405,7 @@ function updateRemoveButtons() {
 
 function loadSubcategories(categoryId, selectElement) {
     $.ajax({
-        url: "{{ route('getSubCategory') }}",
+        url: "{{ route('cp.getSubCategory') }}",
         method: 'GET',
         data: { category_id: categoryId },
         success: function(data) {
@@ -437,7 +437,7 @@ function loadSubcategories(categoryId, selectElement) {
 
 function loadProducts(subcategoryId, selectElement) {
     $.ajax({
-        url: "{{ route('getProducts') }}",
+        url: "{{ route('cp.getProducts') }}",
         method: 'GET',
         data: { sub_category_id: subcategoryId },
         success: function(data) {

@@ -172,6 +172,8 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
 Route::prefix('channel-partner')->middleware(['auth', ChannelPartnerMiddleware::class])->group(function () {
     Route::get('/cp-new-order', [OrderController::class, 'newOrderCp'])->name(name: 'newOrderCp');
     Route::post('/cp-new-order', [OrderController::class, 'storeNewOrderRequest'])->name(name: 'storeNewOrderRequest');
+    Route::get('/get-sub-categories', [ProductController::class, 'getSubCategories'])->name('cp.getSubCategory');
+    Route::get('/get-products', [ProductController::class, 'getProducts'])->name('cp.getProducts');
     Route::get('/cp-order-report', [OrderController::class, 'orderReportCp'])->name(name: 'orderReportCp');
     Route::get('/viewSingleOrderCp/{id}', [OrderController::class, 'viewSingleOrderCp'])->name('viewSingleOrderCp');
     Route::get('/product-pricing', [OrderController::class, 'productPricing'])->name(name: 'productPricing');
