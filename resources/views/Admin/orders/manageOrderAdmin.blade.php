@@ -19,8 +19,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-2xl font-bold text-slate-900">Order Management</h1>
-                        <p class="text-sm text-slate-600">Manage orders received from channel partners / stores</p>
+                        <h1 class="text-2xl font-bold text-slate-900">All Inventory Requests</h1>
+                        <p class="text-sm text-slate-600">View all inventory requests from channel partners</p>
                     </div>
                 </div>
               
@@ -54,15 +54,10 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Order ID</th>
+                                <th>Request ID</th>
                                 <th>Channel Partner</th>
-                                <th>Order Date</th>
+                                <th>Request Date</th>
                                 <th>Status</th>
-                                
-                                    <th>Quote Amount</th>
-                                    <th>Quote Date</th>
-                                    <th>Quote Validity Date</th>
-                               
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -72,24 +67,22 @@
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $order->order_id }}</td>
                                 <td>{{ $order->channelPartner->cp_name }}</td>
-                                <td>{{ $order->order_date }}</td>
-                                <td>{{ $order->status }}</td>
-                                <td>{{ $order->quote_amount ?? '—' }}</td>
-                                <td>{{ $order->quote_date ?? '—' }}</td>
-                                <td>{{ $order->quote_validity_date ?? '—' }}</td>
+                                <td>{{ \Carbon\Carbon::parse($order->order_date)->format('d M Y') }}</td>
                                 <td>
-                                    <div class="d-flex flex-wrap gap-2">
-                                        <a href="{{ route('viewSingleOrder', ['id' => $order->id]) }}" class="btn btn-sm btn-primary-theme d-inline-flex align-items-center gap-1">
-                                            <i class="bi bi-eye"></i><span>View</span>
-                                        </a>
-                                        <form action="{{ route('admin.order.delete', ['id' => $order->id]) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this order?');" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger d-inline-flex align-items-center gap-1">
-                                                <i class="bi bi-trash"></i><span>Delete</span>
-                                            </button>
-                                        </form>
-                                    </div>
+                                    @if($order->status == 'pending')
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    @elseif($order->status == 'completed')
+                                        <span class="badge bg-success">Approved</span>
+                                    @elseif($order->status == 'cancelled')
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    @else
+                                        <span class="badge bg-secondary">{{ ucfirst($order->status) }}</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <a href="{{ route('viewSingleOrder', ['id' => $order->id]) }}" class="btn btn-sm btn-primary-theme d-inline-flex align-items-center gap-1">
+                                        <i class="bi bi-eye"></i><span>View</span>
+                                    </a>
                                 </td>
                             </tr>
                             @endforeach
@@ -108,9 +101,9 @@
                 <div>
                     <h4 class="text-sm font-semibold text-blue-900">Tips</h4>
                     <ul class="text-sm text-blue-800 space-y-1 list-disc list-inside mt-1">
-                        <li>Use search box to quickly find orders by Order ID, Partner Name, or Date</li>
-                        <li>Export order data in Excel or CSV format</li>
-                        <li>You can view and approve orders from the action menu</li>
+                        <li>Use search box to find requests by Request ID, Partner Name, or Date</li>
+                        <li>Export data in Excel or CSV format</li>
+                        <li>Click View to see request details</li>
                     </ul>
                 </div>
             </div>

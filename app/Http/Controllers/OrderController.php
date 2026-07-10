@@ -71,11 +71,6 @@ class OrderController extends Controller
     public function viewSingleOrder($id)
     {
         $order = CpOrder::with('channelPartner')->findOrFail($id);
-        if($order->inQuoteSent=='1')
-            {
-                 return view('admin.orders.viewDetaildOrderReportAdmin', compact('order'));
-
-            }
         return view('admin.orders.viewSIngleOrderAdmin', compact('order'));
     }
 
@@ -99,6 +94,26 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error saving order pricing: ' . $e->getMessage());
         }
+    }
+
+    public function approveInventoryRequest(Request $request, $id)
+    {
+        $order = CpOrder::findOrFail($id);
+        $order->status = 'completed';
+        $order->admin_remarks = $request->input('admin_remarks');
+        $order->save();
+
+        return redirect()->route('pendingOrders')->with('success', 'Inventory request approved successfully.');
+    }
+
+    public function cancelInventoryRequest(Request $request, $id)
+    {
+        $order = CpOrder::findOrFail($id);
+        $order->status = 'cancelled';
+        $order->admin_remarks = $request->input('admin_remarks');
+        $order->save();
+
+        return redirect()->route('pendingOrders')->with('success', 'Inventory request cancelled.');
     }
 
     public function productPricing()

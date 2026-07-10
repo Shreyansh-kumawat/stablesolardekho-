@@ -19,8 +19,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-2xl font-bold text-slate-900">Pending Order Management</h1>
-                        <p class="text-sm text-slate-600">Manage pending orders received from channel partners / stores</p>
+                        <h1 class="text-2xl font-bold text-slate-900">Pending Inventory Requests</h1>
+                        <p class="text-sm text-slate-600">Review and approve/cancel inventory requests from channel partners</p>
                     </div>
                 </div>
               
@@ -54,9 +54,9 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Order ID</th>
+                                <th>Request ID</th>
                                 <th>Channel Partner</th>
-                                <th>Order Date</th>
+                                <th>Request Date</th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>
@@ -67,14 +67,13 @@
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $order->order_id }}</td>
                                 <td>{{ $order->channelPartner->cp_name }}</td>
-                                <td>{{ $order->order_date }}</td>
-                                <td>{{ $order->status }}</td>
+                                <td>{{ \Carbon\Carbon::parse($order->order_date)->format('d M Y') }}</td>
+                                <td><span class="badge bg-warning text-dark">Pending</span></td>
                                 <td>
                                     <div class="d-flex flex-wrap gap-2">
                                         <a href="{{ route('viewSingleOrder', ['id' => $order->id]) }}" class="btn btn-sm btn-primary-theme d-inline-flex align-items-center gap-1">
-                                            <i class="bi bi-pencil-square"></i><span>View/Approve</span>
+                                            <i class="bi bi-eye"></i><span>Review</span>
                                         </a>
-                                        
                                     </div>
                                 </td>
                             </tr>
@@ -94,9 +93,9 @@
                 <div>
                     <h4 class="text-sm font-semibold text-blue-900">Tips</h4>
                     <ul class="text-sm text-blue-800 space-y-1 list-disc list-inside mt-1">
-                        <li>Use search box to quickly find orders by Order ID, Partner Name, or Date</li>
-                        <li>Export order data in Excel or CSV format</li>
-                        <li>You can view and approve orders from the action menu</li>
+                        <li>Use search box to find requests by Request ID, Partner Name, or Date</li>
+                        <li>Export data in Excel or CSV format</li>
+                        <li>Click Review to approve or cancel a request</li>
                     </ul>
                 </div>
             </div>
