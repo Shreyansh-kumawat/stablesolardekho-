@@ -119,6 +119,7 @@
         <a href="{{ route('register') }}" class="back-link">&larr; Back to Registration</a>
     </div>
 
+    <script src="/assets/js/jquery-3.7.1.min.js"></script>
     <script src="/assets/js/toastr.min.js"></script>
     <script>
         toastr.options={closeButton:true,progressBar:true,positionClass:'toast-top-right',timeOut:5000};
