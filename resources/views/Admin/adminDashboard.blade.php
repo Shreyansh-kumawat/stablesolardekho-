@@ -2,431 +2,266 @@
 
 @section('title', 'Admin Dashboard')
 
-@section('css')
-    <style>
-        :root {
-            --primary-blue: #4A90E2;
-            --primary-light: #f5f7fa;
-            --text-primary: #2d3436;
-            --text-secondary: #636e72;
-            --border-color: #e1e8ed;
-            --hover-bg: #f1f3f5;
-            --card-bg: #ffffff;
-            --success-color: #27ae60;
-            --warning-color: #f39c12;
-            --danger-color: #e74c3c;
-        }
-
-        body {
-            background: var(--primary-light);
-            color: var(--text-primary);
-            font-size: 0.9rem;
-        }
-
-        .dashboard-header {
-            background: linear-gradient(135deg, var(--primary-blue) 0%, #357abd 100%);
-            padding: 1.25rem;
-            margin-bottom: 1.5rem;
-            border-radius: 8px;
-            color: white;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-        }
-
-        .dashboard-header h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin: 0 0 0.35rem 0;
-        }
-
-        .dashboard-header p {
-            font-size: 0.85rem;
-            opacity: 0.9;
-            margin: 0;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            border-radius: 10px;
-            padding: 1.25rem;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary-blue), #357abd);
-        }
-
-        .stat-card.installations::before {
-            background: linear-gradient(90deg, #27ae60, #229954);
-        }
-
-        .stat-card.partners::before {
-            background: linear-gradient(90deg, #f39c12, #e67e22);
-        }
-
-        .stat-card.stock::before {
-            background: linear-gradient(90deg, #8e44ad, #7d3c98);
-        }
-
-        .stat-icon {
-            width: 55px;
-            height: 55px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.6rem;
-            margin-bottom: 0.75rem;
-            background: var(--primary-light);
-        }
-
-        .stat-card.installations .stat-icon {
-            background: #d4edda;
-            color: var(--success-color);
-        }
-
-        .stat-card.partners .stat-icon {
-            background: #fff3cd;
-            color: var(--warning-color);
-        }
-
-        .stat-card.stock .stat-icon {
-            background: #e7d4f5;
-            color: #8e44ad;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin: 0 0 0.35rem 0;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-            margin: 0;
-        }
-
-        .stat-info {
-            margin-top: 0.75rem;
-            padding-top: 0.75rem;
-            border-top: 1px solid var(--border-color);
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-
-        .stat-info i {
-            margin-right: 0.35rem;
-        }
-
-        .chart-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .chart-card {
-            background: var(--card-bg);
-            border-radius: 10px;
-            padding: 1.25rem;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-        }
-
-        .chart-card h3 {
-            margin: 0 0 0.75rem 0;
-            color: var(--text-primary);
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .activity-list {
-            background: var(--card-bg);
-            border-radius: 10px;
-            padding: 1.25rem;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-        }
-
-        .activity-list h3 {
-            margin: 0 0 1rem 0;
-            color: var(--text-primary);
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .activity-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem;
-            border-bottom: 1px solid var(--border-color);
-            transition: background 0.2s;
-        }
-
-        .activity-item:last-child {
-            border-bottom: none;
-        }
-
-        .activity-item:hover {
-            background: var(--primary-light);
-        }
-
-        .activity-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            flex-shrink: 0;
-        }
-
-        .activity-icon.success {
-            background: #d4edda;
-            color: var(--success-color);
-        }
-
-        .activity-icon.warning {
-            background: #fff3cd;
-            color: var(--warning-color);
-        }
-
-        .activity-text {
-            flex: 1;
-        }
-
-        .activity-text p {
-            margin: 0;
-            color: var(--text-primary);
-            font-weight: 500;
-            font-size: 0.85rem;
-        }
-
-        .activity-text small {
-            color: var(--text-secondary);
-            font-size: 0.75rem;
-        }
-
-        .empty-state {
-            padding: 1.5rem;
-            text-align: center;
-            color: var(--text-secondary);
-        }
-
-        .empty-state i {
-            font-size: 2.5rem;
-            opacity: 0.5;
-            margin-bottom: 0.75rem;
-        }
-
-        @media (max-width: 768px) {
-            .dashboard-header h1 {
-                font-size: 1.2rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-                gap: 0.75rem;
-            }
-
-            .stat-number {
-                font-size: 1.75rem;
-            }
-
-            .chart-section {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-@endsection
-
 @section('content')
-    <div style="padding: 1rem 0;">
-        <div style="max-width: 1400px; margin: 0 auto; padding: 0 1rem;">
-            <!-- Header -->
-            <div class="dashboard-header">
-                <h1><i class="fas fa-sun me-2"></i>Solar Energy Dashboard</h1>
-                <p>Welcome back! Here's your business overview</p>
-            </div>
+<div class="p-6 space-y-6">
 
-            <!-- Statistics Grid -->
-            <div class="stats-grid">
-                <!-- Installations Card -->
-                <div class="stat-card installations">
-                    <div class="stat-icon">
-                        <i class="fas fa-solar-panel"></i>
-                    </div>
-                    <p class="stat-number">{{ $totalInstallations ?? 0 }}</p>
-                    <p class="stat-label">Total Installations</p>
-                    <div class="stat-info">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>{{ $installationsThisMonth ?? 0 }} this month</span>
-                    </div>
-                </div>
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+            <p class="text-gray-500 text-sm mt-0.5">Welcome back! Here's your business overview for today.</p>
+        </div>
+        <span class="text-xs text-gray-400">{{ now()->format('d M Y, h:i A') }}</span>
+    </div>
 
-                <!-- Channel Partners Card -->
-                <div class="stat-card partners">
-                    <div class="stat-icon">
-                        <i class="fas fa-handshake"></i>
-                    </div>
-                    <p class="stat-number">{{ $totalPartners ?? 0 }}</p>
-                    <p class="stat-label">Channel Partners</p>
-                    <div class="stat-info">
-                        <i class="fas fa-check-circle"></i>
-                        <span>{{ $activePartners ?? 0 }} active</span>
-                    </div>
-                </div>
-
-                <!-- Stock Card -->
-                <div class="stat-card stock">
-                    <div class="stat-icon">
-                        <i class="fas fa-boxes"></i>
-                    </div>
-                    <p class="stat-number">{{ $totalStock ?? 0 }}</p>
-                    <p class="stat-label">Current Stock</p>
-                    <div class="stat-info">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span>{{ $lowStock ?? 0 }} low stock</span>
-                    </div>
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+        <!-- Total Revenue -->
+        <div class="xl:col-span-2 bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-xl p-5 text-white shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-indigo-200 text-xs font-medium uppercase tracking-wide">Total Revenue</span>
+                <div class="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33" />
+                    </svg>
                 </div>
             </div>
+            <p class="text-3xl font-bold">₹{{ number_format($totalRevenue, 0) }}</p>
+            <p class="text-indigo-200 text-xs mt-1">from paid orders</p>
+        </div>
 
-            <!-- Charts Section -->
-            <div class="chart-section">
-                <!-- Installation Trend -->
-                <div class="chart-card">
-                    <h3><i class="fas fa-chart-line me-2"></i>Installation Trend</h3>
-                    <canvas id="installationChart" height="100"></canvas>
+        <!-- Orders Today -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-gray-500 text-xs font-medium uppercase tracking-wide">Today's Orders</span>
+                <div class="w-9 h-9 bg-amber-50 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                    </svg>
                 </div>
-
-                <!-- Partner Distribution -->
-                {{-- <div class="chart-card">
-                    <h3><i class="fas fa-chart-pie me-2"></i>Partner Distribution</h3>
-                    <canvas id="partnerChart" height="100"></canvas>
-                </div> --}}
             </div>
+            <p class="text-3xl font-bold text-gray-800">{{ $ordersToday }}</p>
+            <p class="text-gray-400 text-xs mt-1">new orders</p>
+        </div>
 
-            <!-- Recent Activity -->
-            <div class="activity-list">
-                <h3><i class="fas fa-clock me-2"></i>Recent Activity</h3>
-                @if(isset($recentActivity) && count($recentActivity) > 0)
-                    @foreach($recentActivity as $activity)
-                        <div class="activity-item">
-                            <div class="activity-icon {{ $activity['type'] ?? 'success' }}">
-                                <i class="{{ $activity['icon'] ?? 'fas fa-check' }}"></i>
-                            </div>
-                            <div class="activity-text">
-                                <p>{{ $activity['description'] ?? 'No description' }}</p>
-                                <small>{{ $activity['time'] ?? 'Recently' }}</small>
-                            </div>
-                        </div>
-                    @endforeach
-                @else
-                    <div class="empty-state">
-                        <i class="fas fa-inbox"></i>
-                        <p>No recent activity</p>
+        <!-- Pending Orders -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-gray-500 text-xs font-medium uppercase tracking-wide">Pending</span>
+                <div class="w-9 h-9 bg-yellow-50 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+            <p class="text-3xl font-bold text-gray-800">{{ $pendingOrders }}</p>
+            <p class="text-gray-400 text-xs mt-1">need attention</p>
+        </div>
+
+        <!-- Customers -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-gray-500 text-xs font-medium uppercase tracking-wide">Customers</span>
+                <div class="w-9 h-9 bg-green-50 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                    </svg>
+                </div>
+            </div>
+            <p class="text-3xl font-bold text-gray-800">{{ $totalCustomers }}</p>
+            <p class="text-gray-400 text-xs mt-1">registered</p>
+        </div>
+
+        <!-- Products -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-gray-500 text-xs font-medium uppercase tracking-wide">Products</span>
+                <div class="w-9 h-9 bg-purple-50 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                    </svg>
+                </div>
+            </div>
+            <p class="text-3xl font-bold text-gray-800">{{ $totalProducts }}</p>
+            <p class="text-gray-400 text-xs mt-1">in catalogue</p>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Monthly Revenue Chart -->
+        <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <h2 class="font-semibold text-gray-800 mb-4">Monthly Revenue (Last 6 Months)</h2>
+            <canvas id="revenueChart" height="90"></canvas>
+        </div>
+
+        <!-- Order Status Donut -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <h2 class="font-semibold text-gray-800 mb-4">Orders by Status</h2>
+            <canvas id="statusChart" height="160"></canvas>
+            <div class="mt-4 space-y-2">
+                @php
+                    $statusDots = ['pending'=>'bg-yellow-400','confirmed'=>'bg-blue-400','shipped'=>'bg-purple-400','delivered'=>'bg-green-400','cancelled'=>'bg-red-400'];
+                @endphp
+                @foreach($statusDots as $st => $dot)
+                <div class="flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full {{ $dot }}"></span>
+                        <span class="text-gray-600 capitalize">{{ $st }}</span>
                     </div>
-                @endif
+                    <span class="font-semibold text-gray-800">{{ $orderStatusCounts[$st] ?? 0 }}</span>
+                </div>
+                @endforeach
             </div>
         </div>
     </div>
+
+    <!-- Bottom Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Top Products -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-semibold text-gray-800">Top Selling Products</h2>
+                <a href="{{ route('manageProducts') }}" class="text-xs text-indigo-600 hover:underline">View all</a>
+            </div>
+            @if($topProducts->count())
+            <div class="space-y-3">
+                @foreach($topProducts as $i => $p)
+                <div class="flex items-center gap-3">
+                    <span class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500">{{ $i+1 }}</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-800 truncate">{{ $p->product_name }}</p>
+                        <div class="w-full bg-gray-100 rounded-full h-1.5 mt-1">
+                            @php $maxQty = $topProducts->max('total_qty'); @endphp
+                            <div class="bg-indigo-500 h-1.5 rounded-full" style="width: {{ $maxQty > 0 ? round($p->total_qty/$maxQty*100) : 0 }}%"></div>
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <p class="text-xs font-semibold text-gray-800">{{ $p->total_qty }} units</p>
+                        <p class="text-xs text-gray-400">₹{{ number_format($p->total_revenue, 0) }}</p>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            @else
+            <div class="py-8 text-center text-gray-400">
+                <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5" />
+                </svg>
+                <p class="text-sm">No sales data yet</p>
+            </div>
+            @endif
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-semibold text-gray-800">Recent Orders</h2>
+                <a href="{{ route('customerOrders') }}" class="text-xs text-indigo-600 hover:underline">View all</a>
+            </div>
+            @if($recentOrders->count())
+            <div class="space-y-3">
+                @foreach($recentOrders as $order)
+                @php
+                    $statusColors = ['pending'=>'bg-yellow-100 text-yellow-800','confirmed'=>'bg-blue-100 text-blue-800','shipped'=>'bg-purple-100 text-purple-800','delivered'=>'bg-green-100 text-green-800','cancelled'=>'bg-red-100 text-red-800'];
+                    $color = $statusColors[$order->status] ?? 'bg-gray-100 text-gray-800';
+                @endphp
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-semibold text-xs shrink-0">
+                        {{ strtoupper(substr($order->name, 0, 1)) }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-800 truncate">{{ $order->name }}</p>
+                        <p class="text-xs text-gray-400 font-mono">{{ $order->order_number }}</p>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <p class="text-sm font-semibold text-gray-800">₹{{ number_format($order->total_amount, 0) }}</p>
+                        <span class="inline-flex px-1.5 py-0.5 rounded text-xs font-medium {{ $color }}">{{ ucfirst($order->status) }}</span>
+                    </div>
+                    <a href="{{ route('viewCustomerOrder', $order->id) }}" class="text-gray-400 hover:text-indigo-600 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </a>
+                </div>
+                @endforeach
+            </div>
+            @else
+            <div class="py-8 text-center text-gray-400">
+                <p class="text-sm">No orders yet</p>
+            </div>
+            @endif
+        </div>
+    </div>
+
+</div>
 @endsection
 
 @section('js')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        // Installation Chart
-        const ctx1 = document.getElementById('installationChart');
-        if (ctx1) {
-            new Chart(ctx1, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                    datasets: [{
-                        label: 'Installations',
-                        data: [12, 19, 15, 25, 22, 30],
-                        borderColor: '#27ae60',
-                        backgroundColor: 'rgba(39, 174, 96, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 5,
-                        pointBackgroundColor: '#27ae60'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0,0,0,0.05)' },
-                            ticks: { font: { size: 11 } }
-                        },
-                        x: {
-                            ticks: { font: { size: 11 } }
-                        }
-                    }
-                }
-            });
-        }
+<script src="/assets/js/chart.umd.min.js"></script>
+<script>
+    // Monthly Revenue Chart
+    const revenueLabels = @json($monthlyRevenue->pluck('label'));
+    const revenueData   = @json($monthlyRevenue->pluck('revenue'));
 
-        // Partner Chart
-        const ctx2 = document.getElementById('partnerChart');
-        if (ctx2) {
-            new Chart(ctx2, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Vendors', 'Partners', 'Installers'],
-                    datasets: [{
-                        data: [30, 45, 25],
-                        backgroundColor: ['#f39c12', '#27ae60', '#8e44ad'],
-                        borderColor: '#fff',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { font: { size: 11 } }
-                        }
+    new Chart(document.getElementById('revenueChart'), {
+        type: 'bar',
+        data: {
+            labels: revenueLabels,
+            datasets: [{
+                label: 'Revenue (₹)',
+                data: revenueData,
+                backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                borderColor: 'rgba(99, 102, 241, 0.9)',
+                borderWidth: 2,
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.04)' },
+                    ticks: {
+                        font: { size: 11 },
+                        callback: v => '₹' + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v)
                     }
-                }
-            });
+                },
+                x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+            }
         }
-    </script>
+    });
+
+    // Status Donut Chart
+    const statusData = {
+        pending:   {{ $orderStatusCounts['pending']   ?? 0 }},
+        confirmed: {{ $orderStatusCounts['confirmed'] ?? 0 }},
+        shipped:   {{ $orderStatusCounts['shipped']   ?? 0 }},
+        delivered: {{ $orderStatusCounts['delivered'] ?? 0 }},
+        cancelled: {{ $orderStatusCounts['cancelled'] ?? 0 }},
+    };
+
+    new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Pending','Confirmed','Shipped','Delivered','Cancelled'],
+            datasets: [{
+                data: Object.values(statusData),
+                backgroundColor: ['#fbbf24','#60a5fa','#a78bfa','#34d399','#f87171'],
+                borderWidth: 2,
+                borderColor: '#fff',
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '70%',
+            plugins: { legend: { display: false } }
+        }
+    });
+</script>
 @endsection

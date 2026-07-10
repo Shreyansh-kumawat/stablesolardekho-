@@ -37,7 +37,7 @@ class CpInventoryService
 
                 $serial = ProductSerial::where('product_id', $productId)
                     ->where('serial_number', $sn)
-                    ->where('status', 'issue_to_cp')
+                    // ->where('status', 'issue_to_cp')
                     ->where('issue_to', $requestdata['sold_to'] ?? 'unknown')
                     ->first();
                 if (!$serial) {
@@ -49,7 +49,7 @@ class CpInventoryService
                     'serial_id' => $serial->id,
                     'transaction_type' => 'IN',
                     'quantity' => 1,
-                    'txn_done_from' => $cpId,
+                    'txn_done_from' => null,////txn done by admin to add stock in cp inventory, so null
                     'unit_price' => $requestdata['unit_price'] ?? null,
                     'invoice_number' => $requestdata['invoice_number'] ?? null,
                     'invoice_date' => $requestdata['invoice_date'] ?? null,

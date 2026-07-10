@@ -19,4 +19,18 @@ class ProductInventoryTransaction extends Model
         'txn_id',
         'remarks',
     ];
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    public function channelPartner()
+    {
+        return $this->belongsTo(ChannelPartner::class, 'txn_done_from');
+    }
+    public function serialNumbers()
+    {
+        return $this->belongsTo(ProductSerial::class, 'serial_id');
+    }
 }

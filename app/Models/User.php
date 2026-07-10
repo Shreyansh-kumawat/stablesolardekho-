@@ -21,7 +21,19 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role_id',
+        'mobile_number',
+        'address',
+        'state',
+        'district',
+        'city',
+        'pincode',
+        'cp_id',
+        'is_active',
+        'admin_permissions',
     ];
+
+    protected $with = ['role'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -33,16 +45,12 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'admin_permissions' => 'array',
         ];
     }
 
@@ -54,5 +62,23 @@ class User extends Authenticatable
     public function channelPartner()
     {
         return $this->belongsTo(ChannelPartner::class, 'cp_id');
+    }
+
+    public function customerOrders()
+    {
+        return $this->hasMany(\App\Models\CustomerOrder::class, 'user_id');
+    }
+
+    public function hasAdminPermission(string $permission): bool
+    {
+        if ($this->role?->name === 'master_admin') return true;
+        $perms = $this->admin_permissions ?? [];
+        if (in_array($permission, $perms)) return true;
+        if (str_contains($permission, '.')) {
+            $module = explode('.', $permission)[0];
+            return in_array($module, $perms);
+        }
+        $subKeys = array_filter($perms, fn($p) => str_starts_with($p, $permission . '.'));
+        return count($subKeys) > 0;
     }
 }

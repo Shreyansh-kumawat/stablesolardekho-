@@ -22,3 +22,8 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+*.zip
+db_export.sql
+export_db.php
+/.claude
+/otp_deploy

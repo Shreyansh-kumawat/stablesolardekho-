@@ -1,10 +1,10 @@
-@extends('layouts.adminLayout')
+﻿@extends('layouts.adminLayout')
 
 @section('css')
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="/assets/css/buttons.bootstrap5.min.css" rel="stylesheet">
+    <link href="/assets/css/select2.min.css" rel="stylesheet" />
     <style>
         :root {
             --primary-blue: #4A90E2;
@@ -367,9 +367,9 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Quantity</label>
-                            <input type="number" min="1" max="50" id="quantity" name="quantity" class="form-control"
+                            <input type="number" step="0.01" min="1" max="50000" id="quantity" name="quantity" class="form-control"
                                 placeholder="Enter quantity" required>
-                            <div class="invalid-feedback">Quantity is required (1-50).</div>
+                            <div class="invalid-feedback">Quantity is required (1-500).</div>
                         </div>
                     </div>
 
@@ -386,14 +386,14 @@
 @endsection
 
 @section('js')
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="/assets/js/jquery.dataTables.min.js"></script>
+    <script src="/assets/js/dataTables.bootstrap5.min.js"></script>
+    <script src="/assets/js/dataTables.buttons.min.js"></script>
+    <script src="/assets/js/buttons.bootstrap5.min.js"></script>
+    <script src="/assets/js/jszip.min.js"></script>
+    <script src="/assets/js/buttons.html5.min.js"></script>
+    <script src="/assets/js/buttons.print.min.js"></script>
+    <script src="/assets/js/select2.min.js"></script>
 
     <script>
         $(function () {
@@ -443,8 +443,8 @@
                     data.forEach(item => {
                         $('#product_id').append(
                             `<option value="${item.id}" data-uom="${item.uom || ''}" data-serial="${item.is_serialNumber_required || 0}">
-                                        ${item.item_name}
-                                     </option>`
+                                            ${item.item_name}
+                                         </option>`
                         );
                     });
                     $('#product_id').trigger('change.select2');
@@ -463,7 +463,7 @@
                 $('#serial_required_hidden').val(serialFlag ? 1 : 0);
 
                 if (serialFlag) {
-                    $('#quantity').attr('max', 50);
+                    $('#quantity').attr('max', 500);
                 } else {
                     $('#quantity').removeAttr('max');
                 }
@@ -478,8 +478,8 @@
             $('#quantity').on('input', function () {
                 const qty = parseInt($(this).val(), 10) || 0;
 
-                if (serialRequired && qty > 50) {
-                    this.setCustomValidity('Quantity must be 1-50 when serial numbers are required.');
+                if (serialRequired && qty > 500) {
+                    this.setCustomValidity('Quantity must be 1-500 when serial numbers are required.');
                     $(this).addClass('is-invalid');
                 } else {
                     this.setCustomValidity('');
@@ -487,14 +487,14 @@
                 }
 
                 $('#serial_container').empty();
-                if (!serialRequired || qty <= 0 || qty > 50) return;
+                if (!serialRequired || qty <= 0 || qty > 500) return;
 
                 let html = '<label class="form-label mt-3">Serial Numbers</label>';
                 for (let i = 1; i <= qty; i++) {
                     html += `
-                                <input type="text" class="form-control serial-input" name="serial_numbers[]"
-                                       value="NA" placeholder="Serial ${i}">
-                            `;
+                                    <input type="text" class="form-control serial-input" name="serial_numbers[]"
+                                           value="NA" placeholder="Serial ${i}">
+                                `;
                 }
                 $('#serial_container').html(html);
             });
@@ -520,7 +520,7 @@
                 }
 
                 const qty = parseInt($('#quantity').val(), 10);
-                if (!qty || qty < 1 || (serialRequired && qty > 50)) {
+                if (!qty || qty < 1 || (serialRequired && qty > 500)) {
                     $('#quantity').addClass('is-invalid');
                     valid = false;
                 }

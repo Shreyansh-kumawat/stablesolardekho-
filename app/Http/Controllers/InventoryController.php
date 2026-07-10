@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\ChannelPartner;
 use App\Models\ChannelPartnerRole;
 use App\Models\ProductCategory;
-use App\Services\CpInventoryService;
+use App\Models\ProductInventoryTransaction;
+use App\Services\cpInventoryService;
 use App\Services\InventoryService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class InventoryController extends Controller
@@ -70,16 +72,16 @@ class InventoryController extends Controller
         $categories = ProductCategory::all();
         $cp_roles = ChannelPartnerRole::all();
         return view('Admin.inventorySetting.transferInventory')
-        ->with('categories', $categories)
-        ->with('cp_roles', $cp_roles);
+            ->with('categories', $categories)
+            ->with('cp_roles', $cp_roles);
     }
 
     public function storeTransferInventory(Request $request, InventoryService $inventoryService, CpInventoryService $cpInventoryService)
-    {     
+    {
 
-            try {
+        try {
             $txn_id = $this->getTxnId();
-            $inventoryService-> transferStock(
+            $inventoryService->transferStock(
                 $request->product_id,
                 $request->quantity,
                 $txn_id,
@@ -87,7 +89,7 @@ class InventoryController extends Controller
                 $request->all()
             );
 
-            $cpInventoryService-> addCpStock(
+            $cpInventoryService->addCpStock(
                 $request->sold_to,
                 $request->product_id,
                 $request->quantity,
@@ -95,32 +97,56 @@ class InventoryController extends Controller
                 $request->serial_numbers ?? [],
                 $request->all()
             );
-            } catch (\Exception $e) {
-                    return redirect()->back()->with('error',  $e->getMessage());
-                }
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error',  $e->getMessage());
+        }
 
-            return redirect()->back()->with('success', 'Inventory has been transferred successfully');
+        return redirect()->back()->with('success', 'Inventory has been transferred successfully');
     }
 
     public function getProductAvailableQty(Request $request)
     {
+        try{
         $productId = $request->input('product_id');
-        $availableQty = DB::table('product_inventories')
+        if(Auth::user()->role_id != 1){
+            $availableQty = DB::table('cp_product_inventories')
+            ->where('product_id', $productId)
+            ->where('cp_id', Auth::user()->cp_id)
+            ->value('available_qty');
+        }
+        else{
+             $availableQty = DB::table('product_inventories')
             ->where('product_id', $productId)
             ->value('available_qty');
-
+        }
+        
         return response()->json(['available_qty' => $availableQty ?? 0]);
+        }
+        catch(\Exception $e){
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function getAvailableSerial(Request $request)
     {
         $productId = $request->input('product_id');
+
+        if(Auth::user()->role_id != 1){
+           $availableSerials = DB::table('product_serials')
+            ->where('product_id', $productId)
+            ->where('status', '!=', 'in_stock')
+            ->where('issue_to', Auth::user()->cp_id)
+            ->where('serial_number', '!=', null)
+            ->pluck('serial_number');
+        }
+        else{
         $availableSerials = DB::table('product_serials')
             ->where('product_id', $productId)
             ->where('status', 'in_stock')
             ->where('issue_to', null)
             ->where('serial_number', '!=', null)
             ->pluck('serial_number');
+        }
         return response()->json(['available_serials' => $availableSerials]);
     }
 
@@ -130,5 +156,23 @@ class InventoryController extends Controller
         $datePart = date('Ymd');
         $randomPart = strtoupper(substr(uniqid(), -4));
         return $prefix . $datePart . $randomPart;
+    }
+
+    public function invTxnsAdmin()
+    {
+        try {
+            $txn_list = ProductInventoryTransaction::with([
+                'product',
+                'channelPartner',
+                'serialNumbers'
+            ])
+                ->orderByDesc('created_at')
+                ->get();
+
+            return view('Admin.inventorySetting.invTxnsAdmin')->with('txn_list', $txn_list);
+        } catch (\Exception $e) {
+            dd($e->getMessage());
+            return redirect()->back()->with('error',  $e->getMessage());
+        }
     }
 }

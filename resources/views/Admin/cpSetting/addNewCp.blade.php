@@ -4,7 +4,7 @@
 
 @section('css')
     <!-- Select2 CSS (only for this page) -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="/assets/css/select2.min.css" rel="stylesheet" />
     <style>
         :root {
             --primary-blue: #4A90E2;
@@ -238,7 +238,7 @@
 
 @section('js')
     <!-- Select2 JS (init only on this page) -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="/assets/js/select2.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // initialize Select2 with dropdownParent to avoid z-index/overflow issues

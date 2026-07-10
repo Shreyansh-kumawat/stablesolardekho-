@@ -1,0 +1,112 @@
+/* Solar Energy Theme Styles */
+
+:root {
+    --primary-green: #4caf50; /* Green for solar energy */
+    --secondary-yellow: #ffeb3b; /* Yellow for sunlight */
+    --accent-orange: #ff9800; /* Orange for warmth */
+    --light-bg: #f0f4c3; /* Light background for a fresh look */
+    --dark-text: #212121; /* Dark text for readability */
+    --light-text: #757575; /* Light text for secondary information */
+    --white: #ffffff; /* White for clean design */
+}
+
+/* Navigation Styles */
+.solar-nav {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-yellow) 100%);
+    box-shadow: 0 4px 20px rgba(0, 128, 0, 0.15);
+}
+
+.nav-link {
+    color: var(--white);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+}
+
+.nav-link:hover {
+    color: var(--accent-orange);
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.nav-link.active {
+    color: var(--accent-orange);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Button Styles */
+.login-btn {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--accent-orange) 100%);
+    color: var(--white);
+    padding: 0.6rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+}
+
+/* Mobile Menu */
+.mobile-menu-button {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--white);
+    padding: 0.5rem;
+    border-radius: 8px;
+}
+
+.mobile-menu-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* User Dropdown */
+.user-dropdown {
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.user-dropdown a {
+    color: var(--dark-text);
+}
+
+.user-dropdown a:hover {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--accent-orange) 100%);
+    color: var(--white);
+}
+
+/* Modal Styles */
+.modal-header {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-yellow) 100%);
+    padding: 2rem;
+    border-radius: 24px 24px 0 0;
+    text-align: center;
+}
+
+.modal-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--white);
+}
+
+/* Input Styles */
+.modal-input {
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    background-color: #f8fafc;
+}
+
+.modal-input:focus {
+    border-color: var(--primary-green);
+    background-color: var(--white);
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+    .modal-container {
+        max-width: 95%;
+    }
+}

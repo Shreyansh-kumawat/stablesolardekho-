@@ -35,4 +35,23 @@ return [
         ],
     ],
 
+    'razorpay' => [
+        'key_id'     => env('RAZORPAY_KEY_ID'),
+        'key_secret' => env('RAZORPAY_KEY_SECRET'),
+    ],
+
+    'payment' => [
+        'upi_id'       => env('PAYMENT_UPI_ID', 'your-upi@bank'),
+        'account_name' => env('PAYMENT_ACCOUNT_NAME', 'Stable Solar Energy'),
+        'account_no'   => env('PAYMENT_ACCOUNT_NO', ''),
+        'ifsc'         => env('PAYMENT_IFSC', ''),
+        'bank_name'    => env('PAYMENT_BANK_NAME', ''),
+    ],
+
+    'google' => [
+        'client_id'     => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect'      => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
+    ],
+
 ];

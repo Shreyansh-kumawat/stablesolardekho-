@@ -13,13 +13,6 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <button class="relative inline-flex items-center justify-center w-9 h-9 rounded-full header-btn">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M14.25 17.25a2.25 2.25 0 11-4.5 0m9-4.5V9a6.75 6.75 0 10-13.5 0v3.75L3 15h18l-2.25-2.25z" />
-                        </svg>
-                    </button>
-
                     <div class="relative">
                         <button id="profileBtn"
                             class="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md header-btn">

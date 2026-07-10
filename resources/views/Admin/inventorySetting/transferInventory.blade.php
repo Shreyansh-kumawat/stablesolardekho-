@@ -1,10 +1,10 @@
-@extends('layouts.adminLayout')
+﻿@extends('layouts.adminLayout')
 
 @section('css')
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="/assets/css/buttons.bootstrap5.min.css" rel="stylesheet">
+    <link href="/assets/css/select2.min.css" rel="stylesheet" />
     <style>
         :root {
             --primary-blue: #4A90E2;
@@ -280,8 +280,8 @@
     <!-- Page Header -->
     <div class="page-header">
         <div class="container-fluid">
-            <h1><i class="fas fa-box me-2"></i>New Inventory</h1>
-            <p>Add products into your inventorry</p>
+            <h1><i class="fas fa-box me-2"></i>Transfer Inventory</h1>
+            <p>Transfer products to another location or partner or user</p>
         </div>
     </div>
 
@@ -373,7 +373,7 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Quantity</label>
-                            <input type="number" min="1" max="50" id="quantity" name="quantity" class="form-control"
+                            <input type="number" step="0.00" min="1" max="50" id="quantity" name="quantity" class="form-control"
                                 placeholder="Enter quantity" required>
                             <div class="invalid-feedback">Quantity is required.</div>
                             <small class="text-muted-custom" id="available_qty_hint"></small>
@@ -393,14 +393,14 @@
 @endsection
 
 @section('js')
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="/assets/js/jquery.dataTables.min.js"></script>
+    <script src="/assets/js/dataTables.bootstrap5.min.js"></script>
+    <script src="/assets/js/dataTables.buttons.min.js"></script>
+    <script src="/assets/js/buttons.bootstrap5.min.js"></script>
+    <script src="/assets/js/jszip.min.js"></script>
+    <script src="/assets/js/buttons.html5.min.js"></script>
+    <script src="/assets/js/buttons.print.min.js"></script>
+    <script src="/assets/js/select2.min.js"></script>
 
     <script>
         $(function () {
@@ -469,6 +469,10 @@
                     $('#serial_container').html(html);
 
                     $('#serial_numbers').select2({ width: '100%' });
+
+                    // Auto-select first N serial numbers based on quantity
+                    const firstNSerials = serials.slice(0, qty).map(sn => sn.serial_number ?? sn);
+                    $('#serial_numbers').val(firstNSerials).trigger('change');
 
                     // Enforce max selection = qty
                     $('#serial_numbers').on('change', function () {

@@ -3,7 +3,7 @@
 @section('title', 'Fund Transfer')
 
 @section('css')
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="/assets/css/select2.min.css" rel="stylesheet" />
     <style>
         .form-control { width: 100% !important; }
         .text-muted { display: block; margin-top: 0.25rem; }
@@ -150,7 +150,7 @@
             <button type="button" class="btn-primary-theme" id="openConfirmBtn">
                 <i class="fas fa-paper-plane me-2"></i>Deduct
             </button>
-            <a href="{{ route('fundTransferList') }}" class="btn-secondary-theme">
+            <a href="{{ route('fundTransactionList') }}" class="btn-secondary-theme">
                 <i class="fas fa-times me-2"></i>Cancel
             </a>
         </div>
@@ -160,8 +160,8 @@
 <!-- Remove Confirm Modal block entirely -->
 
 @section('js')
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/assets/js/select2.min.js"></script>
+    <script src="/assets/js/sweetalert2.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             $('.select2-element').select2({

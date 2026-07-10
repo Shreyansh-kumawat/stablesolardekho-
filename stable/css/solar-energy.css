@@ -1,0 +1,110 @@
+:root {
+    --solar-yellow: #f9d74d;
+    --solar-green: #4caf50;
+    --solar-blue: #2196f3;
+    --solar-dark: #2e2e2e;
+    --solar-light: #f5f5f5;
+    --solar-accent: #ff9800;
+}
+
+/* Body Styles */
+body {
+    font-family: 'Figtree', sans-serif;
+    background-color: var(--solar-light);
+    color: var(--solar-dark);
+}
+
+/* Navigation Styles */
+.solar-nav {
+    background: linear-gradient(135deg, var(--solar-blue) 0%, var(--solar-green) 100%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.nav-link {
+    color: var(--solar-yellow);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+}
+
+.nav-link:hover {
+    color: var(--solar-accent);
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.nav-link.active {
+    color: var(--solar-accent);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Button Styles */
+.login-btn {
+    background: linear-gradient(135deg, var(--solar-yellow) 0%, var(--solar-accent) 100%);
+    color: var(--solar-dark);
+    padding: 0.6rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+}
+
+/* Modal Styles */
+.modal-header {
+    background: linear-gradient(135deg, var(--solar-blue) 0%, var(--solar-green) 100%);
+    padding: 2rem;
+    border-radius: 24px 24px 0 0;
+    text-align: center;
+}
+
+.modal-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--solar-yellow);
+}
+
+/* Footer Styles */
+footer {
+    background-color: var(--solar-dark);
+    color: var(--solar-light);
+    padding: 2rem 0;
+    text-align: center;
+}
+
+footer a {
+    color: var(--solar-yellow);
+    transition: color 0.3s ease;
+}
+
+footer a:hover {
+    color: var(--solar-accent);
+}
+
+/* Logo sizing */
+img {
+    max-width: 200px;
+    height: auto;
+}
+
+/* Or target navigation logo specifically */
+nav img,
+.navigation img {
+    max-width: 150px;
+    height: auto;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .nav-link {
+        padding: 0.5rem;
+    }
+
+    .login-btn {
+        padding: 0.5rem 1rem;
+    }
+}

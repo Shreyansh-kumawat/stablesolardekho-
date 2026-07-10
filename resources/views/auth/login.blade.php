@@ -1,302 +1,321 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
-    <title>{{ config('app.name', 'Solar Panel Installation') }} - Login</title>
-
+    <title>Login — {{ config('app.name', 'Solar Panel') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="{{ asset('css/themes/solar-energy.css') }}" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-
+    <link rel="stylesheet" href="/assets/css/toastr.min.css">
     <style>
-        /* Minimal attractive login styles */
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         body {
-            min-height: 100vh;
-            display: grid;
-            place-items: center;
-            background: radial-gradient(1200px 600px at 10% 20%, rgba(255,214,64,0.08), transparent 10%),
-                        linear-gradient(135deg,#909aa8 0%, #627589 50%, #42a5f5 100%);
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:
+                radial-gradient(900px 500px at 0% 0%, rgba(249,115,22,0.12), transparent 55%),
+                radial-gradient(700px 400px at 100% 100%, rgba(249,115,22,0.07), transparent 50%),
+                linear-gradient(180deg,#0b1117,#0f172a);
+            font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+            padding:1rem;
         }
-
-        .auth-wrap {
-            width: 100%;
-            max-width: 980px;
-            margin: 2rem;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 20px 50px rgba(2,6,23,0.45);
-            display: grid;
-            grid-template-columns: 1fr 480px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02));
-            backdrop-filter: blur(6px);
+        .auth-shell {
+            width:100%;
+            max-width:960px;
+            display:grid;
+            grid-template-columns:1fr 420px;
+            border-radius:12px;
+            overflow:hidden;
+            box-shadow:0 24px 60px rgba(0,0,0,0.55);
+            border:1px solid rgba(255,255,255,0.08);
         }
-
+        /* Left brand panel */
         .auth-brand {
-            padding: 42px;
-            color: #fff;
-            background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(0,0,0,0.06));
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 18px;
-            position: relative;
-            border-radius: 12px;
-            overflow: hidden;
+            background:linear-gradient(160deg,#111827,#0b1117);
+            padding:48px 40px;
+            display:flex;
+            flex-direction:column;
+            justify-content:space-between;
+            border-right:1px solid rgba(255,255,255,0.07);
+            position:relative;
+            overflow:hidden;
         }
-
-        /* subtle dark overlay so white text is always readable */
         .auth-brand::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(0,0,0,0.28), rgba(0,0,0,0.12));
-            pointer-events: none;
-            z-index: 0;
+            content:'';
+            position:absolute;
+            top:-80px;right:-80px;
+            width:280px;height:280px;
+            border-radius:50%;
+            background:radial-gradient(circle,rgba(249,115,22,0.18),transparent 70%);
+            pointer-events:none;
         }
-
-        /* ensure content sits above overlay */
-        .auth-brand > * { position: relative; z-index: 1; }
-
-        .auth-brand .logo {
-            display: flex;
-            align-items: center;
-            gap: 16px;
+        .brand-logo {
+            display:flex;
+            align-items:center;
+            gap:14px;
         }
-
-        /* bigger, more prominent logo */
-        .auth-brand .logo img {
-            height: 164px;                 /* increased size */
-            max-width: 240px;
-            width: auto;
-            object-fit: contain;
-            border-radius: 12px;
-            padding: 6px;
-            background: rgba(255,255,255,0.06);
-            box-shadow: 0 8px 30px rgba(11,37,69,0.25);
+        .brand-logo img {
+            height:52px;
+            width:auto;
+            object-fit:contain;
         }
-
-        .brand-title {
-            font-size: 2.25rem;           /* larger title */
-            font-weight: 900;
-            letter-spacing: -0.02em;
-            color: #fff;
-            text-shadow: 0 8px 30px rgba(2,6,23,0.6); /* improved contrast */
+        .brand-logo-name {
+            font-size:1.25rem;
+            font-weight:800;
+            color:#fff;
+            letter-spacing:-0.02em;
         }
-
-        .brand-sub {
-            color: #f8fafc;
-            opacity: 0.95;
-            max-width: 420px;
-            line-height: 1.45;
-            font-size: 1.02rem;           /* slightly larger */
-            text-shadow: 0 4px 14px rgba(2,6,23,0.45);
+        .brand-tagline {
+            font-size:0.78rem;
+            color:#94a3b8;
+            margin-top:2px;
         }
-
-        /* make the small chips clearer on darker background */
-        .auth-brand .small {
-            color: #fff;
-            opacity: 0.95;
+        .brand-headline {
+            margin-top:40px;
         }
-
-        .auth-hero {
-            position: absolute;
-            right: -60px;
-            bottom: -40px;
-            width: 320px;
-            height: 320px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, rgba(255,214,64,0.14), transparent 30%),
-                        radial-gradient(circle at 70% 70%, rgba(255,107,53,0.08), transparent 20%);
-            filter: blur(30px);
-            pointer-events: none;
+        .brand-headline h1 {
+            font-size:2rem;
+            font-weight:900;
+            color:#fff;
+            line-height:1.15;
+            letter-spacing:-0.03em;
         }
-
-        .auth-form {
-            padding: 36px;
-            background: #fff;
+        .brand-headline h1 span { color:#f97316; }
+        .brand-headline p {
+            margin-top:12px;
+            font-size:0.9rem;
+            color:#94a3b8;
+            line-height:1.6;
+            max-width:300px;
         }
-
-        .auth-card {
-            max-width: 420px;
-            margin: 10px auto;
+        .brand-features {
+            margin-top:32px;
+            display:flex;
+            flex-direction:column;
+            gap:10px;
         }
-
-        .auth-card h2 {
-            font-size: 1.45rem;
-            font-weight: 800;
-            color: #0b2545;
-            margin-bottom: 6px;
+        .brand-feat {
+            display:flex;
+            align-items:center;
+            gap:10px;
+            font-size:0.84rem;
+            color:#cbd5e1;
         }
-
-        .auth-card p.lead {
-            margin-bottom: 20px;
-            color: #546b83;
-            font-size: 0.95rem;
+        .feat-dot {
+            width:7px;height:7px;border-radius:50%;
+            background:#f97316;
+            flex-shrink:0;
         }
-
-        .form-group { margin-bottom: 14px; }
-        .form-group label { display:block; font-weight:600; font-size:0.9rem; color:#213547; margin-bottom:6px; }
-        .form-control {
+        .brand-bottom {
+            margin-top:40px;
+            font-size:0.76rem;
+            color:#475569;
+        }
+        /* Right form panel */
+        .auth-form-panel {
+            background:#0f172a;
+            padding:48px 36px;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+        }
+        .form-head { margin-bottom:28px; }
+        .form-head h2 {
+            font-size:1.4rem;
+            font-weight:800;
+            color:#f1f5f9;
+            letter-spacing:-0.02em;
+        }
+        .form-head p {
+            margin-top:5px;
+            font-size:0.83rem;
+            color:#64748b;
+        }
+        .f-group { margin-bottom:16px; }
+        .f-label {
             display:block;
-            width:100%;
-            padding: 12px 14px;
-            border-radius: 10px;
-            border: 1px solid #e6eef6;
-            background: #fbfdff;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
-            transition: box-shadow .12s, border-color .12s, transform .06s;
+            font-size:0.78rem;
+            font-weight:600;
+            color:#94a3b8;
+            margin-bottom:6px;
+            letter-spacing:0.02em;
+            text-transform:uppercase;
         }
-        .form-control:focus { outline: none; border-color: #4f9ef8; box-shadow: 0 6px 20px rgba(79,158,248,0.12); transform: translateY(-1px); }
-
-        .form-help { font-size: 0.85rem; color: #67758a; margin-top:6px; }
-
-        .error-text { font-size: 0.85rem; color:#d14343; margin-top:6px; }
-
-        .actions { display:flex; gap:10px; align-items:center; margin-top: 8px; }
-        .btn-primary {
-            background: linear-gradient(90deg,#ff6b35,#ffb04e);
-            color: #fff;
-            padding: 12px 18px;
-            border-radius: 10px;
-            border: none;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 10px 30px rgba(255,107,53,0.18);
-            transition: transform .12s, box-shadow .12s;
+        .f-input {
             width:100%;
+            background:rgba(255,255,255,0.05);
+            border:1px solid rgba(255,255,255,0.1);
+            border-radius:8px;
+            padding:10px 14px;
+            color:#e2e8f0;
+            font-size:0.88rem;
+            outline:none;
+            transition:border-color 0.2s,box-shadow 0.2s;
         }
-        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(255,107,53,0.22); }
-
-        .secondary-link { color:#4f9ef8; font-weight:600; text-decoration:none; }
-        .divider { height:1px; background:#f1f6fb; margin:20px 0; border-radius:4px; }
-
-        .small { font-size:0.85rem; color:#6d7b8a; }
-
-        @media (max-width: 880px) {
-            .auth-wrap { grid-template-columns: 1fr; margin: 1rem; }
-            .auth-hero { display:none; }
-            .auth-brand .logo img { height: 64px; max-width: 180px; } /* responsive */
-            .brand-title { font-size: 1.6rem; }
-            .brand-sub { font-size: 0.95rem; }
+        .f-input::placeholder { color:#475569; }
+        .f-input:focus {
+            border-color:#f97316;
+            box-shadow:0 0 0 3px rgba(249,115,22,0.15);
+        }
+        .f-error { font-size:0.78rem; color:#f87171; margin-top:5px; }
+        .f-row {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            margin-bottom:18px;
+        }
+        .f-check {
+            display:flex;
+            align-items:center;
+            gap:7px;
+            font-size:0.82rem;
+            color:#64748b;
+            cursor:pointer;
+        }
+        .f-check input { accent-color:#f97316; width:15px;height:15px; }
+        .f-forgot {
+            font-size:0.82rem;
+            color:#f97316;
+            text-decoration:none;
+            font-weight:600;
+        }
+        .f-forgot:hover { text-decoration:underline; }
+        .btn-login {
+            width:100%;
+            background:linear-gradient(135deg,#f97316,#ea580c);
+            color:#fff;
+            font-weight:800;
+            font-size:0.92rem;
+            padding:12px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            letter-spacing:0.01em;
+            box-shadow:0 8px 24px rgba(249,115,22,0.3);
+            transition:transform 0.15s,box-shadow 0.15s;
+        }
+        .btn-login:hover {
+            transform:translateY(-2px);
+            box-shadow:0 12px 32px rgba(249,115,22,0.4);
+        }
+        .f-divider {
+            height:1px;
+            background:rgba(255,255,255,0.07);
+            margin:20px 0;
+        }
+        .f-signup-row {
+            text-align:center;
+            font-size:0.83rem;
+            color:#64748b;
+        }
+        .f-signup-row a {
+            color:#f97316;
+            font-weight:700;
+            text-decoration:none;
+            margin-left:5px;
+        }
+        .f-signup-row a:hover { text-decoration:underline; }
+        .pass-wrap { position:relative; }
+        .pass-toggle {
+            position:absolute;right:12px;top:50%;transform:translateY(-50%);
+            background:none;border:none;color:#64748b;cursor:pointer;
+            font-size:0.78rem;font-weight:600;
+        }
+        @media(max-width:720px){
+            .auth-shell { grid-template-columns:1fr; }
+            .auth-brand { padding:28px 24px; }
+            .brand-headline h1 { font-size:1.5rem; }
+            .auth-form-panel { padding:28px 24px; }
         }
     </style>
 </head>
-
 <body>
-    <div class="auth-wrap" role="main">
-        <div class="auth-brand" aria-hidden="false">
-            <div class="logo">
-                <a href="{{ route('dashBoardFunction') }}" aria-label="Home">
-                    <img src="{{ asset('stable/images/logo1.png') }}" alt="{{ config('app.name') }} logo" />
-                </a>
+    <div class="auth-shell">
+        <!-- Brand panel -->
+        <div class="auth-brand">
+            <div class="brand-logo">
+                <img src="{{ asset('stable/images/logo1.png') }}" alt="{{ config('app.name') }}">
                 <div>
-                    <div class="brand-title">{{ config('app.name', 'Solar Panel') }}</div>
-                    <div class="brand-sub"><b>S</b>olar <b>T</b>ransformation for <b>A</b> Greener <b>B</b>etter <b>L</b>iving <b>E</b>nvironment</div>
+                    <div class="brand-logo-name">{{ config('app.name','Solar Panel') }}</div>
+                    <div class="brand-tagline">Solar Energy Solutions</div>
                 </div>
             </div>
 
-            <div style="margin-top:18px;">
-                <div class="small">Trusted by homeowners & businesses across the country.</div>
-                <ul style="margin-top:10px;color:rgba(255,255,255,0.92);list-style:none;padding:0;display:flex;gap:10px;flex-wrap:wrap">
-                    <li class="small">Free site visit</li>
-                    <li class="small" >10-year warranty</li>
-                    <li class="small" >Easy financing</li>
-                </ul>
+            <div class="brand-headline">
+                <h1>Power Your Home<br>with <span>Clean Energy</span></h1>
+                <p>Manage your solar installations, track performance, and monitor your savings — all in one place.</p>
             </div>
 
-            <div class="auth-hero" aria-hidden="true"></div>
+            <div class="brand-features">
+                <div class="brand-feat"><span class="feat-dot"></span>Free site visit &amp; consultation</div>
+                <div class="brand-feat"><span class="feat-dot"></span>10-year workmanship warranty</div>
+                <div class="brand-feat"><span class="feat-dot"></span>Easy financing options available</div>
+                <div class="brand-feat"><span class="feat-dot"></span>Trusted by 1000+ homeowners</div>
+            </div>
+
+            <div class="brand-bottom">&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</div>
         </div>
 
-        <div class="auth-form">
-            <div class="auth-card" aria-labelledby="login-heading">
-                <h2 id="login-heading">Welcome back</h2>
-                <p class="lead">Sign in to access your dashboard and manage installations.</p>
-
-                <form method="POST" action="{{ route('login') }}" novalidate>
-                    @csrf
-
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus class="form-control" placeholder="your.email@example.com" />
-                        @error('email') <div class="error-text" role="alert">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <div style="position:relative;">
-                            <input id="password" type="password" name="password" required class="form-control" placeholder="Enter your password" />
-                            <button type="button" id="togglePassword" aria-label="Toggle password visibility" style="position:absolute;right:10px;top:8px;background:none;border:none;color:#67758a;font-weight:700;cursor:pointer;">Show</button>
-                        </div>
-                        @error('password') <div class="error-text" role="alert">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="form-group actions" style="align-items:center;justify-content:space-between;">
-                        <label style="display:flex;align-items:center;gap:8px;font-weight:600;color:#4a6078;">
-                            <input type="checkbox" name="remember" style="width:16px;height:16px;" /> <span style="font-weight:600;color:#4a6078;font-size:0.9rem;">Remember me</span>
-                        </label>
-
-                        <a href="{{ route('password.request') ?? '#' }}" class="secondary-link">Forgot password?</a>
-                    </div>
-
-                    <div class="form-group">
-                        <button type="submit" class="btn-primary">Login to your account</button>
-                    </div>
-
-                    <div class="divider"></div>
-
-                    {{-- <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-                        <div class="small">Don't have an account?</div>
-                        <a href="{{ route('register') }}" class="secondary-link">Create account</a>
-                    </div> --}}
-                </form>
+        <!-- Form panel -->
+        <div class="auth-form-panel">
+            <div class="form-head">
+                <h2>Welcome back</h2>
+                <p>Sign in to access your dashboard</p>
             </div>
+
+            <form method="POST" action="{{ route('login') }}" novalidate>
+                @csrf
+
+                <div class="f-group">
+                    <label class="f-label" for="email">Email Address</label>
+                    <input class="f-input" id="email" type="email" name="email"
+                        value="{{ old('email') }}" required autofocus placeholder="you@example.com">
+                    @error('email') <div class="f-error">{{ $message }}</div> @enderror
+                </div>
+
+                <div class="f-group">
+                    <label class="f-label" for="password">Password</label>
+                    <div class="pass-wrap">
+                        <input class="f-input" id="password" type="password" name="password"
+                            required placeholder="Enter your password">
+                        <button type="button" class="pass-toggle" id="togglePwd">Show</button>
+                    </div>
+                    @error('password') <div class="f-error">{{ $message }}</div> @enderror
+                </div>
+
+                <div class="f-row">
+                    <label class="f-check">
+                        <input type="checkbox" name="remember"> Remember me
+                    </label>
+                    <a href="{{ route('password.request') }}" class="f-forgot">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="btn-login">Sign In</button>
+
+                <div class="f-divider"></div>
+
+                <div class="f-signup-row">
+                    Don't have an account?
+                    <a href="{{ route('register') }}">Create one free</a>
+                </div>
+            </form>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-
+    <script src="/assets/js/toastr.min.js"></script>
     <script>
-        // Password toggle
-        document.getElementById('togglePassword')?.addEventListener('click', function () {
-            const pwd = document.getElementById('password');
-            if (!pwd) return;
-            if (pwd.type === 'password') {
-                pwd.type = 'text';
-                this.textContent = 'Hide';
-            } else {
-                pwd.type = 'password';
-                this.textContent = 'Show';
-            }
+        document.getElementById('togglePwd').addEventListener('click', function(){
+            var p = document.getElementById('password');
+            if(p.type === 'password'){ p.type='text'; this.textContent='Hide'; }
+            else { p.type='password'; this.textContent='Show'; }
         });
-
-        // Toastr Configuration
-        toastr.options = {
-            closeButton: true,
-            progressBar: true,
-            positionClass: 'toast-top-right',
-            timeOut: 5000
-        };
-
-        // Session messages
-        @if (Session::has('success'))
-            toastr.success({!! json_encode(Session::get('success')) !!}, 'Success');
-        @endif
-
-        @if (Session::has('error'))
-            toastr.error({!! json_encode(Session::get('error')) !!}, 'Error');
-        @endif
-
-        // Validation errors (show as toasts)
-        @if ($errors->any())
-            @foreach ($errors->all() as $error)
-                toastr.error({!! json_encode($error) !!}, 'Error');
-            @endforeach
-        @endif
+        toastr.options = { closeButton:true, progressBar:true, positionClass:'toast-top-right', timeOut:5000 };
+        @if(Session::has('success')) toastr.success({!! json_encode(Session::get('success')) !!},'Success'); @endif
+        @if(Session::has('error')) toastr.error({!! json_encode(Session::get('error')) !!},'Error'); @endif
+        @if($errors->any()) @foreach($errors->all() as $error) toastr.error({!! json_encode($error) !!},'Error'); @endforeach @endif
     </script>
 </body>
-
 </html>

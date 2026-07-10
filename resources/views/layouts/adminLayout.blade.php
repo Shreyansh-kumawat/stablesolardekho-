@@ -1,16 +1,18 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Stable Solar Energy')</title>
+    <link rel="icon" type="image/png" href="{{ asset('stable/images/logo.png') }}">
 
     {{-- Tailwind/App assets --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="/assets/css/buttons.bootstrap5.min.css">
+    <link rel="stylesheet" href="/assets/css/fa-all.min.css">
     <style>
         /* Clean Professional Theme Variables */
         :root {
@@ -51,6 +53,48 @@
 
         .overflow-hidden {
             overflow: hidden;
+        }
+
+        /* DataTables pagination fix (Tailwind preflight strips Bootstrap styles) */
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            display: inline-block;
+            padding: 5px 12px;
+            margin: 0 2px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: #fff;
+            color: #374151 !important;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            color: #111827 !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #4f46e5;
+            border-color: #4f46e5;
+            color: #fff !important;
+            font-weight: 600;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+            background: #fff;
+            border-color: #e5e7eb;
+        }
+        .dataTables_wrapper .dataTables_paginate {
+            padding-top: 12px;
+            text-align: right;
+        }
+        .dataTables_wrapper .dataTables_info {
+            padding-top: 12px;
+            font-size: 13px;
+            color: #6b7280;
         }
 
         /* Toast Notification Styles */
@@ -183,6 +227,34 @@
             color: var(--primary-blue);
         }
 
+        /* Ecommerce submenu — dark panel */
+        #submenu-ecommerce {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 4px;
+            margin-top: 4px;
+        }
+        #submenu-ecommerce a {
+            color: #94a3b8;
+            border-left: none;
+            background: transparent;
+        }
+        #submenu-ecommerce a:hover {
+            background: rgba(255,255,255,0.07);
+            color: #e2e8f0;
+        }
+        #submenu-ecommerce a.ec-active {
+            background: rgba(99,102,241,0.25);
+            color: white;
+        }
+        #submenu-ecommerce svg {
+            color: #64748b;
+        }
+        #submenu-ecommerce a:hover svg,
+        #submenu-ecommerce a.ec-active svg {
+            color: #a5b4fc;
+        }
+
         /* Main content area */
         main {
             background: #f5f7fa;
@@ -269,13 +341,17 @@
             color: var(--text-secondary);
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
             header h1 {
                 font-size: 0.875rem;
             }
 
             #sidebar {
-                width: 100%;
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100%;
+                z-index: 40;
             }
 
             .container-fluid {
@@ -303,6 +379,9 @@
 
         <!-- Main container -->
         <div class="flex-1 flex min-w-0 overflow-hidden">
+            <!-- Mobile sidebar backdrop -->
+            <div id="sidebarBackdrop" class="fixed inset-0 bg-black bg-opacity-40 z-30 hidden md:hidden"></div>
+
             <!-- Sidebar -->
             <aside id="sidebar"
                 class="z-30 w-56 flex-shrink-0 flex flex-col transition-transform duration-200 -translate-x-full md:translate-x-0 overflow-y-auto">
@@ -328,10 +407,13 @@
                         </svg>
                         <span class="text-xs font-semibold">Dashboard</span>
                     </a>
-                    @if (in_array($roll_id, ['1']))
+                  
+                    @if (in_array($roll_id, ['1', '2']))
                         @include('layouts.masterPartialsLayout.AdminMaster')
-                        @elseif ($cp_type=='2')
+                        @elseif (session('cp_type') == '2')
                         @include('layouts.masterPartialsLayout.channelPartnerMaster')
+                        @elseif (session('cp_type') == '3')
+                        @include('layouts.masterPartialsLayout.warehouseMaster')
                     @endif
                 </nav>
 
@@ -349,18 +431,19 @@
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="/assets/js/jquery-3.6.0.min.js"></script>
+    <script src="/assets/js/sweetalert2.all.min.js"></script>
+    <script src="/assets/js/jquery.dataTables.min.js"></script>
+    <script src="/assets/js/dataTables.bootstrap5.min.js"></script>
+    <script src="/assets/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/dataTables.buttons.min.js"></script>
+    <script src="/assets/js/buttons.bootstrap5.min.js"></script>
+    <script src="/assets/js/jszip.min.js"></script>
+    <script src="/assets/js/pdfmake.min.js"></script>
+    <script src="/assets/js/vfs_fonts.min.js"></script>
+    <script src="/assets/js/buttons.html5.min.js"></script>
+    <script src="/assets/js/buttons.print.min.js"></script>
+    <script src="/assets/js/select2.min.js"></script>
 
     <script>
         document.documentElement.style.overflow = 'hidden';
@@ -369,8 +452,21 @@
         const profileBtn = document.getElementById('profileBtn');
         const profileMenu = document.getElementById('profileMenu');
 
+        const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
         sidebarToggle?.addEventListener('click', () => {
+            const isHidden = sidebar.classList.contains('-translate-x-full');
             sidebar.classList.toggle('-translate-x-full');
+            if (isHidden) {
+                sidebarBackdrop?.classList.remove('hidden');
+            } else {
+                sidebarBackdrop?.classList.add('hidden');
+            }
+        });
+
+        sidebarBackdrop?.addEventListener('click', () => {
+            sidebar.classList.add('-translate-x-full');
+            sidebarBackdrop.classList.add('hidden');
         });
 
         profileBtn?.addEventListener('click', () => {

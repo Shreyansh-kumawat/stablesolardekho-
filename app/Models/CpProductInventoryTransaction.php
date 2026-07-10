@@ -20,4 +20,29 @@ class CpProductInventoryTransaction extends Model
         'txn_id',
         'remarks',
     ];
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
+    public function channelPartner()
+    {
+        return $this->belongsTo(ChannelPartner::class, 'cp_id');
+    }
+
+    public function transferToCp()
+    {
+        return $this->belongsTo(ChannelPartner::class, 'txn_done_from');
+
+    }
+
+    public function transferByUser()
+    {
+        return $this->belongsTo(User::class, 'performed_by');
+
+    }
+    public function serial()
+    {
+        return $this->belongsTo(ProductSerial::class, 'serial_id', 'id');
+    }
 }

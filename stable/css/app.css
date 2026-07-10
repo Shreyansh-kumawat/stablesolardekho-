@@ -1,0 +1,77 @@
+/* Main CSS styles for the application */
+
+/* Global Styles */
+body {
+    font-family: 'Figtree', sans-serif;
+    background-color: #f0f4f8;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+/* Header Styles */
+header {
+    background-color: #4caf50; /* Green color for solar energy theme */
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}
+
+/* Navigation Styles */
+nav {
+    background-color: #388e3c; /* Darker green for navigation */
+    padding: 0.5rem;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    transition: background-color 0.3s;
+}
+
+nav a:hover {
+    background-color: #66bb6a; /* Lighter green on hover */
+}
+
+/* Main Content Styles */
+main {
+    padding: 2rem;
+}
+
+/* Footer Styles */
+footer {
+    background-color: #4caf50; /* Match header color */
+    color: white;
+    text-align: center;
+    padding: 1rem;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+/* Button Styles */
+button {
+    background-color: #ff9800; /* Orange for buttons */
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #fb8c00; /* Darker orange on hover */
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    nav {
+        flex-direction: column;
+    }
+
+    main {
+        padding: 1rem;
+    }
+}

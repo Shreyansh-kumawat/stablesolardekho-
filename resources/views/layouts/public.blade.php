@@ -6,14 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Solar Panel Installation') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('stable/images/logo.png') }}">
     <!-- jQuery FIRST -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="/assets/js/jquery-3.7.1.min.js"></script>
     <!-- Solar Energy Theme CSS -->
     <link href="{{ asset('css/themes/solar-energy.css') }}" rel="stylesheet" />
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="/assets/css/toastr.min.css">
 
     <style>
         /* New Modern Public Theme (Aurora/Glass) */
@@ -206,6 +207,7 @@
         }
     </style>
 
+    <link rel="stylesheet" href="/assets/css/lenis.css">
     @yield('css')
 </head>
 
@@ -227,7 +229,11 @@
                     <div class="desktop-menu">
                         <a href="{{ route('dashBoardFunction') }}"
                             class="nav-link {{ request()->routeIs('dashBoardFunction') ? 'active' : '' }}">
-                            Dashboard
+                            Home
+                        </a>
+                        <a href="{{ route('shop') }}"
+                            class="nav-link {{ request()->routeIs('shop') ? 'active' : '' }}">
+                            Shop
                         </a>
                         <a href="{{ route('CpInterest') }}"
                             class="nav-link {{ request()->routeIs('CpInterest') ? 'active' : '' }}">
@@ -251,6 +257,71 @@
                         </a>
                     </div>
 
+                    <!-- Right Side Actions -->
+                    <div style="display:flex; align-items:center; gap:0.6rem; flex-shrink:0;">
+                        @auth
+                        {{-- Cart Icon --}}
+                        @php $cartCount = count(session('cart', [])); @endphp
+                        <a href="{{ route('cart.index') }}" style="position:relative; display:flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); text-decoration:none; transition:background 0.2s;"
+                           onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+                            <svg width="18" height="18" fill="none" stroke="#e2e8f0" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+                            @if($cartCount > 0)
+                            <span style="position:absolute; top:-4px; right:-4px; background:#ef4444; color:#fff; font-size:0.62rem; font-weight:800; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center;">{{ $cartCount }}</span>
+                            @endif
+                        </a>
+
+                        {{-- User Dropdown --}}
+                        <div style="position:relative;">
+                            <button id="user-menu-btn" onclick="toggleUserMenu()"
+                                style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); padding:6px 12px 6px 6px; border-radius:999px; cursor:pointer; transition:background 0.2s;"
+                                onmouseover="this.style.background='rgba(255,255,255,0.14)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+                                <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=4A90E2&color=fff&size=32"
+                                     style="width:28px; height:28px; border-radius:50%;">
+                                <span style="color:#e2e8f0; font-size:0.82rem; font-weight:600; max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ Auth::user()->name }}</span>
+                                <svg width="12" height="12" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                            </button>
+
+                            <div id="user-dropdown" style="display:none; position:absolute; right:0; top:calc(100% + 8px); background:rgba(11,18,32,0.97); border:1px solid rgba(255,255,255,0.12); border-radius:14px; min-width:180px; z-index:999; box-shadow:0 20px 50px rgba(0,0,0,0.4); overflow:hidden;">
+                                <div style="padding:10px 14px 8px; border-bottom:1px solid rgba(255,255,255,0.08);">
+                                    <p style="color:#e2e8f0; font-size:0.82rem; font-weight:700; margin:0;">{{ Auth::user()->name }}</p>
+                                    <p style="color:#94a3b8; font-size:0.72rem; margin:2px 0 0; overflow:hidden; text-overflow:ellipsis;">{{ Auth::user()->email }}</p>
+                                </div>
+                                <div style="padding:6px;">
+                                    @if(Auth::user()->role && in_array(Auth::user()->role->name, ['master_admin','secondary_admin']))
+                                    <a href="{{ route('masterAdminDashboard') }}" style="display:block; padding:8px 10px; border-radius:8px; color:#60a5fa; font-size:0.82rem; text-decoration:none; font-weight:600;"
+                                       onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='transparent'">Admin Panel</a>
+                                    @endif
+                                    <a href="{{ route('user.orders') }}" style="display:block; padding:8px 10px; border-radius:8px; color:#e2e8f0; font-size:0.82rem; text-decoration:none;"
+                                       onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='transparent'">My Orders</a>
+                                    <a href="{{ route('user.account') }}" style="display:block; padding:8px 10px; border-radius:8px; color:#e2e8f0; font-size:0.82rem; text-decoration:none;"
+                                       onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='transparent'">Account</a>
+                                    <div style="border-top:1px solid rgba(255,255,255,0.08); margin:4px 0;"></div>
+                                    <form action="{{ route('logout') }}" method="POST">
+                                        @csrf
+                                        <button type="submit" style="width:100%; text-align:left; padding:8px 10px; border-radius:8px; color:#f87171; font-size:0.82rem; background:none; border:none; cursor:pointer;"
+                                            onmouseover="this.style.background='rgba(239,68,68,0.08)'" onmouseout="this.style.background='transparent'">Sign Out</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        @else
+                        <a href="{{ route('login') }}"
+                            style="display:inline-flex;align-items:center;gap:6px;background:transparent;border:1.5px solid rgba(249,115,22,0.55);color:#f97316;font-weight:700;padding:7px 18px;border-radius:7px;font-size:0.84rem;text-decoration:none;white-space:nowrap;transition:all 0.2s;"
+                            onmouseover="this.style.borderColor='#f97316';this.style.background='rgba(249,115,22,0.08)'"
+                            onmouseout="this.style.borderColor='rgba(249,115,22,0.55)';this.style.background='transparent'">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/></svg>
+                            Login
+                        </a>
+                        <a href="{{ route('register') }}"
+                            style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;font-weight:700;padding:7px 18px;border-radius:7px;font-size:0.84rem;text-decoration:none;white-space:nowrap;box-shadow:0 4px 14px rgba(249,115,22,0.35);transition:all 0.2s;"
+                            onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 20px rgba(249,115,22,0.45)'"
+                            onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 14px rgba(249,115,22,0.35)'">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z"/></svg>
+                            Sign Up
+                        </a>
+                        @endauth
+                    </div>
+
                     <!-- Mobile Menu Button -->
                     <button class="mobile-menu-btn" type="button" id="mobile-menu-toggle" aria-expanded="false"
                         aria-controls="mobile-menu">
@@ -266,15 +337,18 @@
 
             <!-- Mobile Navigation -->
             <div id="mobile-menu" class="mobile-menu">
-                <a href="{{ route('dashBoardFunction') }}"
-                    class="{{ request()->routeIs('dashBoardFunction') ? 'active' : '' }}">Dashboard</a>
+                <a href="{{ route('dashBoardFunction') }}" class="{{ request()->routeIs('dashBoardFunction') ? 'active' : '' }}">Home</a>
+                <a href="{{ route('shop') }}" class="{{ request()->routeIs('shop') ? 'active' : '' }}">Shop</a>
+                @auth
+                <a href="{{ route('cart.index') }}" class="{{ request()->routeIs('cart.index') ? 'active' : '' }}">Cart @php $c=count(session('cart',[])); @endphp @if($c > 0)({{ $c }})@endif</a>
+                <a href="{{ route('user.orders') }}">My Orders</a>
+                <a href="{{ route('user.account') }}">Account</a>
+                @endauth
                 <a href="{{ route('CpInterest') }}"
                     class="{{ request()->routeIs('CpInterest') ? 'active' : '' }}">Enroll For Channel Partner</a>
                 <a href="{{ route('installationPartner') }}"
-                    class="{{ request()->routeIs('installationPartner') ? 'active' : '' }}">Enroll For Installation
-                    Partner</a>
-                <a href="{{ route('ourTeam') }}" class="{{ request()->routeIs('ourTeam') ? 'active' : '' }}">Our
-                    Team</a>
+                    class="{{ request()->routeIs('installationPartner') ? 'active' : '' }}">Enroll For Installation Partner</a>
+                <a href="{{ route('ourTeam') }}" class="{{ request()->routeIs('ourTeam') ? 'active' : '' }}">Our Team</a>
                 <a href="{{ route('allInstallationPhotos') }}"
                     class="{{ request()->routeIs('allInstallationPhotos') ? 'active' : '' }}">Installation Photos</a>
                 <a href="{{ route('contactUs') }}"
@@ -287,14 +361,14 @@
             @yield('content')
         </main>
 
-
+        @include('layouts.partials.footer')
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="/assets/js/toastr.min.js"></script>
 
     <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/assets/js/sweetalert2.all.min.js"></script>
 
     <style>
         /* SweetAlert2 custom styles */
@@ -389,46 +463,9 @@
             @endif
         });
 
-        // Auth modal: safe initialization and helper functions
-        document.addEventListener('DOMContentLoaded', function () {
-            const modal = document.getElementById('auth-modal');
-            const closeBtn = document.getElementById('auth-modal-close');
-            const titleEl = document.getElementById('auth-modal-title');
-            const emailInput = document.getElementById('auth-email');
-
-            function openAuthModal(mode = 'login') {
-                if (!modal) return;
-                modal.classList.remove('hidden');
-                modal.setAttribute('aria-hidden', 'false');
-                document.body.style.overflow = 'hidden';
-                if (titleEl) titleEl.textContent = mode === 'register' ? 'Register' : 'Login';
-                setTimeout(() => emailInput && emailInput.focus(), 50);
-            }
-
-            function closeAuthModal() {
-                if (!modal) return;
-                modal.classList.add('hidden');
-                modal.setAttribute('aria-hidden', 'true');
-                document.body.style.overflow = '';
-            }
-
-            // Expose globally for inline onclick
-            window.openAuthModal = openAuthModal;
-            window.closeAuthModal = closeAuthModal;
-
-            if (closeBtn) closeBtn.addEventListener('click', closeAuthModal);
-
-            if (modal) {
-                // click outside content closes modal
-                modal.addEventListener('click', function (e) {
-                    if (e.target === modal) closeAuthModal();
-                });
-            }
-
-            // close on Escape
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') closeAuthModal();
-            });
+        // close auth modal on Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && typeof closeAuthModal === 'function') closeAuthModal();
         });
 
         // Dropdown click/tap support + close outside + keyboard
@@ -493,16 +530,48 @@
             const btn = document.getElementById('mobile-menu-toggle');
             const menu = document.getElementById('mobile-menu');
             if (!btn || !menu) return;
-
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
                 const isOpen = menu.classList.toggle('show');
                 btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
             });
         });
+
+        function toggleUserMenu() {
+            const dd = document.getElementById('user-dropdown');
+            if (!dd) return;
+            dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+        }
+        document.addEventListener('click', function(e) {
+            const btn = document.getElementById('user-menu-btn');
+            const dd = document.getElementById('user-dropdown');
+            if (dd && btn && !btn.contains(e.target) && !dd.contains(e.target)) {
+                dd.style.display = 'none';
+            }
+        });
     </script>
 
     @yield('js')
+
+    <!-- Lenis Smooth Scroll -->
+    <script src="/assets/js/lenis.min.js"></script>
+    <script>
+        const lenis = new Lenis({
+            lerp: 0.08,
+            smoothWheel: true,
+            smoothTouch: false,
+        });
+
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+    </script>
+
+    @guest
+        @include('layouts.partials.modals.auth-modal')
+    @endguest
 </body>
 
 </html>

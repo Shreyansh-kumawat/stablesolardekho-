@@ -43,7 +43,7 @@
         @include('layouts.partials.footer')
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="/assets/js/toastr.min.js"></script>
     <script>
         // Toastr Configuration
         toastr.options = {

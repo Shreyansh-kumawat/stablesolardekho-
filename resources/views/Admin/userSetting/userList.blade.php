@@ -1,9 +1,9 @@
 @extends('layouts.adminLayout')
 @section('css')
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="/assets/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="/assets/css/buttons.bootstrap5.min.css">
 <link rel="stylesheet" href="{{ asset('stable/css/datatableListCss.css') }}">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="/assets/css/bootstrap-icons.min.css">
 @endsection
 
 @section('content')

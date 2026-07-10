@@ -358,7 +358,7 @@
 @endsection
 
 @section('js')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/assets/js/chart.min.js"></script>
     <script>
         // Installation Chart
         const ctx1 = document.getElementById('installationChart');
