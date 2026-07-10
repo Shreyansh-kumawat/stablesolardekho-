@@ -1,3 +1,4 @@
+@if(auth()->user()->hasCpPermission('view_inventory') || auth()->user()->hasCpPermission('transfer_inventory') || auth()->user()->hasCpPermission('inventory_transactions') || auth()->user()->hasCpPermission('product_pricing'))
 <button type="button" data-toggle="submenu-manageinventory"
     class="w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors hover:bg-slate-800 {{ request()->routeIs('cpInventory','transferInventoryCp','invTxnsCp','productPricing') ? 'bg-slate-700 text-white' : '' }}"
     data-submenu="manageinventory">
@@ -16,48 +17,56 @@
 </button>
 <ul id="submenu-manageinventory"
     class="ml-8 mt-1 space-y-1 {{ request()->routeIs('cpInventory','transferInventoryCp','invTxnsCp','productPricing') ? '' : 'hidden' }}">
+    @if(auth()->user()->hasCpPermission('view_inventory'))
     <li>
         <a href="{{ route('cpInventory') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('cpInventory') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                    d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
             </svg>
             <span>My Inventory</span>
         </a>
     </li>
+    @endif
 
-        <li>
+    @if(auth()->user()->hasCpPermission('transfer_inventory'))
+    <li>
         <a href="{{ route('transferInventoryCp') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('transferInventoryCp') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                    d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
             </svg>
             <span>Transfer Inventory</span>
         </a>
     </li>
+    @endif
 
+    @if(auth()->user()->hasCpPermission('inventory_transactions'))
     <li>
         <a href="{{ route('invTxnsCp') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('invTxnsCp') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                    d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
             </svg>
             <span>Inventory Txns</span>
         </a>
     </li>
+    @endif
 
-     <li>
+    @if(auth()->user()->hasCpPermission('product_pricing'))
+    <li>
         <a href="{{ route('productPricing') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('productPricing') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                    d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>Current Purchase Price</span>
         </a>
     </li>
-    
+    @endif
 </ul>
+@endif

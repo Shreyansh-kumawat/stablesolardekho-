@@ -31,6 +31,7 @@ class User extends Authenticatable
         'cp_id',
         'is_active',
         'admin_permissions',
+        'cp_permissions',
     ];
 
     protected $with = ['role'];
@@ -51,6 +52,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'admin_permissions' => 'array',
+            'cp_permissions' => 'array',
         ];
     }
 
@@ -67,6 +69,12 @@ class User extends Authenticatable
     public function customerOrders()
     {
         return $this->hasMany(\App\Models\CustomerOrder::class, 'user_id');
+    }
+
+    public function hasCpPermission(string $permission): bool
+    {
+        $perms = $this->cp_permissions ?? [];
+        return in_array($permission, $perms);
     }
 
     public function hasAdminPermission(string $permission): bool

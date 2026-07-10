@@ -1,3 +1,4 @@
+@if(auth()->user()->hasCpPermission('manual_installations'))
 <button type="button" data-toggle="submenu-manageManualInstallation"
     class="w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors hover:bg-slate-800 {{ request()->routeIs('newManualEntry','myManualEntries') ? 'bg-slate-700 text-white' : '' }}"
     data-submenu="manageManualInstallation">
@@ -40,5 +41,6 @@
 
 
 
-    
+
 </ul>
+@endif

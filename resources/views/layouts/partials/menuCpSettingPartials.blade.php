@@ -1,6 +1,6 @@
 <!-- Manage User (submenu) -->
 <button type="button" data-toggle="submenu-managecp"
-    class="w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors hover:bg-slate-800 {{ request()->routeIs('addNewCp', 'cpList','edit_cp') ? 'bg-slate-700 text-white' : '' }}"
+    class="w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors hover:bg-slate-800 {{ request()->routeIs('addNewCp', 'cpList','edit_cp','manageCpPermissions') ? 'bg-slate-700 text-white' : '' }}"
     data-submenu="managecp">
     <span class="flex items-center gap-3">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -10,12 +10,12 @@
         </svg>
         <span>Manage CP</span>
     </span>
-    <svg class="w-4 h-4 transition-transform {{ request()->routeIs('addNewCp', 'cpList') ? 'rotate-180' : '' }}"
+    <svg class="w-4 h-4 transition-transform {{ request()->routeIs('addNewCp', 'cpList','manageCpPermissions') ? 'rotate-180' : '' }}"
         data-arrow="submenu-managecp" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
     </svg>
 </button>
-<ul id="submenu-managecp" class="ml-8 mt-1 space-y-1 {{ request()->routeIs('addNewCp', 'cpList','edit_cp') ? '' : 'hidden' }}">
+<ul id="submenu-managecp" class="ml-8 mt-1 space-y-1 {{ request()->routeIs('addNewCp', 'cpList','edit_cp','manageCpPermissions') ? '' : 'hidden' }}">
 
     <li>
         <a href="{{ route('addNewCp') }}"
@@ -35,6 +35,16 @@
                     d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
             </svg>
             <span>CP List</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ route('manageCpPermissions') }}"
+            class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('manageCpPermissions') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+            </svg>
+            <span>CP Permissions</span>
         </a>
     </li>
 

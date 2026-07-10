@@ -9,12 +9,16 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ChannelPartnerMiddleware
 {
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, ?string $permission = null): Response
     {
         $user = Auth::user();
 
         if (!$user || !$user->role || $user->role->name !== 'channel_partner') {
             abort(403, 'Unauthorized.');
+        }
+
+        if ($permission && !$user->hasCpPermission($permission)) {
+            abort(403, 'You do not have permission to access this feature.');
         }
 
         return $next($request);

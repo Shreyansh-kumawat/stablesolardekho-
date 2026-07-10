@@ -86,7 +86,8 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::get('edit_cp/{id?}', [UserController::class, 'edit_cp'])->name('edit_cp');
     route::post('editCpQuery/', [UserController::class, 'editCpQuery'])->name('editCpQuery');
 
-
+    Route::get('/cp-permissions', [UserController::class, 'manageCpPermissions'])->name('manageCpPermissions');
+    Route::post('/cp-permissions/{id}', [UserController::class, 'updateCpPermissions'])->name('updateCpPermissions');
 
     Route::get('/secondary-admins', [UserController::class, 'manageSecondaryAdmins'])->name('manageSecondaryAdmins');
     Route::post('/secondary-admins/add', [UserController::class, 'addSecondaryAdmin'])->name('addSecondaryAdmin');
@@ -172,22 +173,37 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
 });
 
 Route::prefix('channel-partner')->middleware(['auth', ChannelPartnerMiddleware::class])->group(function () {
-    Route::get('/cp-new-order', [OrderController::class, 'newOrderCp'])->name(name: 'newOrderCp');
-    Route::post('/cp-new-order', [OrderController::class, 'storeNewOrderRequest'])->name(name: 'storeNewOrderRequest');
     Route::get('/get-sub-categories', [ProductController::class, 'getSubCategories'])->name('cp.getSubCategory');
     Route::get('/get-products', [ProductController::class, 'getProducts'])->name('cp.getProducts');
-    Route::get('/cp-order-report', [OrderController::class, 'orderReportCp'])->name(name: 'orderReportCp');
-    Route::get('/viewSingleOrderCp/{id}', [OrderController::class, 'viewSingleOrderCp'])->name('viewSingleOrderCp');
-    Route::get('/product-pricing', [OrderController::class, 'productPricing'])->name(name: 'productPricing');
-    Route::get('/cp-inventory', [CpInventoryController::class, 'cpInventory'])->name(name: 'cpInventory');
 
-    Route::get('/transfer-inventory', [CpInventoryController::class, 'transferInventoryCp'])->name(name: 'transferInventoryCp');
-    Route::post('/transfer-inventory', [CpInventoryController::class, 'storeTransferInventoryCp'])->name('storeTransferInventoryCp');
-    Route::get('/cp-inv-txnx', [CpInventoryController::class, 'invTxnsCp'])->name('invTxnsCp');
-    
-    Route::get('/new-manual-entry', [ManualInstallationController::class, 'newEntry'])->name(name: 'newManualEntry');
-    Route::post('/store-manual-installation', [ManualInstallationController::class, 'storeManualInstallation'])->name('storeManualInstallation');
-    Route::get('/my-manual-entries', [ManualInstallationController::class, 'myManualEntries'])->name(name: 'myManualEntries');
+    Route::middleware(ChannelPartnerMiddleware::class.':new_request')->group(function () {
+        Route::get('/cp-new-order', [OrderController::class, 'newOrderCp'])->name(name: 'newOrderCp');
+        Route::post('/cp-new-order', [OrderController::class, 'storeNewOrderRequest'])->name(name: 'storeNewOrderRequest');
+    });
+
+    Route::middleware(ChannelPartnerMiddleware::class.':view_requests')->group(function () {
+        Route::get('/cp-order-report', [OrderController::class, 'orderReportCp'])->name(name: 'orderReportCp');
+        Route::get('/viewSingleOrderCp/{id}', [OrderController::class, 'viewSingleOrderCp'])->name('viewSingleOrderCp');
+    });
+
+    Route::get('/product-pricing', [OrderController::class, 'productPricing'])->name(name: 'productPricing')->middleware(ChannelPartnerMiddleware::class.':product_pricing');
+
+    Route::middleware(ChannelPartnerMiddleware::class.':view_inventory')->group(function () {
+        Route::get('/cp-inventory', [CpInventoryController::class, 'cpInventory'])->name(name: 'cpInventory');
+    });
+
+    Route::middleware(ChannelPartnerMiddleware::class.':transfer_inventory')->group(function () {
+        Route::get('/transfer-inventory', [CpInventoryController::class, 'transferInventoryCp'])->name(name: 'transferInventoryCp');
+        Route::post('/transfer-inventory', [CpInventoryController::class, 'storeTransferInventoryCp'])->name('storeTransferInventoryCp');
+    });
+
+    Route::get('/cp-inv-txnx', [CpInventoryController::class, 'invTxnsCp'])->name('invTxnsCp')->middleware(ChannelPartnerMiddleware::class.':inventory_transactions');
+
+    Route::middleware(ChannelPartnerMiddleware::class.':manual_installations')->group(function () {
+        Route::get('/new-manual-entry', [ManualInstallationController::class, 'newEntry'])->name(name: 'newManualEntry');
+        Route::post('/store-manual-installation', [ManualInstallationController::class, 'storeManualInstallation'])->name('storeManualInstallation');
+        Route::get('/my-manual-entries', [ManualInstallationController::class, 'myManualEntries'])->name(name: 'myManualEntries');
+    });
     
 });
 

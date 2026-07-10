@@ -1,5 +1,6 @@
+@if(auth()->user()->hasCpPermission('new_request') || auth()->user()->hasCpPermission('view_requests'))
 <button type="button" data-toggle="submenu-manageCpOrders"
-    class="w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors hover:bg-slate-800 {{ request()->routeIs('newOrderCp','viewSingleOrderCp') ? 'bg-slate-700 text-white' : '' }}"
+    class="w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors hover:bg-slate-800 {{ request()->routeIs('newOrderCp','viewSingleOrderCp','orderReportCp') ? 'bg-slate-700 text-white' : '' }}"
     data-submenu="manageCpOrders">
     <span class="flex items-center gap-3">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -9,13 +10,14 @@
         </svg>
         <span>Inventory Requests</span>
     </span>
-    <svg class="w-4 h-4 transition-transform {{ request()->routeIs('newOrderCp','viewSingleOrderCp') ? 'rotate-180' : '' }}"
+    <svg class="w-4 h-4 transition-transform {{ request()->routeIs('newOrderCp','viewSingleOrderCp','orderReportCp') ? 'rotate-180' : '' }}"
         data-arrow="submenu-manageCpOrders" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
     </svg>
 </button>
 <ul id="submenu-manageCpOrders"
-    class="ml-8 mt-1 space-y-1 {{ request()->routeIs('newOrderCp','viewSingleOrderCp') ? '' : 'hidden' }}">
+    class="ml-8 mt-1 space-y-1 {{ request()->routeIs('newOrderCp','viewSingleOrderCp','orderReportCp') ? '' : 'hidden' }}">
+    @if(auth()->user()->hasCpPermission('new_request'))
     <li>
         <a href="{{ route('newOrderCp') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('newOrderCp') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
@@ -26,8 +28,10 @@
             <span>New Request</span>
         </a>
     </li>
+    @endif
 
-      <li>
+    @if(auth()->user()->hasCpPermission('view_requests'))
+    <li>
         <a href="{{ route('orderReportCp') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('orderReportCp','viewSingleOrderCp') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -37,8 +41,6 @@
             <span>My Requests</span>
         </a>
     </li>
-
-
-
-    
+    @endif
 </ul>
+@endif

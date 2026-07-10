@@ -391,6 +391,21 @@ class UserController extends Controller
         }
     }
 
+    public function manageCpPermissions()
+    {
+        $cpUsers = User::whereHas('role', fn($q) => $q->where('name', 'channel_partner'))->get();
+        return view('Admin.cpSetting.cpPermissions', compact('cpUsers'));
+    }
+
+    public function updateCpPermissions(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $user->cp_permissions = $request->input('permissions', []);
+        $user->save();
+
+        return redirect()->route('manageCpPermissions')->with('success', 'Permissions updated for ' . $user->name);
+    }
+
     public function manageSecondaryAdmins()
     {
         abort_unless(auth()->user()->role?->name === 'master_admin', 403);

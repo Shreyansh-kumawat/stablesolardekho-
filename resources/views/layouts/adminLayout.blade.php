@@ -410,9 +410,9 @@
                   
                     @if (in_array($roll_id, ['1', '2']))
                         @include('layouts.masterPartialsLayout.AdminMaster')
-                        @elseif (session('cp_type') == '2')
+                    @elseif ($roll_id == 4)
                         @include('layouts.masterPartialsLayout.channelPartnerMaster')
-                        @elseif (session('cp_type') == '3')
+                    @elseif (session('cp_type') == '3')
                         @include('layouts.masterPartialsLayout.warehouseMaster')
                     @endif
                 </nav>
