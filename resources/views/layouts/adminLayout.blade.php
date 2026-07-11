@@ -227,6 +227,56 @@
             color: var(--primary-blue);
         }
 
+        /* Sidebar buttons (parent menu toggles) */
+        #sidebar nav button {
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+        #sidebar nav button:hover {
+            background: var(--hover-bg) !important;
+            color: var(--primary-blue) !important;
+        }
+        #sidebar nav button:hover svg {
+            color: var(--primary-blue);
+        }
+        #sidebar nav button.bg-slate-700,
+        #sidebar nav button.bg-slate-800 {
+            background: #E8F4FD !important;
+            color: var(--primary-blue) !important;
+        }
+        #sidebar nav button.bg-slate-700 svg,
+        #sidebar nav button.bg-slate-800 svg {
+            color: var(--primary-blue) !important;
+        }
+        #sidebar nav button.text-white {
+            color: var(--primary-blue) !important;
+        }
+
+        /* Sidebar submenu items (non-ecommerce) */
+        #sidebar nav ul:not(#submenu-ecommerce) a.bg-slate-700 {
+            background: #E8F4FD !important;
+            color: var(--primary-blue) !important;
+        }
+        #sidebar nav ul:not(#submenu-ecommerce) a.text-white {
+            color: var(--primary-blue) !important;
+        }
+        #sidebar nav ul:not(#submenu-ecommerce) a.bg-slate-700 svg {
+            color: var(--primary-blue) !important;
+        }
+
+        /* Override Tailwind hover:bg-slate-800 on non-ecommerce submenu links */
+        #sidebar nav ul:not(#submenu-ecommerce) a:hover {
+            background: var(--hover-bg) !important;
+            color: var(--primary-blue) !important;
+        }
+        #sidebar nav ul:not(#submenu-ecommerce) a:hover svg {
+            color: var(--primary-blue) !important;
+        }
+
         /* Ecommerce submenu — dark panel */
         #submenu-ecommerce {
             background: #0f172a;
