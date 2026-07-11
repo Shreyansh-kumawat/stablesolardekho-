@@ -29,7 +29,7 @@ Route::get('/shop/category/{slug}', [ProductController::class, 'shopPage'])->nam
 Route::get('/featured', [ProductController::class, 'featuredPage'])->name('featured');
 Route::get('/product/{slug}', [ProductController::class, 'showProduct'])->name('product.show');
 Route::get('/print', [UserController::class, 'printQuotation'])->name('printQuotation');
-Route::get('CpInterest', [UserController::class, 'CpInterest'])->middleware('auth')->name('CpInterest');
+Route::get('CpInterest', [UserController::class, 'CpInterest'])->name('CpInterest');
 Route::post('QueryCpInterest', [UserController::class, 'QueryCpInterest'])->middleware('auth')->name('QueryCpInterest');
 Route::get('installationPartner', [UserController::class, 'installationPartner'])->name('installationPartner');
 Route::post('QueryInstallationPartner', [UserController::class, 'QueryInstallationPartner'])->name('QueryInstallationPartner');
