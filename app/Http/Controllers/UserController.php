@@ -454,8 +454,10 @@ class UserController extends Controller
             'contact_person' => $interest->contact_person,
             'email' => $interest->email,
             'phone_number' => $interest->mobile,
+            'full_address' => '',
             'city' => $interest->city,
             'state' => $interest->state,
+            'zip_code' => '',
             'cp_role' => $cpRole ? $cpRole->id : 1,
             'is_active' => 1,
         ]);
