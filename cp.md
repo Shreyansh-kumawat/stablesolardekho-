@@ -7,6 +7,8 @@ Flow: User applies via CP Interest form → Admin approves → User becomes Chan
 ---
 
 
+
+
 ## Step 1: CP Interest Requests
 
 ### Public Form (`/CpInterest`)
