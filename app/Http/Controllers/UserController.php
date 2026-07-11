@@ -446,36 +446,44 @@ class UserController extends Controller
 
     public function approveCpInterest($id)
     {
-        $interest = CpInterest::findOrFail($id);
+        try {
+            $interest = CpInterest::findOrFail($id);
 
-        $cpRole = ChannelPartnerRole::first();
-        $cp = ChannelPartner::create([
-            'cp_name' => $interest->company_name,
-            'contact_person' => $interest->contact_person,
-            'email' => $interest->email,
-            'phone_number' => $interest->mobile,
-            'full_address' => '',
-            'city' => $interest->city,
-            'state' => $interest->state,
-            'zip_code' => '',
-            'cp_role' => $cpRole ? $cpRole->id : 1,
-            'is_active' => 1,
-        ]);
-
-        if ($interest->user_id) {
-            $user = User::find($interest->user_id);
-            if ($user) {
-                $user->role_id = 4;
-                $user->cp_id = $cp->id;
-                $user->cp_permissions = ['new_request', 'view_requests', 'product_pricing', 'view_inventory'];
-                $user->save();
+            $cpRole = ChannelPartnerRole::first();
+            if (!$cpRole) {
+                $cpRole = ChannelPartnerRole::create(['role_name' => 'Dealer']);
             }
+
+            $cp = new ChannelPartner();
+            $cp->cp_name = $interest->company_name;
+            $cp->contact_person = $interest->contact_person;
+            $cp->email = $interest->email;
+            $cp->phone_number = $interest->mobile;
+            $cp->full_address = $interest->city . ', ' . $interest->state;
+            $cp->city = $interest->city;
+            $cp->state = $interest->state;
+            $cp->zip_code = '000000';
+            $cp->cp_role = $cpRole->id;
+            $cp->is_active = 1;
+            $cp->save();
+
+            if ($interest->user_id) {
+                $user = User::find($interest->user_id);
+                if ($user) {
+                    $user->role_id = 4;
+                    $user->cp_id = $cp->id;
+                    $user->cp_permissions = json_encode(['new_request', 'view_requests', 'product_pricing', 'view_inventory']);
+                    $user->save();
+                }
+            }
+
+            $interest->status = 'approved';
+            $interest->save();
+
+            return redirect()->route('cpInterestList')->with('success', $interest->company_name . ' approved and added as Channel Partner.');
+        } catch (\Exception $e) {
+            return redirect()->route('cpInterestList')->with('error', 'Error: ' . $e->getMessage());
         }
-
-        $interest->status = 'approved';
-        $interest->save();
-
-        return redirect()->route('cpInterestList')->with('success', $interest->company_name . ' approved and added as Channel Partner.');
     }
 
     public function rejectCpInterest($id)
