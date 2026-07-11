@@ -454,18 +454,24 @@ class UserController extends Controller
                 $cpRole = ChannelPartnerRole::create(['role_name' => 'Dealer']);
             }
 
-            $cp = new ChannelPartner();
-            $cp->cp_name = $interest->company_name;
-            $cp->contact_person = $interest->contact_person;
-            $cp->email = $interest->email;
-            $cp->phone_number = $interest->mobile;
-            $cp->full_address = $interest->city . ', ' . $interest->state;
-            $cp->city = $interest->city;
-            $cp->state = $interest->state;
-            $cp->zip_code = '000000';
-            $cp->cp_role = $cpRole->id;
-            $cp->is_active = 1;
-            $cp->save();
+            $existingCp = ChannelPartner::where('email', $interest->email)->first();
+            if ($existingCp) {
+                $cp = $existingCp;
+            } else {
+                $cp = new ChannelPartner();
+                $cp->cp_name = $interest->company_name;
+                $cp->contact_person = $interest->contact_person;
+                $cp->email = $interest->email;
+                $cp->phone_number = $interest->mobile;
+                $cp->full_address = $interest->city . ', ' . $interest->state;
+                $cp->city = $interest->city;
+                $cp->state = $interest->state;
+                $cp->zip_code = '000000';
+                $cp->cp_role = $cpRole->id;
+                $cp->is_active = 1;
+                $cp->active_status = 1;
+                $cp->save();
+            }
 
             if ($interest->user_id) {
                 $user = User::find($interest->user_id);
