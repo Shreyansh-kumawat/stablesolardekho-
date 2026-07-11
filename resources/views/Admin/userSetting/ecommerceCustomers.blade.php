@@ -94,8 +94,13 @@
                             {{ $user->customer_orders_count }} order{{ $user->customer_orders_count != 1 ? 's' : '' }}
                         </span>
                         <span class="tag bg-blue-50 text-blue-600">
-                            {{ $user->created_at->format('d M Y') }}
+                            {{ $user->created_at ? $user->created_at->format('d M Y') : '—' }}
                         </span>
+                        @if($user->role)
+                        <span class="tag {{ $user->role_id == 4 ? 'bg-purple-100 text-purple-700' : ($user->role_id == 2 ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-500') }}">
+                            {{ $user->role_id == 4 ? 'CP' : ($user->role_id == 2 ? 'Admin' : 'User') }}
+                        </span>
+                        @endif
                     </div>
                 </div>
                 <div class="flex items-center gap-1.5 flex-shrink-0">
