@@ -601,7 +601,7 @@ class UserController extends Controller
     {
         abort_unless(auth()->user()->hasAdminPermission('users'), 403);
         $users = User::with('role')
-            ->where('role_id', 3)
+            ->whereNotIn('role_id', [1])
             ->withCount([
                 'customerOrders',
                 'customerOrders as pending_orders_count' => fn($q) => $q->whereNotIn('status', ['delivered', 'cancelled']),

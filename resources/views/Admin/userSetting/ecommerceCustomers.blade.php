@@ -55,8 +55,8 @@
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 sm:mb-6">
         <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-800">E-commerce Customers</h1>
-            <p class="text-gray-500 text-sm mt-0.5">Registered users who shop on the website</p>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Users</h1>
+            <p class="text-gray-500 text-sm mt-0.5">All registered users on the platform</p>
         </div>
         <span class="inline-flex items-center self-start sm:self-auto px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
             Total: {{ $users->count() }}
@@ -72,7 +72,7 @@
 
     {{-- Search --}}
     <div class="mb-4">
-        <input type="text" id="customerSearch" placeholder="Search customers..."
+        <input type="text" id="customerSearch" placeholder="Search users..."
             class="w-full sm:max-w-sm border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
     </div>
 
