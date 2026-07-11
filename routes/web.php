@@ -179,6 +179,8 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::delete('/banners/{banner}', [BannerController::class, 'destroy'])->name('admin.banners.destroy');
 });
 
+Route::get('/cp-dashboard', [UserController::class, 'cpDashboard'])->middleware(['auth', ChannelPartnerMiddleware::class])->name('cpDashboard');
+
 Route::prefix('channel-partner')->middleware(['auth', ChannelPartnerMiddleware::class])->group(function () {
     Route::get('/get-sub-categories', [ProductController::class, 'getSubCategories'])->name('cp.getSubCategory');
     Route::get('/get-products', [ProductController::class, 'getProducts'])->name('cp.getProducts');

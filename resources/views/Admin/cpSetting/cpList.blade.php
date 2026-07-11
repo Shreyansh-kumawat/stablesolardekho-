@@ -1,339 +1,240 @@
 @extends('layouts.adminLayout')
+
+@section('title', 'Channel Partners')
+
 @section('css')
-    <link rel="stylesheet" href="/assets/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="/assets/css/buttons.bootstrap5.min.css">
-    <link rel="stylesheet" href="{{ asset('stable/css/datatableListCss.css') }}">
-    <style>
-        .dataTables_wrapper {
-            margin-top: 1rem;
-        }
+<link href="/assets/css/fa-all.min.css" rel="stylesheet">
+<style>
+    .cp-wrap { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1rem; }
 
-        .dataTables_paginate {
-            margin-top: 1.5rem;
-            text-align: right;
-            padding-top: 1rem;
-            border-top: 1px solid var(--border-color);
-        }
+    .cp-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.25rem; }
+    .cp-header-left h1 { font-size: 1.2rem; font-weight: 800; color: #1f2937; margin: 0; }
+    .cp-header-left p { font-size: .8rem; color: #6b7280; margin: .2rem 0 0; }
+    .cp-header-right { display: flex; gap: .5rem; align-items: center; }
+    .cp-add-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .5rem 1rem; background: #4A90E2; color: #fff; border-radius: 8px; font-size: .85rem; font-weight: 700; text-decoration: none; transition: background .15s; border: none; cursor: pointer; }
+    .cp-add-btn:hover { background: #3b7dc4; color: #fff; }
 
-        .dataTables_paginate .paginate_button {
-            padding: 0.5rem 0.75rem !important;
-            margin: 0 0.25rem !important;
-            border: 1px solid var(--border-color) !important;
-            border-radius: 4px !important;
-            background: var(--card-bg) !important;
-            color: var(--text-primary) !important;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-block;
-        }
+    .cp-stats { display: flex; gap: .5rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .cp-stat { padding: 5px 14px; border-radius: 20px; font-size: .7rem; font-weight: 700; }
+    .cp-stat-total { background: #e3f2fd; color: #1565c0; }
+    .cp-stat-active { background: #d1fae5; color: #065f46; }
+    .cp-stat-inactive { background: #fee2e2; color: #991b1b; }
 
-        .dataTables_paginate .paginate_button:hover:not(.disabled) {
-            background: var(--primary-blue) !important;
-            color: white !important;
-            border-color: var(--primary-blue) !important;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
+    .cp-success { padding: .75rem 1rem; background: #d1fae5; border: 1px solid #6ee7b7; border-radius: 8px; color: #065f46; font-size: .85rem; margin-bottom: 1rem; }
+    .cp-error { padding: .75rem 1rem; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; color: #991b1b; font-size: .85rem; margin-bottom: 1rem; }
 
-        .dataTables_paginate .paginate_button.current {
-            background: var(--primary-blue) !important;
-            color: white !important;
-            border-color: var(--primary-blue) !important;
-            font-weight: 600;
-        }
+    .cp-filters { display: flex; gap: .75rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .cp-search { flex: 1; min-width: 200px; padding: .5rem .75rem; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: .85rem; background: #fff; color: #1f2937; }
+    .cp-search:focus { outline: none; border-color: #4A90E2; box-shadow: 0 0 0 3px rgba(74,144,226,.12); }
+    .cp-filter-btn { padding: .5rem 1rem; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; background: #fff; color: #6b7280; transition: all .15s; }
+    .cp-filter-btn.active { background: #1f2937; color: #fff; border-color: #1f2937; }
+    .cp-filter-btn:hover:not(.active) { border-color: #9ca3af; }
 
-        .dataTables_paginate .paginate_button.current:hover {
-            background: #3b7dc4 !important;
-            border-color: #3b7dc4 !important;
-        }
+    .cp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1rem; }
+    @media(max-width: 420px) { .cp-grid { grid-template-columns: 1fr; } }
 
-        .dataTables_paginate .paginate_button.disabled,
-        .dataTables_paginate .paginate_button.disabled:hover {
-            opacity: 0.5;
-            cursor: not-allowed;
-            background: var(--primary-light) !important;
-        }
+    .cp-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,.04); transition: box-shadow .15s, border-color .15s; position: relative; }
+    .cp-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08); border-color: #d1d5db; }
 
-        .dataTables_info {
-            padding: 1rem 0;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            float: left;
-            margin-top: 1.5rem;
-        }
+    .cp-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: .75rem; }
+    .cp-card-company { font-size: 1rem; font-weight: 700; color: #1f2937; margin: 0; }
+    .cp-card-date { font-size: .7rem; color: #9ca3af; margin-top: 2px; }
+    .cp-card-status { flex-shrink: 0; }
 
-        .dt-buttons {
-            margin-bottom: 1rem;
-            display: inline-flex;
-            gap: 0.5rem;
-        }
+    .cp-card-info { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem .75rem; margin-bottom: .85rem; }
+    .cp-card-field label { display: block; font-size: .65rem; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 1px; }
+    .cp-card-field span { font-size: .82rem; color: #374151; word-break: break-word; }
+    .cp-card-field.full { grid-column: 1 / -1; }
 
-        .dt-buttons .btn {
-            padding: 0.5rem 1rem !important;
-            margin-right: 0 !important;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
+    .cp-card-meta { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .85rem; }
+    .cp-meta-tag { padding: 3px 10px; border-radius: 6px; font-size: .72rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .cp-meta-role { background: #e3f2fd; color: #1565c0; }
+    .cp-meta-users { background: #f3e5f5; color: #6a1b9a; }
+    .cp-meta-balance { background: #fff3e0; color: #e65100; }
 
-        .dt-buttons .btn-success {
-            background: #28a745 !important;
-            color: white !important;
-        }
+    .cp-card-actions { display: flex; gap: .4rem; padding-top: .75rem; border-top: 1px solid #f3f4f6; flex-wrap: wrap; }
+    .cp-act-btn { padding: .4rem .7rem; border: none; border-radius: 6px; font-size: .75rem; font-weight: 700; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: .3rem; text-decoration: none; }
+    .cp-act-view { background: #e3f2fd; color: #1565c0; }
+    .cp-act-view:hover { background: #bbdefb; color: #1565c0; }
+    .cp-act-edit { background: #fff3e0; color: #e65100; }
+    .cp-act-edit:hover { background: #ffe0b2; color: #e65100; }
+    .cp-act-delete { background: #fee2e2; color: #991b1b; }
+    .cp-act-delete:hover { background: #fecaca; color: #991b1b; }
+    .cp-act-status { border: none; padding: 4px 10px; border-radius: 12px; font-size: .7rem; font-weight: 700; cursor: pointer; }
+    .cp-act-active { background: #d1fae5; color: #065f46; }
+    .cp-act-inactive { background: #fee2e2; color: #991b1b; }
 
-        .dt-buttons .btn-success:hover {
-            background: #218838 !important;
-        }
+    .status-badge { padding: 3px 10px; border-radius: 20px; font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+    .status-active { background: #d1fae5; color: #065f46; }
+    .status-inactive { background: #fee2e2; color: #991b1b; }
 
-        .dt-buttons .btn-info {
-            background: #17a2b8 !important;
-            color: white !important;
-        }
-
-        .dt-buttons .btn-info:hover {
-            background: #138496 !important;
-        }
-
-        .dt-buttons .btn-warning {
-            background: #ffc107 !important;
-            color: #333 !important;
-        }
-
-        .dt-buttons .btn-warning:hover {
-            background: #e0a800 !important;
-        }
-    </style>
+    .cp-empty { text-align: center; padding: 3rem 1rem; color: #9ca3af; font-size: .9rem; }
+</style>
 @endsection
 
 @section('content')
-    <div style="background: var(--primary-light); min-height: 100vh; padding: 2rem 0;">
-        <div style="max-width: 1200px; margin: 0 auto; padding: 0 1rem;">
-            <!-- Header -->
-            <div style="margin-bottom: 1.5rem;">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                        <div style="padding: 0.5rem; background: var(--primary-blue); border-radius: 8px;">
-                            <i class="fas fa-handshake text-white" style="font-size: 1.5rem;"></i>
-                        </div>
-                        <div>
-                            <h1 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin: 0;">
-                                Channel Partners Management
-                            </h1>
-                            <p style="color: var(--text-secondary); margin: 0.25rem 0 0 0; font-size: 0.9rem;">
-                                Manage all channel partners and their information
-                            </p>
-                        </div>
-                    </div>
-                    <a href="{{ route('addNewCp') }}"
-                        style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: var(--primary-blue); color: white; border-radius: 6px; text-decoration: none; font-weight: 600; transition: background 0.2s;">
-                        <i class="fas fa-plus"></i>
-                        <span>Add New Partner</span>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Main Card -->
-            <div
-                style="background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.04); padding: 1.5rem;">
-                @if(session('success'))
-                    <div style="margin-bottom:1rem;padding:0.75rem 1rem;background:#d1fae5;border:1px solid #6ee7b7;border-radius:8px;color:#065f46;font-size:0.9rem;">
-                        {{ session('success') }}
-                    </div>
-                @endif
-
-                <!-- Controls Section -->
-                <div
-                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
-                    <div>
-                        <label
-                            style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-right: 0.5rem;">
-                            Show entries:
-                        </label>
-                        <select id="cpTable_length"
-                            style="padding: 0.35rem 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.85rem;">
-                            <option value="10">10</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                    </div>
-                    <div id="buttons_export"></div>
-                    <div style="flex: 0 1 300px;">
-                        <input type="text" id="cpTable_filter_input" placeholder="Search by name, email, city..."
-                            style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.9rem;">
-                    </div>
-                </div>
-
-                <!-- Table -->
-                <div style="overflow-x: auto;">
-                    <table id="cpTable" class="table table-striped table-hover" style="width:100%;">
-                        <thead>
-                            <tr style="background: var(--primary-light); border-bottom: 2px solid var(--border-color);">
-                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #fff;">Company Name
-                                </th>
-                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #fff;">Contact
-                                    Person</th>
-                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #fff;">Email</th>
-                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #fff;">Mobile</th>
-                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #fff;">City</th>
-                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #fff;">CP Type</th>
-                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #fff;">Users</th>
-                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #fff;">Balance</th>
-                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #fff;">Status</th>
-                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #fff;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($cp_list as $cp)
-                                <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;">
-                                    <td style="padding: 0.75rem; color: var(--text-primary); font-weight: 500;">{{ $cp->cp_name }}</td>
-                                    <td style="padding: 0.75rem; color: var(--text-secondary);">{{ $cp->contact_person }}</td>
-                                    <td style="padding: 0.75rem; color: var(--text-secondary); font-size: 0.9rem;">
-                                        {{ $cp->email }}</td>
-                                    <td style="padding: 0.75rem; color: var(--text-secondary);">{{ $cp->phone_number }}</td>
-                                    <td style="padding: 0.75rem; color: var(--text-secondary);">{{ $cp->city ?? 'N/A' }}</td>
-                                    <td style="padding: 0.75rem;">
-                                        <span
-                                            style="background: #e3f2fd; color: var(--primary-blue); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">
-                                            {{ $cp->role ? $cp->role->role_name : 'N/A' }}
-                                        </span>
-                                    </td>
-                                    <td style="padding: 0.75rem; text-align: center;">
-                                        <span
-                                            style="background: #f3e5f5; color: #6a1b9a; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">
-                                            {{ $cp->associateUsers ? $cp->associateUsers->count() : 0 }}
-                                        </span>
-                                    </td>
-                                    <td style="padding: 0.75rem; color: var(--text-secondary); font-size: 0.9rem;">
-                                        {{ $cp->wallet ? number_format($cp->wallet->balance, 2) : '0.00' }}
-                                    </td>
-                                    <td style="padding: 0.75rem;">
-                                        <form action="{{ route('toggleCpStatus', $cp->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @if($cp->is_active)
-                                                <button type="submit" class="btn-action" style="background:#d1fae5;color:#065f46;border:none;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;">Active</button>
-                                            @else
-                                                <button type="submit" class="btn-action" style="background:#fee2e2;color:#991b1b;border:none;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;">Inactive</button>
-                                            @endif
-                                        </form>
-                                    </td>
-                                    <td style="padding: 0.75rem;">
-                                        <div style="display: flex; gap: 0.35rem;">
-                                            <a href="{{ route('cpDetail', $cp->id) }}" class="btn-action" style="background:#e3f2fd;color:#4A90E2;border:none;padding:4px 8px;border-radius:4px;font-size:.8rem;font-weight:600;text-decoration:none;">
-                                                <i class="fas fa-eye"></i> View
-                                            </a>
-                                            <a href="{{ route('edit_cp', $cp->id) }}" class="btn-action btn-edit">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </a>
-                                            <button type="button" class="btn-action btn-delete"
-                                                onclick="deleteCp({{ $cp->id }})">
-                                                <i class="fas fa-trash"></i> Delete
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Info Card -->
-            <div
-                style="margin-top: 1.5rem; padding: 1rem; background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px;">
-                <div style="display: flex; gap: 1rem;">
-                    <i class="fas fa-info-circle"
-                        style="color: var(--primary-blue); font-size: 1.2rem; flex-shrink: 0;"></i>
-                    <div>
-                        <h4 style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-weight: 600;">Tips</h4>
-                        <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary); font-size: 0.9rem;">
-                            <li>Use search box to find partners by name, email, or city</li>
-                            <li>Export data in Excel or CSV format</li>
-                            <li>View associated users count for each partner</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+<div class="cp-wrap">
+    <div class="cp-header">
+        <div class="cp-header-left">
+            <h1>Channel Partners</h1>
+            <p>Manage all channel partners and their information</p>
+        </div>
+        <div class="cp-header-right">
+            <a href="{{ route('addNewCp') }}" class="cp-add-btn">
+                <i class="fas fa-plus"></i> Add New Partner
+            </a>
         </div>
     </div>
+
+    <div class="cp-stats">
+        <span class="cp-stat cp-stat-total">{{ $cp_list->count() }} Total</span>
+        <span class="cp-stat cp-stat-active">{{ $cp_list->where('is_active', 1)->count() }} Active</span>
+        @if($cp_list->where('is_active', 0)->count() > 0)
+            <span class="cp-stat cp-stat-inactive">{{ $cp_list->where('is_active', 0)->count() }} Inactive</span>
+        @endif
+    </div>
+
+    @if(session('success'))
+        <div class="cp-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="cp-error">{{ session('error') }}</div>
+    @endif
+
+    <div class="cp-filters">
+        <input type="text" class="cp-search" id="cpSearch" placeholder="Search by name, email, city...">
+        <button class="cp-filter-btn active" data-filter="all">All</button>
+        <button class="cp-filter-btn" data-filter="active">Active</button>
+        <button class="cp-filter-btn" data-filter="inactive">Inactive</button>
+    </div>
+
+    @if($cp_list->count())
+    <div class="cp-grid" id="cpGrid">
+        @foreach($cp_list as $cp)
+        <div class="cp-card" data-status="{{ $cp->is_active ? 'active' : 'inactive' }}" data-search="{{ strtolower($cp->cp_name . ' ' . $cp->contact_person . ' ' . $cp->email . ' ' . $cp->phone_number . ' ' . $cp->city . ' ' . $cp->state) }}">
+            <div class="cp-card-top">
+                <div>
+                    <h3 class="cp-card-company">{{ $cp->cp_name }}</h3>
+                    <div class="cp-card-date">{{ $cp->created_at ? $cp->created_at->format('d M Y, h:i A') : 'N/A' }}</div>
+                </div>
+                <div class="cp-card-status">
+                    @if($cp->is_active)
+                        <span class="status-badge status-active">Active</span>
+                    @else
+                        <span class="status-badge status-inactive">Inactive</span>
+                    @endif
+                </div>
+            </div>
+
+            <div class="cp-card-info">
+                <div class="cp-card-field">
+                    <label>Contact Person</label>
+                    <span>{{ $cp->contact_person }}</span>
+                </div>
+                <div class="cp-card-field">
+                    <label>Mobile</label>
+                    <span>{{ $cp->phone_number }}</span>
+                </div>
+                <div class="cp-card-field full">
+                    <label>Email</label>
+                    <span>{{ $cp->email }}</span>
+                </div>
+                <div class="cp-card-field">
+                    <label>City</label>
+                    <span>{{ $cp->city ?? 'N/A' }}</span>
+                </div>
+                <div class="cp-card-field">
+                    <label>State</label>
+                    <span>{{ $cp->state ?? 'N/A' }}</span>
+                </div>
+            </div>
+
+            <div class="cp-card-meta">
+                <span class="cp-meta-tag cp-meta-role">
+                    <i class="fas fa-tag"></i> {{ $cp->role ? $cp->role->role_name : 'N/A' }}
+                </span>
+                <span class="cp-meta-tag cp-meta-users">
+                    <i class="fas fa-users"></i> {{ $cp->associateUsers ? $cp->associateUsers->count() : 0 }} Users
+                </span>
+                <span class="cp-meta-tag cp-meta-balance">
+                    <i class="fas fa-wallet"></i> {{ $cp->wallet ? number_format($cp->wallet->balance, 2) : '0.00' }}
+                </span>
+            </div>
+
+            <div class="cp-card-actions">
+                <a href="{{ route('cpDetail', $cp->id) }}" class="cp-act-btn cp-act-view">
+                    <i class="fas fa-eye"></i> View
+                </a>
+                <a href="{{ route('edit_cp', $cp->id) }}" class="cp-act-btn cp-act-edit">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <form action="{{ route('toggleCpStatus', $cp->id) }}" method="POST" style="display:inline;">
+                    @csrf
+                    @if($cp->is_active)
+                        <button type="submit" class="cp-act-btn cp-act-status cp-act-active" title="Click to deactivate">
+                            <i class="fas fa-toggle-on"></i> Active
+                        </button>
+                    @else
+                        <button type="submit" class="cp-act-btn cp-act-status cp-act-inactive" title="Click to activate">
+                            <i class="fas fa-toggle-off"></i> Inactive
+                        </button>
+                    @endif
+                </form>
+                <button type="button" class="cp-act-btn cp-act-delete" onclick="deleteCp({{ $cp->id }})">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+        @endforeach
+    </div>
+    @else
+        <div class="cp-empty">No channel partners yet. <a href="{{ route('addNewCp') }}">Add your first partner</a></div>
+    @endif
+</div>
 @endsection
 
 @section('js')
-    <script src="/assets/js/jquery-3.6.0.min.js"></script>
-    <script src="/assets/js/jquery.dataTables.min.js"></script>
-    <script src="/assets/js/dataTables.bootstrap5.min.js"></script>
-    <script src="/assets/js/dataTables.buttons.min.js"></script>
-    <script src="/assets/js/buttons.bootstrap5.min.js"></script>
-    <script src="/assets/js/jszip.min.js"></script>
-    <script src="/assets/js/pdfmake.min.js"></script>
-    <script src="/assets/js/vfs_fonts.min.js"></script>
-    <script src="/assets/js/buttons.html5.min.js"></script>
-    <script src="/assets/js/buttons.print.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var cards = document.querySelectorAll('.cp-card');
+    var filterBtns = document.querySelectorAll('.cp-filter-btn');
+    var searchInput = document.getElementById('cpSearch');
+    var currentFilter = 'all';
 
-    <script>
-        $(document).ready(function () {
-            let table = $('#cpTable').DataTable({
-                pageLength: 10,
-                lengthChange: false,
-                ordering: true,
-                searching: true,
-                paging: true,
-                info: true,
-                dom: 'rtip',
-                buttons: [
-                    {
-                        extend: 'excel',
-                        text: '<i class="fas fa-file-excel"></i> Excel',
-                        className: 'btn btn-sm btn-success me-2'
-                    },
-                    {
-                        extend: 'csv',
-                        text: '<i class="fas fa-file-csv"></i> CSV',
-                        className: 'btn btn-sm btn-info me-2'
-                    },
-                    {
-                        extend: 'print',
-                        text: '<i class="fas fa-print"></i> Print',
-                        className: 'btn btn-sm btn-warning'
-                    }
-                ]
-            });
-
-            // Move export buttons to custom container
-            table.buttons().container().appendTo('#buttons_export');
-
-            // Custom search with input field
-            $('#cpTable_filter_input').on('keyup', function () {
-                table.search(this.value).draw();
-            });
-
-            // Page length control
-            $('#cpTable_length').on('change', function () {
-                table.page.len(parseInt(this.value)).draw();
-            });
+    function applyFilters() {
+        var query = searchInput.value.toLowerCase().trim();
+        cards.forEach(function(card) {
+            var matchFilter = currentFilter === 'all' || card.dataset.status === currentFilter;
+            var matchSearch = !query || card.dataset.search.indexOf(query) !== -1;
+            card.style.display = matchFilter && matchSearch ? '' : 'none';
         });
+    }
 
-        function deleteCp(id) {
-            if (confirm('Are you sure you want to delete this channel partner? Associated users will be reverted to normal users.')) {
-                $.ajax({
-                    url: '/admin/cp/' + id + '/delete',
-                    type: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function (response) {
-                        alert(response.message || 'Channel Partner deleted successfully');
-                        location.reload();
-                    },
-                    error: function () {
-                        alert('Error deleting channel partner');
-                    }
-                });
-            }
-        }
-    </script>
+    filterBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            filterBtns.forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            currentFilter = btn.dataset.filter;
+            applyFilters();
+        });
+    });
+
+    searchInput.addEventListener('input', applyFilters);
+});
+
+function deleteCp(id) {
+    if (confirm('Are you sure you want to delete this channel partner? Associated users will be reverted to normal users.')) {
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/admin/cp/' + id + '/delete';
+        var csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = '_token';
+        csrf.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        form.appendChild(csrf);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
 @endsection

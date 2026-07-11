@@ -14,6 +14,7 @@ class CpInterest extends Model
         'mobile',
         'state',
         'city',
+        'pin_code',
         'message',
         'status',
     ];

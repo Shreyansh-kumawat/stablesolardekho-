@@ -285,7 +285,36 @@
         </div>
 
         @auth
-            {{-- Logged in — Show Application Form --}}
+            @if(isset($cpStatus) && $cpStatus === 'partner')
+                <div style="text-align:center;padding:24px 20px;background:rgba(16,185,129,0.1);border:1.5px solid rgba(16,185,129,0.3);border-radius:12px;margin-bottom:20px;">
+                    <div style="width:48px;height:48px;background:rgba(16,185,129,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                        <svg width="24" height="24" fill="none" stroke="#10b981" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div style="font-size:1.1rem;font-weight:800;color:#10b981;margin-bottom:6px;">You are a Channel Partner now!</div>
+                    <div style="color:#94a3b8;font-size:.85rem;">Aap already ek Channel Partner hain. Apne dashboard se apna business manage karein.</div>
+                    <a href="{{ route('cpDashboard') }}" style="display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:10px 24px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-radius:10px;font-weight:700;font-size:.9rem;text-decoration:none;">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+                        Go to Dashboard
+                    </a>
+                </div>
+            @elseif(isset($cpStatus) && $cpStatus === 'pending')
+                <div style="text-align:center;padding:24px 20px;background:rgba(251,191,36,0.1);border:1.5px solid rgba(251,191,36,0.3);border-radius:12px;margin-bottom:20px;">
+                    <div style="width:48px;height:48px;background:rgba(251,191,36,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                        <svg width="24" height="24" fill="none" stroke="#fbbf24" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div style="font-size:1.1rem;font-weight:800;color:#fbbf24;margin-bottom:6px;">Verification in Progress</div>
+                    <div style="color:#94a3b8;font-size:.85rem;">Aapki application submit ho chuki hai. Humari team jaldi hi verify karegi. Kripya thoda intezar karein.</div>
+                </div>
+            @elseif(isset($cpStatus) && $cpStatus === 'approved')
+                <div style="text-align:center;padding:24px 20px;background:rgba(16,185,129,0.1);border:1.5px solid rgba(16,185,129,0.3);border-radius:12px;margin-bottom:20px;">
+                    <div style="width:48px;height:48px;background:rgba(16,185,129,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                        <svg width="24" height="24" fill="none" stroke="#10b981" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div style="font-size:1.1rem;font-weight:800;color:#10b981;margin-bottom:6px;">Application Approved!</div>
+                    <div style="color:#94a3b8;font-size:.85rem;">Aapki application approve ho chuki hai. Aap ab Channel Partner hain!</div>
+                </div>
+            @else
+            {{-- No application yet — Show Form --}}
             <div class="cp-form-section-title">Fill Your Application</div>
             <form method="POST" action="{{ route('QueryCpInterest') }}">
                 @csrf
@@ -328,6 +357,11 @@
                             @endforeach
                         </select>
                     </div>
+                    <div>
+                        <label class="cp-label" for="pin_code">Pin Code</label>
+                        <input class="cp-input" id="pin_code" name="pin_code" type="text" pattern="\d{6}" maxlength="6" required placeholder="6-digit pin code" value="{{ old('pin_code') }}">
+                        @error('pin_code') <div class="error-text">{{ $message }}</div> @enderror
+                    </div>
                     <div class="cp-full">
                         <label class="cp-label" for="message">Message (Optional)</label>
                         <textarea class="cp-input cp-textarea" id="message" name="message" placeholder="Tell us about your business...">{{ old('message') }}</textarea>
@@ -338,6 +372,7 @@
                     <button class="cp-btn" type="submit">Submit Application</button>
                 </div>
             </form>
+            @endif
         @else
             {{-- Not logged in — Show Login/Signup CTA --}}
             <div class="cp-login-cta">

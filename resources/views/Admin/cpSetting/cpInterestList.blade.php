@@ -139,6 +139,12 @@
                     <label>State</label>
                     <span>{{ $i->state }}</span>
                 </div>
+                @if($i->pin_code)
+                <div class="cpi-card-field">
+                    <label>Pin Code</label>
+                    <span>{{ $i->pin_code }}</span>
+                </div>
+                @endif
             </div>
 
             @if($i->message)

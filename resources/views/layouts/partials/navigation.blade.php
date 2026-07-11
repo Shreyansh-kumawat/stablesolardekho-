@@ -68,7 +68,12 @@
                                 <p class="text-sm font-semibold text-gray-800">{{ Auth::user()->name }}</p>
                                 <p class="text-xs text-gray-500 truncate">{{ Auth::user()->email }}</p>
                             </div>
-                            <a href="#" class="block px-4 py-2.5 text-sm rounded-lg mx-2 mt-2">
+                            @if(Auth::user()->role_id == 4)
+                            <a href="{{ route('cpDashboard') }}" class="block px-4 py-2.5 text-sm rounded-lg mx-2 mt-2" style="color:#4A90E2;font-weight:600;">
+                                <i class="fas fa-chart-line" style="margin-right:4px;"></i> CP Dashboard
+                            </a>
+                            @endif
+                            <a href="#" class="block px-4 py-2.5 text-sm rounded-lg mx-2 {{ Auth::user()->role_id != 4 ? 'mt-2' : '' }}">
                                 Your Profile
                             </a>
                             <a href="#" class="block px-4 py-2.5 text-sm rounded-lg mx-2">

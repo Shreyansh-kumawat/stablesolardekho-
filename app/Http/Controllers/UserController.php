@@ -39,9 +39,27 @@ class UserController extends Controller
     {
         $states = $this->getStates();
         $cities = $this->getCities();
+
+        $cpStatus = null;
+        if (Auth::check()) {
+            $user = Auth::user();
+            if ($user->role_id == 4) {
+                $cpStatus = 'partner';
+            } else {
+                $pendingInterest = CpInterest::where('user_id', $user->id)
+                    ->whereIn('status', ['pending', 'approved'])
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+                if ($pendingInterest) {
+                    $cpStatus = $pendingInterest->status;
+                }
+            }
+        }
+
         return view('publicPages.channelPartnerEnrollment')
             ->with('states', $states)
-            ->with('cities', $cities);
+            ->with('cities', $cities)
+            ->with('cpStatus', $cpStatus);
     }
 
     public function QueryCpInterest(Request $request)
@@ -53,6 +71,7 @@ class UserController extends Controller
             'mobile' => 'required|string|size:10',
             'state' => 'required|string',
             'city' => 'required|string',
+            'pin_code' => 'required|string|size:6',
         ]);
 
         if ($validator->fails()) {
@@ -67,6 +86,7 @@ class UserController extends Controller
             'mobile' => $request->mobile,
             'state' => $request->state,
             'city' => $request->city,
+            'pin_code' => $request->pin_code,
             'message' => $request->message,
         ]);
 
@@ -339,9 +359,32 @@ class UserController extends Controller
         }
     }
 
+    public function cpDashboard()
+    {
+        $user = Auth::user();
+        $cp = ChannelPartner::with('role', 'wallet')->find($user->cp_id);
+
+        if (!$cp) {
+            return redirect()->route('dashBoardFunction')->with('error', 'Channel Partner not found.');
+        }
+
+        $totalOrders = CpOrder::where('cp_id', $cp->id)->count();
+        $pendingOrders = CpOrder::where('cp_id', $cp->id)->where('status', 'pending')->count();
+        $completedOrders = CpOrder::where('cp_id', $cp->id)->where('status', 'completed')->count();
+        $recentOrders = CpOrder::where('cp_id', $cp->id)->orderBy('created_at', 'desc')->take(5)->get();
+        $recentTransactions = CpWalletTransaction::where('cp_id', $cp->id)->orderBy('created_at', 'desc')->take(5)->get();
+        $totalSpending = CpWalletTransaction::where('cp_id', $cp->id)->where('type', 'debit')->sum('amount');
+        $inventoryCount = CpProductInventory::where('cp_id', $cp->id)->sum('quantity');
+
+        return view('channelPartner.cpDashboard', compact(
+            'cp', 'totalOrders', 'pendingOrders', 'completedOrders',
+            'recentOrders', 'recentTransactions', 'totalSpending', 'inventoryCount'
+        ));
+    }
+
     public function cpList()
     {
-        $cp_list = ChannelPartner::with('role', 'associateUsers', 'wallet')->get();
+        $cp_list = ChannelPartner::with('role', 'associateUsers', 'wallet')->orderBy('created_at', 'desc')->get();
         return view('Admin.cpSetting.cpList')->with('cp_list', $cp_list);
     }
 
@@ -466,7 +509,7 @@ class UserController extends Controller
                 $cp->full_address = $interest->city . ', ' . $interest->state;
                 $cp->city = $interest->city;
                 $cp->state = $interest->state;
-                $cp->zip_code = '000000';
+                $cp->zip_code = $interest->pin_code ?? '000000';
                 $cp->cp_role = $cpRole->id;
                 $cp->is_active = 1;
                 $cp->active_status = 1;
