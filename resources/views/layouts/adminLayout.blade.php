@@ -386,7 +386,7 @@
             <aside id="sidebar"
                 class="z-30 w-56 flex-shrink-0 flex flex-col transition-transform duration-200 -translate-x-full md:translate-x-0 overflow-y-auto">
                 <div class="logo-area flex items-center">
-                    <a href="{{ route('dashboard') }}" class="flex items-center gap-2">
+                    <a href="{{ in_array(Auth::user()->role_id, [1, 2]) ? route('masterAdminDashboard') : route('dashboard') }}" class="flex items-center gap-2">
                         <div
                             class="w-7 h-7 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
                             <img src="{{ asset('stable/images/logo.png') }}" alt="Logo"
@@ -398,8 +398,8 @@
 
                 <nav class="flex-1 space-y-0.5">
                     <!-- Dashboard -->
-                    <a href="{{ route('dashboard') }}"
-                        class="flex items-center gap-2.5 {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    <a href="{{ in_array(Auth::user()->role_id, [1, 2]) ? route('masterAdminDashboard') : route('dashboard') }}"
+                        class="flex items-center gap-2.5 {{ request()->routeIs('masterAdminDashboard') ? 'active' : '' }}">
                         <svg class="flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"

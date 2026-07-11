@@ -148,7 +148,13 @@ class UserController extends Controller
         $totalProducts   = Product::count();
         $totalCPs        = \App\Models\ChannelPartner::count();
 
-        // Monthly revenue – last 6 months
+        $pendingCpOrders = 0;
+        $cpInterestCount = 0;
+        try {
+            $pendingCpOrders = \App\Models\CpOrder::where('status', 'pending')->count();
+            $cpInterestCount = \App\Models\CpInterest::where('status', 'pending')->count();
+        } catch (\Exception $e) {}
+
         $monthlyRevenue = collect(range(5, 0))->map(function ($i) {
             $month = now()->subMonths($i);
             return [
@@ -160,25 +166,28 @@ class UserController extends Controller
             ];
         });
 
-        // Orders by status
         $orderStatusCounts = \App\Models\CustomerOrder::selectRaw('status, count(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status');
 
-        // Top 5 products by quantity sold
         $topProducts = \App\Models\CustomerOrderItem::selectRaw('product_name, SUM(quantity) as total_qty, SUM(subtotal) as total_revenue')
             ->groupBy('product_name')
             ->orderByDesc('total_qty')
             ->limit(5)
             ->get();
 
-        // Recent 5 orders
         $recentOrders = \App\Models\CustomerOrder::with('user')->latest()->limit(5)->get();
+
+        $recentCpOrders = collect();
+        try {
+            $recentCpOrders = \App\Models\CpOrder::with('channelPartner')->latest()->limit(5)->get();
+        } catch (\Exception $e) {}
 
         return view('Admin.adminDashboard', compact(
             'totalCustomers', 'totalRevenue', 'ordersToday', 'pendingOrders',
-            'totalProducts', 'totalCPs', 'monthlyRevenue', 'orderStatusCounts',
-            'topProducts', 'recentOrders'
+            'totalProducts', 'totalCPs', 'pendingCpOrders', 'cpInterestCount',
+            'monthlyRevenue', 'orderStatusCounts',
+            'topProducts', 'recentOrders', 'recentCpOrders'
         ));
     }
 

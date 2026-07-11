@@ -25,6 +25,10 @@ class CpOrder extends Model
         'quote_validity_date',
         'quote_generated_by',
         'inQuoteSent',
+        'payment_screenshot',
+        'payment_reference',
+        'payment_status',
+        'viewed_by_admin',
     ];
 
     protected $casts = [

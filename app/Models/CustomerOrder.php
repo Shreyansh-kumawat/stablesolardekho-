@@ -11,6 +11,7 @@ class CustomerOrder extends Model
         'payment_status', 'razorpay_order_id', 'razorpay_payment_id',
         'payment_screenshot', 'payment_reference',
         'status', 'name', 'phone', 'address', 'city', 'district', 'state', 'pincode', 'notes',
+        'viewed_by_admin',
     ];
 
     public function user()

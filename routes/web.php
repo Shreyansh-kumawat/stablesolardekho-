@@ -162,6 +162,8 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::post('/saveOrderPricing', [OrderController::class, 'saveOrderPricing'])->name('save_order_pricing');
     Route::post('/inventory-request/{id}/approve', [OrderController::class, 'approveInventoryRequest'])->name('approveInventoryRequest');
     Route::post('/inventory-request/{id}/cancel', [OrderController::class, 'cancelInventoryRequest'])->name('cancelInventoryRequest');
+    Route::post('/cp-order/{id}/approve-payment', [OrderController::class, 'approveCpPayment'])->name('approveCpPayment');
+    Route::post('/cp-order/{id}/reject-payment', [OrderController::class, 'rejectCpPayment'])->name('rejectCpPayment');
     Route::get('/approveRejectOrders', [OrderController::class, 'approveRejectOrders'])->name('approveRejectOrders');
     Route::get('/customer-orders', [OrderController::class, 'customerOrderList'])->name('customerOrders');
     Route::get('/customer-orders/{id}', [OrderController::class, 'viewCustomerOrder'])->name('viewCustomerOrder');
@@ -193,6 +195,8 @@ Route::prefix('channel-partner')->middleware(['auth', ChannelPartnerMiddleware::
     Route::middleware(ChannelPartnerMiddleware::class.':view_requests')->group(function () {
         Route::get('/cp-order-report', [OrderController::class, 'orderReportCp'])->name(name: 'orderReportCp');
         Route::get('/viewSingleOrderCp/{id}', [OrderController::class, 'viewSingleOrderCp'])->name('viewSingleOrderCp');
+        Route::get('/cp-order-payment/{id}', [OrderController::class, 'cpOrderPaymentPage'])->name('cpOrderPayment');
+        Route::post('/cp-order-payment/{id}/upload', [OrderController::class, 'uploadCpOrderPayment'])->name('cpOrderPaymentUpload');
     });
 
     Route::get('/product-pricing', [OrderController::class, 'productPricing'])->name(name: 'productPricing')->middleware(ChannelPartnerMiddleware::class.':product_pricing');

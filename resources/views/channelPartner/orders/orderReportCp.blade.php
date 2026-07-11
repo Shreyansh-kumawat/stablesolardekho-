@@ -92,6 +92,7 @@
                                     <th>Request ID</th>
                                     <th>Request Date</th>
                                     <th>Status</th>
+                                    <th>Payment</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -113,10 +114,29 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <a href="{{ route('viewSingleOrderCp', ['id' => $order->id]) }}"
-                                                class="btn btn-sm btn-primary-theme d-inline-flex align-items-center gap-1">
-                                                <i class="bi bi-eye"></i><span>View</span>
-                                            </a>
+                                            @if($order->payment_status === 'verification_pending')
+                                                <span class="badge bg-info text-white">Receipt Uploaded</span>
+                                            @elseif($order->payment_status === 'paid')
+                                                <span class="badge bg-success">Payment Verified</span>
+                                            @elseif($order->payment_status === 'failed')
+                                                <span class="badge bg-danger">Payment Rejected</span>
+                                            @else
+                                                <span class="badge bg-secondary">Unpaid</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                <a href="{{ route('viewSingleOrderCp', ['id' => $order->id]) }}"
+                                                    class="btn btn-sm btn-primary-theme d-inline-flex align-items-center gap-1">
+                                                    <i class="bi bi-eye"></i><span>View</span>
+                                                </a>
+                                                @if(!in_array($order->payment_status, ['paid', 'verification_pending']))
+                                                <a href="{{ route('cpOrderPayment', $order->id) }}"
+                                                    class="btn btn-sm btn-success d-inline-flex align-items-center gap-1">
+                                                    <i class="bi bi-upload"></i><span>Pay</span>
+                                                </a>
+                                                @endif
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach

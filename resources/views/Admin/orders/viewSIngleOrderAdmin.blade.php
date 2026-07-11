@@ -247,6 +247,51 @@
         </div>
         @endif
 
+        @if($order->payment_screenshot)
+        <div class="remarks-card" style="margin-top:20px;">
+            <h5><i class="bi bi-receipt"></i> Payment Receipt</h5>
+            <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap;">
+                <div>
+                    <a href="{{ asset('storage/' . $order->payment_screenshot) }}" target="_blank">
+                        <img src="{{ asset('storage/' . $order->payment_screenshot) }}" alt="Payment Receipt" style="max-width:300px;max-height:250px;border-radius:8px;border:1px solid var(--border-color);cursor:pointer;">
+                    </a>
+                </div>
+                <div>
+                    <p style="margin:0 0 .5rem;"><strong>Payment Status:</strong>
+                        @if($order->payment_status === 'verification_pending')
+                            <span class="badge bg-warning text-dark">Verification Pending</span>
+                        @elseif($order->payment_status === 'paid')
+                            <span class="badge bg-success">Approved</span>
+                        @elseif($order->payment_status === 'failed')
+                            <span class="badge bg-danger">Rejected</span>
+                        @else
+                            <span class="badge bg-secondary">{{ ucfirst($order->payment_status ?? 'pending') }}</span>
+                        @endif
+                    </p>
+                    @if($order->payment_reference)
+                    <p style="margin:0 0 .5rem;"><strong>Reference:</strong> {{ $order->payment_reference }}</p>
+                    @endif
+                    @if($order->payment_status === 'verification_pending')
+                    <div style="display:flex;gap:.5rem;margin-top:1rem;">
+                        <form method="POST" action="{{ route('approveCpPayment', $order->id) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Approve this payment?')">
+                                <i class="bi bi-check-circle"></i> Approve Payment
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ route('rejectCpPayment', $order->id) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Reject this payment?')">
+                                <i class="bi bi-x-circle"></i> Reject Payment
+                            </button>
+                        </form>
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @endif
+
         @if($order->status == 'pending')
         <div class="remarks-card">
             <h5><i class="bi bi-chat-left-text"></i> Admin Remarks (Optional)</h5>

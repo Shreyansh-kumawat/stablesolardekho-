@@ -47,8 +47,37 @@ class OrderController extends Controller
 
     public function orderReportCp()
     {
-        $orders = CpOrder::where('cp_id', Auth::user()->cp_id)->get();
+        $orders = CpOrder::where('cp_id', Auth::user()->cp_id)->orderBy('created_at', 'desc')->get();
         return view('channelPartner.orders.orderReportCp', compact('orders'));
+    }
+
+    public function cpOrderPaymentPage($id)
+    {
+        $order = CpOrder::where('cp_id', Auth::user()->cp_id)->findOrFail($id);
+        return view('channelPartner.orders.cpOrderPayment', compact('order'));
+    }
+
+    public function uploadCpOrderPayment(Request $request, $id)
+    {
+        $request->validate([
+            'payment_screenshot' => 'required|image|max:5120',
+            'payment_reference' => 'nullable|string|max:255',
+        ]);
+
+        $order = CpOrder::where('cp_id', Auth::user()->cp_id)->findOrFail($id);
+
+        if ($order->payment_screenshot) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($order->payment_screenshot);
+        }
+
+        $path = $request->file('payment_screenshot')->store('cp-payment-screenshots', 'public');
+        $order->payment_screenshot = $path;
+        $order->payment_reference = $request->payment_reference;
+        $order->payment_status = 'verification_pending';
+        $order->viewed_by_admin = 0;
+        $order->save();
+
+        return redirect()->route('orderReportCp')->with('success', 'Payment receipt uploaded successfully. Our team will verify it shortly.');
     }
 
      public function viewSingleOrderCp($id)
@@ -59,12 +88,14 @@ class OrderController extends Controller
 
     public function pendingOrders()
     {
-        $orders = CpOrder::with(relations: 'channelPartner')->where('status', 'pending')->get();
+        $orders = CpOrder::with(relations: 'channelPartner')->where('status', 'pending')->orderBy('created_at', 'desc')->get();
+        CpOrder::where('viewed_by_admin', 0)->update(['viewed_by_admin' => 1]);
         return view('Admin.orders.pendingOrders', compact('orders'));
     }
     public function manageOrdersAdmin()
     {
-        $orders = CpOrder::with(relations: 'channelPartner')->get();
+        $orders = CpOrder::with(relations: 'channelPartner')->orderBy('created_at', 'desc')->get();
+        CpOrder::where('viewed_by_admin', 0)->update(['viewed_by_admin' => 1]);
         return view('Admin.orders.manageOrderAdmin', compact('orders'));
     }
 
@@ -122,10 +153,28 @@ class OrderController extends Controller
         return view('channelPartner.products.productPricingCp', compact('products'));
     }
 
+    public function approveCpPayment($id)
+    {
+        $order = CpOrder::findOrFail($id);
+        $order->payment_status = 'paid';
+        $order->status = 'completed';
+        $order->save();
+        return redirect()->back()->with('success', 'CP payment approved and order confirmed.');
+    }
+
+    public function rejectCpPayment($id)
+    {
+        $order = CpOrder::findOrFail($id);
+        $order->payment_status = 'failed';
+        $order->save();
+        return redirect()->back()->with('success', 'CP payment rejected.');
+    }
+
     public function customerOrderList()
     {
         abort_unless(auth()->user()->hasAdminPermission('orders'), 403);
         $orders = CustomerOrder::with('user')->latest()->get();
+        CustomerOrder::where('viewed_by_admin', 0)->update(['viewed_by_admin' => 1]);
         return view('Admin.orders.customerOrdersList', compact('orders'));
     }
 
