@@ -139,6 +139,12 @@
             <!-- Main Card -->
             <div
                 style="background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.04); padding: 1.5rem;">
+                @if(session('success'))
+                    <div style="margin-bottom:1rem;padding:0.75rem 1rem;background:#d1fae5;border:1px solid #6ee7b7;border-radius:8px;color:#065f46;font-size:0.9rem;">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
                 <!-- Controls Section -->
                 <div
                     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
@@ -177,14 +183,14 @@
                                 <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #fff;">CP Type</th>
                                 <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #fff;">Users</th>
                                 <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #fff;">Balance</th>
+                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #fff;">Status</th>
                                 <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #fff;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($cp_list as $cp)
                                 <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;">
-                                    <td style="padding: 0.75rem; color: var(--text-primary); font-weight: 500;">{{ $cp->email }}
-                                    </td>
+                                    <td style="padding: 0.75rem; color: var(--text-primary); font-weight: 500;">{{ $cp->cp_name }}</td>
                                     <td style="padding: 0.75rem; color: var(--text-secondary);">{{ $cp->contact_person }}</td>
                                     <td style="padding: 0.75rem; color: var(--text-secondary); font-size: 0.9rem;">
                                         {{ $cp->email }}</td>
@@ -206,7 +212,20 @@
                                         {{ $cp->wallet ? number_format($cp->wallet->balance, 2) : '0.00' }}
                                     </td>
                                     <td style="padding: 0.75rem;">
+                                        <form action="{{ route('toggleCpStatus', $cp->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @if($cp->is_active)
+                                                <button type="submit" class="btn-action" style="background:#d1fae5;color:#065f46;border:none;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;">Active</button>
+                                            @else
+                                                <button type="submit" class="btn-action" style="background:#fee2e2;color:#991b1b;border:none;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;">Inactive</button>
+                                            @endif
+                                        </form>
+                                    </td>
+                                    <td style="padding: 0.75rem;">
                                         <div style="display: flex; gap: 0.35rem;">
+                                            <a href="{{ route('cpDetail', $cp->id) }}" class="btn-action" style="background:#e3f2fd;color:#4A90E2;border:none;padding:4px 8px;border-radius:4px;font-size:.8rem;font-weight:600;text-decoration:none;">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
                                             <a href="{{ route('edit_cp', $cp->id) }}" class="btn-action btn-edit">
                                                 <i class="fas fa-edit"></i> Edit
                                             </a>
@@ -299,15 +318,15 @@
         });
 
         function deleteCp(id) {
-            if (confirm('Are you sure you want to delete this channel partner?')) {
+            if (confirm('Are you sure you want to delete this channel partner? Associated users will be reverted to normal users.')) {
                 $.ajax({
-                    url: '/cp/' + id,
-                    type: 'DELETE',
+                    url: '/admin/cp/' + id + '/delete',
+                    type: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function (response) {
-                        alert('Channel Partner deleted successfully');
+                        alert(response.message || 'Channel Partner deleted successfully');
                         location.reload();
                     },
                     error: function () {

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class CpInterest extends Model
 {
     protected $fillable = [
+        'user_id',
         'company_name',
         'contact_person',
         'email',
@@ -16,4 +17,9 @@ class CpInterest extends Model
         'message',
         'status',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

@@ -148,34 +148,34 @@
                 </div>
                 <div>
                     <label class="cp-label" for="contactPerson">Contact Person</label>
-                    <input class="cp-input" id="contactPerson" name="contactPerson" type="text" required placeholder="Full name" value="{{ old('contactPerson') }}">
+                    <input class="cp-input" id="contactPerson" name="contactPerson" type="text" required placeholder="Full name" value="{{ old('contactPerson', auth()->user()->name) }}">
                     @error('contactPerson') <div class="error-text">{{ $message }}</div> @enderror
                 </div>
                 <div>
-                    <label class="cp-label" for="email">Email</label>
-                    <input class="cp-input" id="email" name="email" type="email" required placeholder="name@email.com" value="{{ old('email') }}">
-                    @error('email') <div class="error-text">{{ $message }}</div> @enderror
+                    <label class="cp-label" for="email">Email <span style="font-size:.7rem;color:#64748b;">(verified)</span></label>
+                    <input class="cp-input" id="email" name="email" type="email" required value="{{ auth()->user()->email }}" readonly style="opacity:0.6;cursor:not-allowed;">
                 </div>
                 <div>
                     <label class="cp-label" for="mobile">Mobile</label>
-                    <input class="cp-input" id="mobile" name="mobile" type="text" pattern="[6-9]\d{9}" maxlength="10" required placeholder="10-digit number" value="{{ old('mobile') }}">
+                    <input class="cp-input" id="mobile" name="mobile" type="text" pattern="[6-9]\d{9}" maxlength="10" required placeholder="10-digit number" value="{{ old('mobile', auth()->user()->mobile_number) }}">
                     @error('mobile') <div class="error-text">{{ $message }}</div> @enderror
                 </div>
+                @php $userState = old('state', auth()->user()->state); $userCity = old('city', auth()->user()->city); @endphp
                 <div>
                     <label class="cp-label" for="state">State</label>
                     <select class="cp-input" id="state" name="state" required>
-                        <option value="" disabled {{ old('state') ? '' : 'selected' }}>Select state</option>
+                        <option value="" disabled {{ $userState ? '' : 'selected' }}>Select state</option>
                         @foreach($states as $s)
-                            <option value="{{ $s }}" {{ old('state') == $s ? 'selected' : '' }}>{{ $s }}</option>
+                            <option value="{{ $s }}" {{ $userState == $s ? 'selected' : '' }}>{{ $s }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div>
                     <label class="cp-label" for="city">City</label>
                     <select class="cp-input" id="city" name="city" required>
-                        <option value="" disabled {{ old('city') ? '' : 'selected' }}>Select city</option>
+                        <option value="" disabled {{ $userCity ? '' : 'selected' }}>Select city</option>
                         @foreach($cities as $c)
-                            <option value="{{ $c }}" {{ old('city') == $c ? 'selected' : '' }}>{{ $c }}</option>
+                            <option value="{{ $c }}" {{ $userCity == $c ? 'selected' : '' }}>{{ $c }}</option>
                         @endforeach
                     </select>
                 </div>

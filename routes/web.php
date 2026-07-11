@@ -29,9 +29,9 @@ Route::get('/shop/category/{slug}', [ProductController::class, 'shopPage'])->nam
 Route::get('/featured', [ProductController::class, 'featuredPage'])->name('featured');
 Route::get('/product/{slug}', [ProductController::class, 'showProduct'])->name('product.show');
 Route::get('/print', [UserController::class, 'printQuotation'])->name('printQuotation');
-Route::get('CpInterest', [UserController::class, 'CpInterest'])->name('CpInterest');
+Route::get('CpInterest', [UserController::class, 'CpInterest'])->middleware('auth')->name('CpInterest');
+Route::post('QueryCpInterest', [UserController::class, 'QueryCpInterest'])->middleware('auth')->name('QueryCpInterest');
 Route::get('installationPartner', [UserController::class, 'installationPartner'])->name('installationPartner');
-Route::post('QueryCpInterest', [UserController::class, 'QueryCpInterest'])->name('QueryCpInterest');
 Route::post('QueryInstallationPartner', [UserController::class, 'QueryInstallationPartner'])->name('QueryInstallationPartner');
 Route::post('userQuoteQuery', [LeadController::class, 'userQuoteQuery'])->name('userQuoteQuery');
 Route::get('contactUs', [UserController::class, 'contactUs'])->name('contactUs');
@@ -85,9 +85,16 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::get('/cpList', [UserController::class, 'cpList'])->name('cpList');
     Route::get('edit_cp/{id?}', [UserController::class, 'edit_cp'])->name('edit_cp');
     route::post('editCpQuery/', [UserController::class, 'editCpQuery'])->name('editCpQuery');
+    Route::get('/cp/{id}/detail', [UserController::class, 'cpDetail'])->name('cpDetail');
+    Route::post('/cp/{id}/delete', [UserController::class, 'deleteCp'])->name('deleteCp');
+    Route::post('/cp/{id}/toggle-status', [UserController::class, 'toggleCpStatus'])->name('toggleCpStatus');
 
     Route::get('/cp-permissions', [UserController::class, 'manageCpPermissions'])->name('manageCpPermissions');
     Route::post('/cp-permissions/{id}', [UserController::class, 'updateCpPermissions'])->name('updateCpPermissions');
+
+    Route::get('/cp-interest-list', [UserController::class, 'cpInterestList'])->name('cpInterestList');
+    Route::post('/cp-interest/{id}/approve', [UserController::class, 'approveCpInterest'])->name('approveCpInterest');
+    Route::post('/cp-interest/{id}/reject', [UserController::class, 'rejectCpInterest'])->name('rejectCpInterest');
 
     Route::get('/secondary-admins', [UserController::class, 'manageSecondaryAdmins'])->name('manageSecondaryAdmins');
     Route::post('/secondary-admins/add', [UserController::class, 'addSecondaryAdmin'])->name('addSecondaryAdmin');

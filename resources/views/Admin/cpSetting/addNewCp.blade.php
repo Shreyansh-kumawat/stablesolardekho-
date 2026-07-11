@@ -229,7 +229,7 @@
 
                 <div class="mt-4 d-flex gap-2">
                     <button type="submit" class="btn-primary-theme"><i class="fa fa-user-plus me-2"></i>Enroll Partner</button>
-                    <a href="#" class="btn-secondary-theme"><i class="fa fa-times me-2"></i>Cancel</a>
+                    <a href="{{ route('cpList') }}" class="btn-secondary-theme"><i class="fa fa-times me-2"></i>Cancel</a>
                 </div>
             </div>
         </form>

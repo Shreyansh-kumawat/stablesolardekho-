@@ -19,6 +19,9 @@ use App\Models\UserQuery;
 use App\Models\UserRole;
 use App\Models\UserSolarQuotation;
 use App\Models\CpInterest;
+use App\Models\CpOrder;
+use App\Models\CpWalletTransaction;
+use App\Models\CpProductInventory;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -57,6 +60,7 @@ class UserController extends Controller
         }
 
         CpInterest::create([
+            'user_id' => Auth::id(),
             'company_name' => $request->companyName,
             'contact_person' => $request->contactPerson,
             'email' => $request->email,
@@ -328,7 +332,7 @@ class UserController extends Controller
             // Send registration email to the channel partner
             // Mail::to(users: $cp->email)->send(new CpRegistrationEmail($cp));
 
-            return redirect()->route('addNewCp')->with('success', 'New Channel Partner added successfully.');
+            return redirect()->route('cpList')->with('success', 'New Channel Partner "' . $cp->cp_name . '" added successfully.');
         } catch (Exception $e) {
             Log::error('Error adding new Channel Partner: ' . $e->getMessage());
             return redirect()->back()->with('error', $e->getMessage())->withInput();
@@ -339,6 +343,16 @@ class UserController extends Controller
     {
         $cp_list = ChannelPartner::with('role', 'associateUsers', 'wallet')->get();
         return view('Admin.cpSetting.cpList')->with('cp_list', $cp_list);
+    }
+
+    public function cpDetail($id)
+    {
+        $cp = ChannelPartner::with('role', 'associateUsers', 'wallet')->findOrFail($id);
+        $orders = CpOrder::where('cp_id', $id)->orderBy('created_at', 'desc')->get();
+        $walletTransactions = CpWalletTransaction::where('cp_id', $id)->orderBy('created_at', 'desc')->get();
+        $inventory = CpProductInventory::where('cp_id', $id)->get();
+
+        return view('Admin.cpSetting.cpDetail', compact('cp', 'orders', 'walletTransactions', 'inventory'));
     }
 
     public function edit_cp($id)
@@ -391,6 +405,24 @@ class UserController extends Controller
         }
     }
 
+    public function deleteCp($id)
+    {
+        $cp = ChannelPartner::findOrFail($id);
+        User::where('cp_id', $cp->id)->update(['role_id' => 3, 'cp_id' => null, 'cp_permissions' => null]);
+        $cp->delete();
+
+        return response()->json(['success' => true, 'message' => 'Channel Partner deleted successfully.']);
+    }
+
+    public function toggleCpStatus($id)
+    {
+        $cp = ChannelPartner::findOrFail($id);
+        $cp->is_active = !$cp->is_active;
+        $cp->save();
+
+        return redirect()->route('cpList')->with('success', $cp->cp_name . ' is now ' . ($cp->is_active ? 'Active' : 'Inactive'));
+    }
+
     public function manageCpPermissions()
     {
         $cpUsers = User::whereHas('role', fn($q) => $q->where('name', 'channel_partner'))->get();
@@ -404,6 +436,53 @@ class UserController extends Controller
         $user->save();
 
         return redirect()->route('manageCpPermissions')->with('success', 'Permissions updated for ' . $user->name);
+    }
+
+    public function cpInterestList()
+    {
+        $interests = CpInterest::orderBy('created_at', 'desc')->get();
+        return view('Admin.cpSetting.cpInterestList', compact('interests'));
+    }
+
+    public function approveCpInterest($id)
+    {
+        $interest = CpInterest::findOrFail($id);
+
+        $cpRole = ChannelPartnerRole::first();
+        $cp = ChannelPartner::create([
+            'cp_name' => $interest->company_name,
+            'contact_person' => $interest->contact_person,
+            'email' => $interest->email,
+            'phone_number' => $interest->mobile,
+            'city' => $interest->city,
+            'state' => $interest->state,
+            'cp_role' => $cpRole ? $cpRole->id : 1,
+            'is_active' => 1,
+        ]);
+
+        if ($interest->user_id) {
+            $user = User::find($interest->user_id);
+            if ($user) {
+                $user->role_id = 4;
+                $user->cp_id = $cp->id;
+                $user->cp_permissions = ['new_request', 'view_requests', 'product_pricing', 'view_inventory'];
+                $user->save();
+            }
+        }
+
+        $interest->status = 'approved';
+        $interest->save();
+
+        return redirect()->route('cpInterestList')->with('success', $interest->company_name . ' approved and added as Channel Partner.');
+    }
+
+    public function rejectCpInterest($id)
+    {
+        $interest = CpInterest::findOrFail($id);
+        $interest->status = 'rejected';
+        $interest->save();
+
+        return redirect()->route('cpInterestList')->with('success', $interest->company_name . ' rejected.');
     }
 
     public function manageSecondaryAdmins()
