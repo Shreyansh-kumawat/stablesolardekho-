@@ -34,7 +34,6 @@ class User extends Authenticatable
         'cp_permissions',
     ];
 
-    protected $with = ['role'];
 
     /**
      * The attributes that should be hidden for serialization.
