@@ -186,8 +186,8 @@
 
     {{-- Quick Links --}}
     <div class="cpd-quick-links">
-        @if(auth()->user()->cp_permissions)
-            @php $perms = is_array(auth()->user()->cp_permissions) ? auth()->user()->cp_permissions : json_decode(auth()->user()->cp_permissions, true); @endphp
+        @php $perms = []; try { $perms = auth()->user()->cp_permissions ?? []; if (is_string($perms)) $perms = json_decode($perms, true) ?? []; } catch (\Exception $e) { $perms = []; } @endphp
+        @if(!empty($perms))
             @if(in_array('new_request', $perms ?? []))
                 <a href="{{ route('newOrderCp') }}" class="cpd-quick-link"><i class="fas fa-plus-circle"></i> New Order</a>
             @endif
