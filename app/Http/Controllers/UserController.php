@@ -371,19 +371,19 @@ class UserController extends Controller
     public function cpDashboard()
     {
         $user = Auth::user();
-        $cp = ChannelPartner::with('role', 'wallet')->find($user->cp_id);
+        $cp = ChannelPartner::with('role')->find($user->cp_id);
 
         if (!$cp) {
             return redirect()->route('dashBoardFunction')->with('error', 'Channel Partner not found.');
         }
 
-        $totalOrders = CpOrder::where('cp_id', $cp->id)->count();
-        $pendingOrders = CpOrder::where('cp_id', $cp->id)->where('status', 'pending')->count();
-        $completedOrders = CpOrder::where('cp_id', $cp->id)->where('status', 'completed')->count();
-        $recentOrders = CpOrder::where('cp_id', $cp->id)->orderBy('created_at', 'desc')->take(5)->get();
-        $recentTransactions = CpWalletTransaction::where('cp_id', $cp->id)->orderBy('created_at', 'desc')->take(5)->get();
-        $totalSpending = CpWalletTransaction::where('cp_id', $cp->id)->where('type', 'debit')->sum('amount');
-        $inventoryCount = CpProductInventory::where('cp_id', $cp->id)->sum('quantity');
+        try { $totalOrders = CpOrder::where('cp_id', $cp->id)->count(); } catch (\Exception $e) { $totalOrders = 0; }
+        try { $pendingOrders = CpOrder::where('cp_id', $cp->id)->where('status', 'pending')->count(); } catch (\Exception $e) { $pendingOrders = 0; }
+        try { $completedOrders = CpOrder::where('cp_id', $cp->id)->where('status', 'completed')->count(); } catch (\Exception $e) { $completedOrders = 0; }
+        try { $recentOrders = CpOrder::where('cp_id', $cp->id)->orderBy('created_at', 'desc')->take(5)->get(); } catch (\Exception $e) { $recentOrders = collect(); }
+        try { $recentTransactions = CpWalletTransaction::where('cp_id', $cp->id)->orderBy('created_at', 'desc')->take(5)->get(); } catch (\Exception $e) { $recentTransactions = collect(); }
+        try { $totalSpending = CpWalletTransaction::where('cp_id', $cp->id)->where('type', 'debit')->sum('amount'); } catch (\Exception $e) { $totalSpending = 0; }
+        try { $inventoryCount = CpProductInventory::where('cp_id', $cp->id)->sum('quantity'); } catch (\Exception $e) { $inventoryCount = 0; }
 
         return view('channelPartner.cpDashboard', compact(
             'cp', 'totalOrders', 'pendingOrders', 'completedOrders',
