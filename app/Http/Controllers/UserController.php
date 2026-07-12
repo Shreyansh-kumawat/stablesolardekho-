@@ -370,8 +370,10 @@ class UserController extends Controller
 
     public function cpDashboard()
     {
+        try {
         $user = Auth::user();
-        $cp = ChannelPartner::with('role')->find($user->cp_id);
+        $cp = null;
+        try { $cp = ChannelPartner::find($user->cp_id); } catch (\Exception $e) {}
 
         if (!$cp) {
             return redirect()->route('dashBoardFunction')->with('error', 'Channel Partner not found.');
@@ -389,6 +391,9 @@ class UserController extends Controller
             'cp', 'totalOrders', 'pendingOrders', 'completedOrders',
             'recentOrders', 'recentTransactions', 'totalSpending', 'inventoryCount'
         ));
+        } catch (\Exception $e) {
+            return redirect()->route('dashBoardFunction')->with('error', 'CP Dashboard error: ' . $e->getMessage());
+        }
     }
 
     public function cpList()

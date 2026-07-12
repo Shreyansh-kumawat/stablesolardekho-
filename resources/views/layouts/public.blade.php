@@ -293,6 +293,9 @@
                                     @elseif(Auth::user()->role_id == 2)
                                     <a href="/secondary-admin" style="display:block; padding:8px 10px; border-radius:8px; color:#60a5fa; font-size:0.82rem; text-decoration:none; font-weight:600;"
                                        onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='transparent'">Admin Panel</a>
+                                    @elseif(Auth::user()->role_id == 4)
+                                    <a href="{{ route('cpDashboard') }}" style="display:block; padding:8px 10px; border-radius:8px; color:#60a5fa; font-size:0.82rem; text-decoration:none; font-weight:600;"
+                                       onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='transparent'">CP Dashboard</a>
                                     @endif
                                     <a href="{{ route('user.orders') }}" style="display:block; padding:8px 10px; border-radius:8px; color:#e2e8f0; font-size:0.82rem; text-decoration:none;"
                                        onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='transparent'">My Orders</a>

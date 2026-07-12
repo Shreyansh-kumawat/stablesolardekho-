@@ -86,7 +86,7 @@
             <p>Welcome back, {{ $cp->contact_person ?? $cp->cp_name }}!</p>
         </div>
         <div class="cpd-header-right">
-            <span class="cpd-header-tag"><i class="fas fa-tag"></i> {{ $cp->role ? $cp->role->role_name : 'Partner' }}</span>
+            <span class="cpd-header-tag"><i class="fas fa-tag"></i> Partner</span>
             <span class="cpd-header-tag"><i class="fas fa-circle" style="font-size:.5rem;color:{{ $cp->is_active ? '#10b981' : '#ef4444' }};"></i> {{ $cp->is_active ? 'Active' : 'Inactive' }}</span>
         </div>
     </div>
@@ -128,7 +128,7 @@
         </div>
         <div class="cpd-stat balance">
             <div class="cpd-stat-icon"><i class="fas fa-wallet"></i></div>
-            <p class="cpd-stat-number">{{ $cp->wallet ? number_format($cp->wallet->balance, 2) : '0.00' }}</p>
+            <p class="cpd-stat-number">@php try { echo $cp->wallet ? number_format($cp->wallet->balance, 2) : '0.00'; } catch (\Exception $e) { echo '0.00'; } @endphp</p>
             <p class="cpd-stat-label">Wallet Balance</p>
         </div>
         <div class="cpd-stat inventory">
