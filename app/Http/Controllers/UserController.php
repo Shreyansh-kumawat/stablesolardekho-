@@ -501,8 +501,10 @@ class UserController extends Controller
     public function updateCpPermissions(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        $user->cp_permissions = $request->input('permissions', []);
-        $user->save();
+        if (\Schema::hasColumn('users', 'cp_permissions')) {
+            $user->cp_permissions = $request->input('permissions', []);
+            $user->save();
+        }
 
         return redirect()->route('manageCpPermissions')->with('success', 'Permissions updated for ' . $user->name);
     }
@@ -547,7 +549,9 @@ class UserController extends Controller
                 if ($user) {
                     $user->role_id = 4;
                     $user->cp_id = $cp->id;
-                    $user->cp_permissions = json_encode(['new_request', 'view_requests', 'product_pricing', 'view_inventory']);
+                    if (\Schema::hasColumn('users', 'cp_permissions')) {
+                        $user->cp_permissions = json_encode(['new_request', 'view_requests', 'product_pricing', 'view_inventory']);
+                    }
                     $user->save();
                 }
             }

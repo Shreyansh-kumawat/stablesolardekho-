@@ -13,7 +13,7 @@ class MasterAdminMiddleware
     {
         $user = Auth::user();
 
-        if (!$user || !$user->role || !in_array($user->role->name, ['master_admin', 'secondary_admin'])) {
+        if (!$user || !in_array($user->role_id, [1, 2])) {
             abort(403, 'Unauthorized.');
         }
 

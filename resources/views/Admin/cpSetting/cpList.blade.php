@@ -223,18 +223,38 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function deleteCp(id) {
-    if (confirm('Are you sure you want to delete this channel partner? Associated users will be reverted to normal users.')) {
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/admin/cp/' + id + '/delete';
-        var csrf = document.createElement('input');
-        csrf.type = 'hidden';
-        csrf.name = '_token';
-        csrf.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        form.appendChild(csrf);
-        document.body.appendChild(form);
-        form.submit();
-    }
+    Swal.fire({
+        title: 'Delete Channel Partner?',
+        text: 'Associated users will be reverted to normal users.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, Delete',
+        cancelButtonText: 'Cancel'
+    }).then(function(result) {
+        if (result.isConfirmed) {
+            fetch('/admin/cp/' + id + '/delete', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                }
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    Swal.fire('Deleted!', 'Channel Partner deleted successfully.', 'success')
+                        .then(function() { location.reload(); });
+                } else {
+                    Swal.fire('Error', data.message || 'Failed to delete.', 'error');
+                }
+            })
+            .catch(function() {
+                Swal.fire('Error', 'Something went wrong.', 'error');
+            });
+        }
+    });
 }
 </script>
 @endsection
