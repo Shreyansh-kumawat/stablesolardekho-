@@ -13,7 +13,7 @@ class ChannelPartnerMiddleware
     {
         $user = Auth::user();
 
-        if (!$user || !$user->role || $user->role->name !== 'channel_partner') {
+        if (!$user || $user->role_id !== 4) {
             abort(403, 'Unauthorized.');
         }
 
