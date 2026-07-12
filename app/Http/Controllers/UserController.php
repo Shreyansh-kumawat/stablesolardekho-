@@ -132,7 +132,7 @@ class UserController extends Controller
     public function dashBoardFunction()
     {
         $banners = Banner::active()->get();
-        $categories = ProductCategory::withCount(['products' => fn($q) => $q->where('is_active', true)])->get();
+        $categories = ProductCategory::withCount(['products' => fn($q) => $q->where('is_active', true)])->orderBy('id', 'desc')->get();
         $featuredProducts = Product::featured()->with('category')->latest()->take(8)->get();
         $allProducts = Product::active()->with('category')->latest()->take(12)->get();
 

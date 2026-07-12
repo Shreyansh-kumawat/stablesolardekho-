@@ -15,7 +15,7 @@ class ProductController extends Controller
 {
     public function shopPage(Request $request, $slug = null)
     {
-        $categories = ProductCategory::withCount(['products' => fn($q) => $q->where('is_active', true)])->get();
+        $categories = ProductCategory::withCount(['products' => fn($q) => $q->where('is_active', true)])->orderBy('id', 'desc')->get();
         $query = Product::with('category')->where('is_active', true);
         $activeCategory = null;
 
@@ -53,7 +53,7 @@ class ProductController extends Controller
     {
         abort_unless(auth()->user()->hasAdminPermission('categories'), 403);
         try {
-            $category_list = ProductCategory::withCount('products')->orderBy('category_name')->get();
+            $category_list = ProductCategory::withCount('products')->orderBy('id', 'desc')->get();
 
             return view('Admin.productSetting.manageCategory')
                 ->with('category_list', $category_list);
