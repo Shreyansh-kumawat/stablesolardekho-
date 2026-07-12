@@ -187,19 +187,16 @@
                                 <option value="">Select Subcategory</option>
                             </select>
                         </div>
-                        <div class="col-lg-3 col-md-6">
+                        <div class="col-lg-4 col-md-6">
                             <label class="form-label">Product <span class="text-danger">*</span></label>
                             <select class="form-control product-select" name="products[0][product_id]" required disabled>
                                 <option value="">Select Product</option>
                             </select>
                         </div>
-                         <div class="col-lg-1 col-md-6">
-                            <label class="form-label">UOM <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control uom-input" name="products[0][uom]" readonly id="product_uom">
-                        </div>
                         <div class="col-lg-1 col-md-4">
                             <label class="form-label">Qty <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control quantity-input" name="products[0][quantity]" min="1" value="1" required>
+                            <input type="number" class="form-control quantity-input" name="products[0][quantity]" min="1" value="1" required disabled>
+                            <small class="stock-info text-muted" style="font-size:0.72rem;"></small>
                         </div>
                         <div class="col-lg-1 col-md-2 d-flex align-items-end">
                             <button type="button" class="btn btn-danger btn-sm remove-row w-100 d-none">
@@ -277,19 +274,16 @@ $(document).ready(function() {
                             <option value="">Select Subcategory</option>
                         </select>
                     </div>
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-lg-4 col-md-6">
                         <label class="form-label">Product <span class="text-danger">*</span></label>
                         <select class="form-control product-select" name="products[${rowIndex}][product_id]" required disabled>
                             <option value="">Select Product</option>
                         </select>
                     </div>
-                     <div class="col-lg-1 col-md-4">
-                        <label class="form-label">UOM <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control uom-input" name="products[${rowIndex}][uom]" required>
-                    </div>
                     <div class="col-lg-1 col-md-4">
                         <label class="form-label">Qty <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control quantity-input" name="products[${rowIndex}][quantity]" min="1" value="1" required>
+                        <input type="number" class="form-control quantity-input" name="products[${rowIndex}][quantity]" min="1" value="1" required disabled>
+                        <small class="stock-info text-muted" style="font-size:0.72rem;"></small>
                     </div>
                     <div class="col-lg-1 col-md-2 d-flex align-items-end">
                         <button type="button" class="btn btn-danger btn-sm remove-row w-100">
@@ -325,6 +319,25 @@ $(document).ready(function() {
         }
     });
 
+    $(document).on('input', '.quantity-input', function() {
+        var max = parseInt($(this).attr('max')) || 0;
+        var val = parseInt($(this).val()) || 0;
+        var stockInfo = $(this).closest('.product-row').find('.stock-info');
+
+        if (max > 0) {
+            var remaining = max - val;
+            if (val > max) {
+                $(this).val(max);
+                remaining = 0;
+                stockInfo.html('<span style="color:#dc2626;font-weight:600;">Max ' + max + ' available</span>');
+            } else if (val < 1) {
+                stockInfo.html('<span style="color:#059669;font-weight:600;">' + max + ' left</span>');
+            } else {
+                stockInfo.html('<span style="color:#059669;font-weight:600;">' + remaining + ' left</span>');
+            }
+        }
+    });
+
     $('#paymentScreenshot').on('change', function() {
         const file = this.files[0];
         if (file) {
@@ -350,7 +363,6 @@ $(document).ready(function() {
             const subcategoryId = $(this).find('.subcategory-select').val();
             const productId = $(this).find('.product-select').val();
             const quantity = $(this).find('.quantity-input').val();
-            const uom = $(this).find('.uom-input').val();
 
             if (!categoryId || !subcategoryId || !productId || !quantity) {
                 isValid = false;
@@ -361,7 +373,6 @@ $(document).ready(function() {
                 category_id: categoryId,
                 subcategory_id: subcategoryId,
                 product_id: productId,
-                uom: uom,
                 quantity: parseInt(quantity)
             });
         });
@@ -476,31 +487,39 @@ function loadProducts(subcategoryId, selectElement) {
         method: 'GET',
         data: { sub_category_id: subcategoryId },
         success: function(data) {
-            // Destroy select2 first
             if (selectElement.hasClass('select2-hidden-accessible')) {
                 selectElement.select2('destroy');
             }
-            
+
             selectElement.html('<option value="">Select Product</option>');
-            
+
             if (data && data.length > 0) {
                 data.forEach(function(product) {
-                    selectElement.append(`<option value="${product.id}" data-uom="${product.uom}">${product.product_name || product.item_name || product.name}</option>`);
+                    var qty = product.quantity || 0;
+                    var name = product.product_name || product.item_name || product.name;
+                    selectElement.append('<option value="' + product.id + '" data-stock="' + qty + '">' + name + ' (' + qty + ' available)</option>');
                 });
             }
-            
-            // Re-initialize select2
+
             selectElement.select2({
                 width: '100%',
                 minimumResultsForSearch: 5,
                 placeholder: 'Select Product'
             }).prop('disabled', false);
-            
-            // Handle product selection and UOM update
-            selectElement.off('select2:select').on('select2:select', function(e) {
-                const selectedOption = $(this).find('option:selected');
-                const uom = selectedOption.data('uom') || '';
-                $(this).closest('.product-row').find('.uom-input').val(uom);
+
+            selectElement.off('select2:select').on('select2:select', function() {
+                var row = $(this).closest('.product-row');
+                var stock = parseInt($(this).find('option:selected').data('stock')) || 0;
+                var qtyInput = row.find('.quantity-input');
+                var stockInfo = row.find('.stock-info');
+
+                if (stock > 0) {
+                    qtyInput.attr('max', stock).val(1).prop('disabled', false);
+                    stockInfo.html('<span style="color:#059669;font-weight:600;">' + stock + ' left</span>');
+                } else {
+                    qtyInput.val(0).prop('disabled', true);
+                    stockInfo.html('<span style="color:#dc2626;font-weight:600;">Out of stock</span>');
+                }
             });
         },
         error: function(xhr) {
