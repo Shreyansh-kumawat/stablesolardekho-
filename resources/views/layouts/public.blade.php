@@ -287,8 +287,11 @@
                                     <p style="color:#94a3b8; font-size:0.72rem; margin:2px 0 0; overflow:hidden; text-overflow:ellipsis;">{{ Auth::user()->email }}</p>
                                 </div>
                                 <div style="padding:6px;">
-                                    @if(in_array(Auth::user()->role_id, [1, 2]))
+                                    @if(Auth::user()->role_id == 1)
                                     <a href="{{ route('masterAdminDashboard') }}" style="display:block; padding:8px 10px; border-radius:8px; color:#60a5fa; font-size:0.82rem; text-decoration:none; font-weight:600;"
+                                       onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='transparent'">Admin Panel</a>
+                                    @elseif(Auth::user()->role_id == 2)
+                                    <a href="/secondary-admin" style="display:block; padding:8px 10px; border-radius:8px; color:#60a5fa; font-size:0.82rem; text-decoration:none; font-weight:600;"
                                        onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='transparent'">Admin Panel</a>
                                     @endif
                                     <a href="{{ route('user.orders') }}" style="display:block; padding:8px 10px; border-radius:8px; color:#e2e8f0; font-size:0.82rem; text-decoration:none;"

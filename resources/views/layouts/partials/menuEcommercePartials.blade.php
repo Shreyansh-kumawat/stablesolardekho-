@@ -108,6 +108,7 @@
     @endif
 
     {{-- CP Interest Requests --}}
+    @if(Auth::user()->hasAdminPermission('cp_interest'))
     <li>
         <a href="{{ route('cpInterestList') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('cpInterestList') ? 'ec-active' : '' }}">
@@ -117,8 +118,10 @@
             <span>CP Interest Requests</span>
         </a>
     </li>
+    @endif
 
     {{-- CP Partners --}}
+    @if(Auth::user()->hasAdminPermission('cp_partners'))
     <li>
         <a href="{{ route('cpList') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('cpList','addNewCp','edit_cp','cpDetail') ? 'ec-active' : '' }}">
@@ -128,8 +131,10 @@
             <span>CP Partners</span>
         </a>
     </li>
+    @endif
 
     {{-- CP Orders --}}
+    @if(Auth::user()->hasAdminPermission('cp_orders'))
     <li>
         <a href="{{ route('pendingOrders') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('pendingOrders','manageOrdersAdmin','viewSingleOrder') ? 'ec-active' : '' }}">
@@ -142,6 +147,7 @@
             @endif
         </a>
     </li>
+    @endif
 
     {{-- View Shop --}}
     <li>

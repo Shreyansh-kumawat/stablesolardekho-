@@ -67,6 +67,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+Route::get('/secondary-admin', function () { return redirect()->route('masterAdminDashboard'); })->middleware(['auth', MasterAdminMiddleware::class]);
 Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->group(function () {
     Route::get('/dashboard', [UserController::class, 'masterAdminDashboard'])->name('masterAdminDashboard');
     Route::get('/addNewUser', [UserController::class, 'addNewUser'])->name('addNewUser');

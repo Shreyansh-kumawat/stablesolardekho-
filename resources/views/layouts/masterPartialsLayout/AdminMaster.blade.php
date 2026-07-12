@@ -4,27 +4,17 @@
 </div>
 @include('layouts.partials.menuEcommercePartials')
 
-@if(Auth::user()->role?->name === 'master_admin')
+@if(Auth::user()->role_id == 1)
     @include('layouts.partials.menuUserSettingPartials')
-@endif
 
-@if(Auth::user()->hasAdminPermission('cp_orders'))
     @include('layouts.partials.menuCpSettingPartials')
-@endif
 
-@if(Auth::user()->hasAdminPermission('products'))
     @include('layouts.partials.menuProductPartials')
-@endif
 
-@if(Auth::user()->hasAdminPermission('inventory'))
     @include('layouts.partials.menuInventoryPartials')
-@endif
 
-@if(Auth::user()->role?->name === 'master_admin')
     @include('layouts.partials.modals.menuAdminSetting')
     @include('layouts.partials.menuFundSetting')
-@endif
 
-@if(Auth::user()->hasAdminPermission('orders') || Auth::user()->hasAdminPermission('cp_orders'))
     @include('layouts.partials.menuOrderSetting')
 @endif

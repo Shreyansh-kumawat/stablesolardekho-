@@ -68,8 +68,12 @@
                                 <p class="text-sm font-semibold text-gray-800">{{ Auth::user()->name }}</p>
                                 <p class="text-xs text-gray-500 truncate">{{ Auth::user()->email }}</p>
                             </div>
-                            @if(in_array(Auth::user()->role_id, [1, 2]))
+                            @if(Auth::user()->role_id == 1)
                             <a href="{{ route('masterAdminDashboard') }}" class="block px-4 py-2.5 text-sm rounded-lg mx-2 mt-2" style="color:#60a5fa;font-weight:600;">
+                                <i class="fas fa-shield-alt" style="margin-right:4px;"></i> Admin Panel
+                            </a>
+                            @elseif(Auth::user()->role_id == 2)
+                            <a href="/secondary-admin" class="block px-4 py-2.5 text-sm rounded-lg mx-2 mt-2" style="color:#60a5fa;font-weight:600;">
                                 <i class="fas fa-shield-alt" style="margin-right:4px;"></i> Admin Panel
                             </a>
                             @endif
