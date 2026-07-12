@@ -74,13 +74,15 @@ class User extends Authenticatable
     public function hasCpPermission(string $permission): bool
     {
         $perms = $this->cp_permissions ?? [];
+        if (is_string($perms)) { $perms = json_decode($perms, true) ?? []; }
         return in_array($permission, $perms);
     }
 
     public function hasAdminPermission(string $permission): bool
     {
-        if ($this->role?->name === 'master_admin') return true;
+        if ($this->role_id === 1) return true;
         $perms = $this->admin_permissions ?? [];
+        if (is_string($perms)) { $perms = json_decode($perms, true) ?? []; }
         if (in_array($permission, $perms)) return true;
         if (str_contains($permission, '.')) {
             $module = explode('.', $permission)[0];
