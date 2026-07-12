@@ -93,13 +93,9 @@
 
     @php
         $permissions = [
-            'new_request' => ['label' => 'New Inventory Request', 'desc' => 'Create new inventory requests'],
-            'view_requests' => ['label' => 'View Requests', 'desc' => 'View own inventory request history'],
-            'product_pricing' => ['label' => 'Product Pricing', 'desc' => 'View product pricing list'],
-            'view_inventory' => ['label' => 'View Inventory', 'desc' => 'View assigned inventory'],
-            'transfer_inventory' => ['label' => 'Transfer Inventory', 'desc' => 'Transfer inventory to others'],
-            'inventory_transactions' => ['label' => 'Inventory Transactions', 'desc' => 'View inventory transaction history'],
-            'manual_installations' => ['label' => 'Manual Installations', 'desc' => 'Create and view manual installation entries'],
+            'new_request' => ['label' => 'New Order', 'desc' => 'Place new orders with payment proof'],
+            'view_requests' => ['label' => 'My Orders', 'desc' => 'View own order history and status'],
+            'manual_installations' => ['label' => 'Installations', 'desc' => 'Create and view installation reports'],
         ];
     @endphp
 

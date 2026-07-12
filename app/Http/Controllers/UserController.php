@@ -383,13 +383,11 @@ class UserController extends Controller
         try { $pendingOrders = CpOrder::where('cp_id', $cp->id)->where('status', 'pending')->count(); } catch (\Exception $e) { $pendingOrders = 0; }
         try { $completedOrders = CpOrder::where('cp_id', $cp->id)->where('status', 'completed')->count(); } catch (\Exception $e) { $completedOrders = 0; }
         try { $recentOrders = CpOrder::where('cp_id', $cp->id)->orderBy('created_at', 'desc')->take(5)->get(); } catch (\Exception $e) { $recentOrders = collect(); }
-        try { $recentTransactions = CpWalletTransaction::where('cp_id', $cp->id)->orderBy('created_at', 'desc')->take(5)->get(); } catch (\Exception $e) { $recentTransactions = collect(); }
-        try { $totalSpending = CpWalletTransaction::where('cp_id', $cp->id)->where('type', 'debit')->sum('amount'); } catch (\Exception $e) { $totalSpending = 0; }
-        try { $inventoryCount = CpProductInventory::where('cp_id', $cp->id)->sum('quantity'); } catch (\Exception $e) { $inventoryCount = 0; }
+        try { $totalSpending = CpOrder::where('cp_id', $cp->id)->whereIn('status', ['completed', 'approved'])->sum('grand_total'); } catch (\Exception $e) { $totalSpending = 0; }
 
         return view('channelPartner.cpDashboard', compact(
             'cp', 'totalOrders', 'pendingOrders', 'completedOrders',
-            'recentOrders', 'recentTransactions', 'totalSpending', 'inventoryCount'
+            'recentOrders', 'totalSpending'
         ));
         } catch (\Exception $e) {
             return redirect()->route('dashBoardFunction')->with('error', 'CP Dashboard error: ' . $e->getMessage());

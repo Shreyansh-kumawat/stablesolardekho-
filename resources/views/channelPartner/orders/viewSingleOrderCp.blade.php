@@ -620,12 +620,12 @@
             <div class="page-header flex items-center justify-between mb-8">
                 <div>
                     <h1 class="flex items-center gap-3">
-                        <i class="bi bi-file-earmark-check" style="color: var(--primary-color);"></i>Request Details
+                        <i class="bi bi-file-earmark-check" style="color: var(--primary-color);"></i>Order Details
                     </h1>
-                    <p>View inventory request details</p>
+                    <p>View order details</p>
                 </div>
                 <a href="{{ route('orderReportCp') }}" class="back-btn">
-                    <i class="bi bi-arrow-left"></i> Back to Requests
+                    <i class="bi bi-arrow-left"></i> Back to Orders
                 </a>
             </div>
 

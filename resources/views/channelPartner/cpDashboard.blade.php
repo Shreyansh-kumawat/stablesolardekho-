@@ -30,7 +30,6 @@
     .cpd-stat.completed::before { background: linear-gradient(90deg, #10b981, #059669); }
     .cpd-stat.spending::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
     .cpd-stat.balance::before { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
-    .cpd-stat.inventory::before { background: linear-gradient(90deg, #06b6d4, #0891b2); }
 
     .cpd-stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: .75rem; }
     .cpd-stat.orders .cpd-stat-icon { background: #e3f2fd; color: #1565c0; }
@@ -126,80 +125,42 @@
             <p class="cpd-stat-number">{{ number_format($totalSpending, 0) }}</p>
             <p class="cpd-stat-label">Total Spending</p>
         </div>
-        <div class="cpd-stat balance">
-            <div class="cpd-stat-icon"><i class="fas fa-wallet"></i></div>
-            <p class="cpd-stat-number">@php try { echo $cp->wallet ? number_format($cp->wallet->balance, 2) : '0.00'; } catch (\Exception $e) { echo '0.00'; } @endphp</p>
-            <p class="cpd-stat-label">Wallet Balance</p>
-        </div>
-        <div class="cpd-stat inventory">
-            <div class="cpd-stat-icon"><i class="fas fa-boxes"></i></div>
-            <p class="cpd-stat-number">{{ $inventoryCount }}</p>
-            <p class="cpd-stat-label">Inventory Items</p>
-        </div>
     </div>
 
-    {{-- Recent Orders & Transactions --}}
-    <div class="cpd-sections">
-        <div class="cpd-section">
-            <h3><i class="fas fa-shopping-bag"></i> Recent Orders</h3>
-            @if($recentOrders->count())
-                @foreach($recentOrders as $order)
-                <div class="cpd-list-item">
-                    <div class="cpd-list-icon order"><i class="fas fa-file-invoice"></i></div>
-                    <div class="cpd-list-text">
-                        <p>Order #{{ $order->id }}</p>
-                        <small>{{ $order->created_at->format('d M Y, h:i A') }}</small>
-                    </div>
-                    <span style="padding:3px 8px;border-radius:12px;font-size:.7rem;font-weight:700;
-                        {{ $order->status === 'completed' ? 'background:#d1fae5;color:#065f46;' : ($order->status === 'pending' ? 'background:#fef3c7;color:#92400e;' : 'background:#e3f2fd;color:#1565c0;') }}">
-                        {{ ucfirst($order->status ?? 'pending') }}
-                    </span>
+    {{-- Recent Orders --}}
+    <div class="cpd-section" style="margin-bottom:1.25rem;">
+        <h3><i class="fas fa-shopping-bag"></i> Recent Orders</h3>
+        @if($recentOrders->count())
+            @foreach($recentOrders as $order)
+            <div class="cpd-list-item">
+                <div class="cpd-list-icon order"><i class="fas fa-file-invoice"></i></div>
+                <div class="cpd-list-text">
+                    <p>Order #{{ $order->id }}</p>
+                    <small>{{ $order->created_at->format('d M Y, h:i A') }}</small>
                 </div>
-                @endforeach
-            @else
-                <div class="cpd-empty"><i class="fas fa-inbox"></i> No orders yet</div>
-            @endif
-        </div>
-
-        <div class="cpd-section">
-            <h3><i class="fas fa-exchange-alt"></i> Recent Transactions</h3>
-            @if($recentTransactions->count())
-                @foreach($recentTransactions as $txn)
-                <div class="cpd-list-item">
-                    <div class="cpd-list-icon {{ $txn->type === 'credit' ? 'credit' : 'debit' }}">
-                        <i class="fas {{ $txn->type === 'credit' ? 'fa-arrow-down' : 'fa-arrow-up' }}"></i>
-                    </div>
-                    <div class="cpd-list-text">
-                        <p>{{ $txn->description ?? ucfirst($txn->type) }}</p>
-                        <small>{{ $txn->created_at->format('d M Y, h:i A') }}</small>
-                    </div>
-                    <span class="cpd-list-amount {{ $txn->type === 'credit' ? 'credit' : 'debit' }}">
-                        {{ $txn->type === 'credit' ? '+' : '-' }}{{ number_format($txn->amount, 2) }}
-                    </span>
-                </div>
-                @endforeach
-            @else
-                <div class="cpd-empty"><i class="fas fa-inbox"></i> No transactions yet</div>
-            @endif
-        </div>
+                <span style="padding:3px 8px;border-radius:12px;font-size:.7rem;font-weight:700;
+                    {{ $order->status === 'completed' ? 'background:#d1fae5;color:#065f46;' : ($order->status === 'pending' ? 'background:#fef3c7;color:#92400e;' : 'background:#e3f2fd;color:#1565c0;') }}">
+                    {{ ucfirst($order->status ?? 'pending') }}
+                </span>
+            </div>
+            @endforeach
+        @else
+            <div class="cpd-empty"><i class="fas fa-inbox"></i> No orders yet</div>
+        @endif
     </div>
 
     {{-- Quick Links --}}
     <div class="cpd-quick-links">
         @php $perms = []; try { $perms = auth()->user()->cp_permissions ?? []; if (is_string($perms)) $perms = json_decode($perms, true) ?? []; } catch (\Exception $e) { $perms = []; } @endphp
-        @if(!empty($perms))
-            @if(in_array('new_request', $perms ?? []))
-                <a href="{{ route('newOrderCp') }}" class="cpd-quick-link"><i class="fas fa-plus-circle"></i> New Order</a>
-            @endif
-            @if(in_array('view_requests', $perms ?? []))
-                <a href="{{ route('orderReportCp') }}" class="cpd-quick-link"><i class="fas fa-list"></i> Order Report</a>
-            @endif
-            @if(in_array('product_pricing', $perms ?? []))
-                <a href="{{ route('productPricing') }}" class="cpd-quick-link"><i class="fas fa-tags"></i> Product Pricing</a>
-            @endif
-            @if(in_array('view_inventory', $perms ?? []))
-                <a href="{{ route('cpInventory') }}" class="cpd-quick-link"><i class="fas fa-warehouse"></i> Inventory</a>
-            @endif
+        @if(in_array('new_request', $perms))
+            <a href="{{ route('newOrderCp') }}" class="cpd-quick-link"><i class="fas fa-plus-circle"></i> New Order</a>
+        @endif
+        @if(in_array('view_requests', $perms))
+            <a href="{{ route('orderReportCp') }}" class="cpd-quick-link"><i class="fas fa-list"></i> My Orders</a>
+        @endif
+        <a href="{{ url('/shop') }}" class="cpd-quick-link"><i class="fas fa-store"></i> Browse Shop</a>
+        @if(in_array('manual_installations', $perms))
+            <a href="{{ route('myManualEntries') }}" class="cpd-quick-link"><i class="fas fa-tools"></i> Installations</a>
         @endif
     </div>
 </div>

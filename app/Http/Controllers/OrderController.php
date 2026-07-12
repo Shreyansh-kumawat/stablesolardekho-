@@ -18,21 +18,30 @@ class OrderController extends Controller
     }
     public function storeNewOrderRequest(Request $request)
     {
-
         try {
-            CpOrder::create([
-                'cp_id' => Auth::user()->cp_id, // Assuming you have the channel partner ID in the session
+            $data = [
+                'cp_id' => Auth::user()->cp_id,
                 'order_id' => $this->orderTxnId(),
-                'products' => json_encode($request->input('products')), // Store products as JSON
+                'products' => $request->input('products'),
                 'order_notes' => $request->input('remarks'),
-                'status' => 'pending', // Set initial status to pending
-                'order_date' => now()->format('Y-m-d'), // Set the order date to the current date and time
-            ]);
+                'status' => 'pending',
+                'order_date' => now()->format('Y-m-d'),
+                'payment_status' => 'verification_pending',
+            ];
+
+            if ($request->hasFile('payment_screenshot')) {
+                $data['payment_screenshot'] = $request->file('payment_screenshot')->store('cp-payment-screenshots', 'public');
+            }
+
+            if ($request->input('payment_reference')) {
+                $data['payment_reference'] = $request->input('payment_reference');
+            }
+
+            CpOrder::create($data);
         } catch (\Exception $e) {
-            dd($e->getMessage());
-            return response()->json(['error' => 'Failed to submit order request: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Failed to submit order: ' . $e->getMessage()], 500);
         }
-        return response()->json(['message' => 'Order request submitted successfully']);
+        return response()->json(['message' => 'Order submitted successfully']);
     }
 
     public function orderTxnId()

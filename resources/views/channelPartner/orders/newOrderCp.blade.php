@@ -158,13 +158,13 @@
 @section('content')
     <div class="page-header">
         <div class="container-fluid">
-            <h1><i class="fas fa-box me-2"></i>New Inventory Request</h1>
-            <p>Select products and quantities to raise an inventory request</p>
+            <h1><i class="fas fa-box me-2"></i>New Order</h1>
+            <p>Select products, quantities and upload payment proof to place an order</p>
         </div>
     </div>
 
     <div class="container-fluid">
-        <form id="orderForm" class="form-section">
+        <form id="orderForm" class="form-section" enctype="multipart/form-data">
             @csrf
 
             <h6 class="section-title">Product Details</h6>
@@ -221,11 +221,24 @@
                 <textarea class="form-control" name="remarks" rows="3" placeholder="Enter any additional remarks..."></textarea>
             </div>
 
+            <div class="mt-3" style="background:#f0f7ff;border:1px solid #b3d4fc;border-radius:6px;padding:1rem;">
+                <h6 class="section-title" style="color:#1a56db;margin-bottom:0.5rem;"><i class="fas fa-camera me-1"></i> Payment Proof</h6>
+                <p style="font-size:0.78rem;color:#555;margin:0 0 0.5rem;">Upload a screenshot of the payment (UPI, bank transfer, etc.)</p>
+                <input type="file" class="form-control" name="payment_screenshot" id="paymentScreenshot" accept="image/*" required>
+                <div id="paymentPreview" style="margin-top:0.5rem;display:none;">
+                    <img id="paymentPreviewImg" style="max-width:200px;max-height:150px;border-radius:4px;border:1px solid #ddd;" />
+                </div>
+                <div class="mt-2">
+                    <label class="form-label">Payment Reference / UTR Number</label>
+                    <input type="text" class="form-control" name="payment_reference" placeholder="Enter UTR / Transaction ID (optional)">
+                </div>
+            </div>
+
             <div class="btn-group-compact mt-3">
                 <button type="submit" class="btn btn-success">
-                    <i class="fas fa-check me-1"></i> Submit Inventory Request
+                    <i class="fas fa-check me-1"></i> Submit Order
                 </button>
-                <a href="{{ route('newOrderCp') }}" class="btn btn-secondary">
+                <a href="{{ route('orderReportCp') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-1"></i> Back
                 </a>
             </div>
@@ -312,6 +325,20 @@ $(document).ready(function() {
         }
     });
 
+    $('#paymentScreenshot').on('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                $('#paymentPreviewImg').attr('src', e.target.result);
+                $('#paymentPreview').show();
+            };
+            reader.readAsDataURL(file);
+        } else {
+            $('#paymentPreview').hide();
+        }
+    });
+
     $('#orderForm').submit(function(e) {
         e.preventDefault();
 
@@ -344,23 +371,31 @@ $(document).ready(function() {
             return;
         }
 
-        const orderData = {
-            products: products,
-            remarks: $('textarea[name="remarks"]').val(),
-            _token: $('input[name="_token"]').val()
-        };
+        const paymentFile = $('#paymentScreenshot')[0].files[0];
+        if (!paymentFile) {
+            alert('Please upload payment proof');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('products', JSON.stringify(products));
+        formData.append('remarks', $('textarea[name="remarks"]').val());
+        formData.append('payment_screenshot', paymentFile);
+        formData.append('payment_reference', $('input[name="payment_reference"]').val());
+        formData.append('_token', $('input[name="_token"]').val());
 
         $.ajax({
             url: '{{ route("storeNewOrderRequest") }}',
             method: 'POST',
-            data: JSON.stringify(orderData),
-            contentType: 'application/json',
+            data: formData,
+            processData: false,
+            contentType: false,
             success: function(response) {
-                alert('Inventory request submitted successfully!');
+                alert('Order submitted successfully!');
                 window.location.href = '{{ route("orderReportCp") }}';
             },
             error: function(xhr) {
-                alert('Error: ' + (xhr.responseJSON?.message || 'Failed to submit request'));
+                alert('Error: ' + (xhr.responseJSON?.message || 'Failed to submit order'));
             }
         });
     });

@@ -448,6 +448,17 @@
 
                 <nav class="flex-1 space-y-0.5">
                     <!-- Dashboard -->
+                    @if(Auth::user()->role_id == 4)
+                    <a href="{{ url('/') }}"
+                        class="flex items-center gap-2.5">
+                        <svg class="flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M2.25 12l8.954-8.955a1.125 1.125 0 011.592 0L21.75 12M4.5 9.75V21h4.5v-4.5h4.5V21h4.5V9.75" />
+                        </svg>
+                        <span class="text-xs font-semibold">Home</span>
+                    </a>
+                    @else
                     <a href="{{ in_array(Auth::user()->role_id, [1, 2]) ? route('masterAdminDashboard') : route('dashboard') }}"
                         class="flex items-center gap-2.5 {{ request()->routeIs('masterAdminDashboard') ? 'active' : '' }}">
                         <svg class="flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -457,6 +468,7 @@
                         </svg>
                         <span class="text-xs font-semibold">Dashboard</span>
                     </a>
+                    @endif
                   
                     @if (in_array($roll_id, ['1', '2']))
                         @include('layouts.masterPartialsLayout.AdminMaster')

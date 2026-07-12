@@ -53,8 +53,8 @@
                             </svg>
                         </div>
                         <div>
-                            <h1 class="text-2xl font-bold text-slate-900">My Inventory Requests</h1>
-                            <p class="text-sm text-slate-600">Track your inventory requests and their status</p>
+                            <h1 class="text-2xl font-bold text-slate-900">My Orders</h1>
+                            <p class="text-sm text-slate-600">Track your orders and their status</p>
                         </div>
                     </div>
 
@@ -89,8 +89,8 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>Request ID</th>
-                                    <th>Request Date</th>
+                                    <th>Order ID</th>
+                                    <th>Order Date</th>
                                     <th>Status</th>
                                     <th>Payment</th>
                                     <th>Action</th>
@@ -157,9 +157,9 @@
                     <div>
                         <h4 class="text-sm font-semibold text-blue-900">Tips</h4>
                         <ul class="text-sm text-blue-800 space-y-1 list-disc list-inside mt-1">
-                            <li>Use search box to quickly find requests by Request ID or Date</li>
+                            <li>Use search box to quickly find orders by Order ID or Date</li>
                             <li>Export data in Excel or CSV format</li>
-                            <li>Pending requests are awaiting admin approval</li>
+                            <li>Pending orders are awaiting admin approval</li>
                         </ul>
                     </div>
                 </div>
