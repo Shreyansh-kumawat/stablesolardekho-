@@ -122,8 +122,8 @@
                                 @foreach($products as $product)
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $product->category->category_name }}</td>
-                                        <td>{{ $product->subCategory->sub_category_name }}</td>
+                                        <td>{{ $product->category->category_name ?? 'N/A' }}</td>
+                                        <td>{{ $product->subCategory->sub_category_name ?? 'N/A' }}</td>
                                         <td>{{ $product->item_name }}</td>
                                         <td>{{ $product->item_code }}</td>
                                         <td>{{ $product->uom }}</td>

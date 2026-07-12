@@ -149,7 +149,15 @@ class OrderController extends Controller
 
     public function productPricing()
     {
-        $products = Product::with(['category', 'subCategory'])->where('current_sale_price', '>', 0)->get();
+        try {
+            $products = Product::with(['category', 'subCategory'])->where('current_sale_price', '>', 0)->get();
+        } catch (\Exception $e) {
+            try {
+                $products = Product::with(['category'])->where('current_sale_price', '>', 0)->get();
+            } catch (\Exception $e2) {
+                $products = collect();
+            }
+        }
         return view('channelPartner.products.productPricingCp', compact('products'));
     }
 

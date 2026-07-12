@@ -95,7 +95,7 @@
     @endif
 
     {{-- Secondary Admins (master_admin only) --}}
-    @if(Auth::user()->role?->name === 'master_admin')
+    @if(Auth::user()->role_id == 1)
     <li>
         <a href="{{ route('manageSecondaryAdmins') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('manageSecondaryAdmins') ? 'ec-active' : '' }}">
