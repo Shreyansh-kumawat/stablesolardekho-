@@ -233,6 +233,7 @@
           <div class="pd-spec-row"><span class="pd-spec-label">Product ID</span><span class="pd-spec-val">{{ $product->slug }}</span></div>
           @if($product->item_code)<div class="pd-spec-row"><span class="pd-spec-label">Item Code</span><span class="pd-spec-val">{{ $product->item_code }}</span></div>@endif
           @if($product->category)<div class="pd-spec-row"><span class="pd-spec-label">Category</span><span class="pd-spec-val">{{ $product->category->category_name }}</span></div>@endif
+          @if($product->subCategory)<div class="pd-spec-row"><span class="pd-spec-label">Sub-Category</span><span class="pd-spec-val">{{ $product->subCategory->sub_category_name }}</span></div>@endif
           @if($product->uom)<div class="pd-spec-row"><span class="pd-spec-label">Unit</span><span class="pd-spec-val">{{ $product->uom }}</span></div>@endif
           @if($product->type)<div class="pd-spec-row"><span class="pd-spec-label">Type</span><span class="pd-spec-val">{{ $product->type }}</span></div>@endif
           @if($product->brand)<div class="pd-spec-row"><span class="pd-spec-label">Brand</span><span class="pd-spec-val">{{ $product->brand }}</span></div>@endif
