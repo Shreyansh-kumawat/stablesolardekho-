@@ -24,7 +24,30 @@ class ProductController extends Controller
             $query->where('category_id', $activeCategory->id);
         }
 
-        $products = $query->latest()->paginate(12);
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('item_name', 'like', "%{$search}%")
+                  ->orWhere('item_code', 'like', "%{$search}%")
+                  ->orWhere('brand', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('sort')) {
+            match ($request->sort) {
+                'price_low'  => $query->orderBy('current_sale_price', 'asc'),
+                'price_high' => $query->orderBy('current_sale_price', 'desc'),
+                'name_asc'   => $query->orderBy('item_name', 'asc'),
+                'name_desc'  => $query->orderBy('item_name', 'desc'),
+                'oldest'     => $query->orderBy('id', 'asc'),
+                default      => $query->latest(),
+            };
+        } else {
+            $query->latest();
+        }
+
+        $products = $query->paginate(12)->appends($request->query());
 
         return view('shop.index', compact('products', 'categories', 'activeCategory'));
     }

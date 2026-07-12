@@ -35,6 +35,52 @@
     .shop-hero h1 span { color: var(--orange); }
     .shop-hero p { color: #94a3b8; font-size: 0.92rem; margin: 0; }
 
+    /* ── Search & Filter Bar ── */
+    .shop-search-bar {
+        max-width: 1220px; margin: -20px auto 0; padding: 0 20px;
+        position: relative; z-index: 10;
+    }
+    .shop-search-inner {
+        background: var(--card); border: 1px solid var(--border);
+        border-radius: 12px; padding: 16px 20px;
+        display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .shop-search-input {
+        flex: 1; min-width: 200px; background: rgba(255,255,255,0.06);
+        border: 1px solid var(--border); border-radius: 8px;
+        padding: 10px 14px 10px 38px; font-size: 0.88rem;
+        color: var(--text); outline: none; transition: border-color 0.2s;
+    }
+    .shop-search-input:focus { border-color: var(--orange); }
+    .shop-search-input::placeholder { color: var(--muted); }
+    .shop-search-wrap {
+        flex: 1; min-width: 200px; position: relative;
+    }
+    .shop-search-icon {
+        position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+        color: var(--muted); font-size: 0.85rem; pointer-events: none;
+    }
+    .shop-sort-select {
+        background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+        border-radius: 8px; padding: 10px 14px; font-size: 0.84rem;
+        color: var(--text); outline: none; cursor: pointer;
+        transition: border-color 0.2s;
+    }
+    .shop-sort-select:focus { border-color: var(--orange); }
+    .shop-sort-select option { background: #1a2336; color: var(--text); }
+    .shop-search-btn {
+        background: var(--orange); color: #fff; border: none;
+        border-radius: 8px; padding: 10px 20px; font-weight: 700;
+        font-size: 0.85rem; cursor: pointer; transition: background 0.2s;
+    }
+    .shop-search-btn:hover { background: #ea580c; }
+    .shop-clear-btn {
+        background: transparent; color: var(--muted); border: 1px solid var(--border);
+        border-radius: 8px; padding: 10px 14px; font-size: 0.84rem;
+        cursor: pointer; text-decoration: none; transition: all 0.2s;
+    }
+    .shop-clear-btn:hover { color: var(--text); border-color: var(--text); }
+
     /* ── Layout ── */
     .shop-wrap { max-width: 1220px; margin: 0 auto; padding: 36px 20px 72px; }
 
@@ -213,6 +259,28 @@
     </div>
 </div>
 
+{{-- Search & Filter --}}
+<div class="shop-search-bar">
+    <form class="shop-search-inner" method="GET" action="{{ isset($activeCategory) ? route('shop.category', $activeCategory->slug) : route('shop') }}">
+        <div class="shop-search-wrap">
+            <span class="shop-search-icon">&#128269;</span>
+            <input type="text" name="search" class="shop-search-input" placeholder="Search by name, brand, code..." value="{{ request('search') }}">
+        </div>
+        <select name="sort" class="shop-sort-select">
+            <option value="">Latest First</option>
+            <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low to High</option>
+            <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price: High to Low</option>
+            <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Name: A to Z</option>
+            <option value="name_desc" {{ request('sort') == 'name_desc' ? 'selected' : '' }}>Name: Z to A</option>
+            <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Oldest First</option>
+        </select>
+        <button type="submit" class="shop-search-btn">Search</button>
+        @if(request('search') || request('sort'))
+            <a href="{{ isset($activeCategory) ? route('shop.category', $activeCategory->slug) : route('shop') }}" class="shop-clear-btn">Clear</a>
+        @endif
+    </form>
+</div>
+
 {{-- Body --}}
 <div class="shop-wrap">
 
@@ -278,7 +346,13 @@
         @else
         <div class="shop-empty">
             <p style="color:#fff;font-size:1.1rem;font-weight:700;margin:0 0 8px;">No products found</p>
-            <p style="color:var(--muted);font-size:0.88rem;margin:0 0 24px;">Try a different category.</p>
+            <p style="color:var(--muted);font-size:0.88rem;margin:0 0 24px;">
+                @if(request('search'))
+                    No results for "{{ request('search') }}". Try a different search term.
+                @else
+                    Try a different category.
+                @endif
+            </p>
             <a href="{{ route('shop') }}" style="background:var(--orange);color:#fff;padding:10px 26px;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.9rem;">View All Products</a>
         </div>
         @endif
