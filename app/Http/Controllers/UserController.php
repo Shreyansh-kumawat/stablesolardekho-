@@ -459,11 +459,28 @@ class UserController extends Controller
 
     public function deleteCp($id)
     {
-        $cp = ChannelPartner::findOrFail($id);
-        User::where('cp_id', $cp->id)->update(['role_id' => 3, 'cp_id' => null, 'cp_permissions' => null]);
-        $cp->delete();
+        try {
+            $cp = ChannelPartner::findOrFail($id);
 
-        return response()->json(['success' => true, 'message' => 'Channel Partner deleted successfully.']);
+            $updateData = ['role_id' => 3, 'cp_id' => null];
+            if (\Schema::hasColumn('users', 'cp_permissions')) {
+                $updateData['cp_permissions'] = null;
+            }
+            User::where('cp_id', $cp->id)->update($updateData);
+
+            $relatedTables = ['cp_orders', 'cp_product_inventories', 'cp_product_inventory_transactions', 'cp_wallets', 'cp_wallet_transactions'];
+            foreach ($relatedTables as $table) {
+                if (\Schema::hasTable($table)) {
+                    \DB::table($table)->where('cp_id', $cp->id)->delete();
+                }
+            }
+
+            $cp->delete();
+
+            return response()->json(['success' => true, 'message' => 'Channel Partner deleted successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to delete: ' . $e->getMessage()], 500);
+        }
     }
 
     public function toggleCpStatus($id)
