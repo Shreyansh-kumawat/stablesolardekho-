@@ -496,6 +496,24 @@
     <script src="/assets/js/select2.min.js"></script>
 
     <script>
+        @if(session('permission_error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Access Denied',
+            text: @json(session('permission_error')),
+            confirmButtonColor: '#6366f1'
+        });
+        @endif
+        $(document).ajaxError(function(e, xhr) {
+            if (xhr.status === 403) {
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    if (data.permission_error) {
+                        Swal.fire({ icon: 'error', title: 'Access Denied', text: data.message, confirmButtonColor: '#6366f1' });
+                    }
+                } catch(ex) {}
+            }
+        });
         document.documentElement.style.overflow = 'hidden';
         const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebarToggle');
