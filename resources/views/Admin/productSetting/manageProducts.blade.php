@@ -456,6 +456,25 @@
                     Manage Products
                 </h1>
                 <p>{{ count($product_list) }} product{{ count($product_list) != 1 ? 's' : '' }} total</p>
+                @if(Auth::user()->role_id == 2)
+                <div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;">
+                    @if(Auth::user()->hasAdminPermission('products.add'))
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:0.78rem;font-weight:600;color:#166534;"><span style="width:8px;height:8px;border-radius:50%;background:#166534;display:inline-block;"></span> Add</span>
+                    @else
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:0.78rem;font-weight:600;color:#dc2626;"><span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block;"></span> Add</span>
+                    @endif
+                    @if(Auth::user()->hasAdminPermission('products.edit'))
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:0.78rem;font-weight:600;color:#166534;"><span style="width:8px;height:8px;border-radius:50%;background:#166534;display:inline-block;"></span> Edit</span>
+                    @else
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:0.78rem;font-weight:600;color:#dc2626;"><span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block;"></span> Edit</span>
+                    @endif
+                    @if(Auth::user()->hasAdminPermission('products.delete'))
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:0.78rem;font-weight:600;color:#166534;"><span style="width:8px;height:8px;border-radius:50%;background:#166534;display:inline-block;"></span> Remove</span>
+                    @else
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:0.78rem;font-weight:600;color:#dc2626;"><span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block;"></span> Remove</span>
+                    @endif
+                </div>
+                @endif
             </div>
             <button type="button" class="btn-save" id="addNewProductBtn" style="padding:0.6rem 1.3rem;font-size:0.88rem;">
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>

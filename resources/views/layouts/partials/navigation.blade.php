@@ -13,7 +13,7 @@
             <div class="hidden lg:flex lg:items-center lg:space-x-2 desktop-menu">
                 <a href="{{ route('dashBoardFunction') }}"
                     class="nav-link {{ request()->routeIs('dashBoardFunction') ? 'active' : '' }}">
-                    Dashboard
+                    Home
                 </a>
                 <a href="{{ route('CpInterest') }}"
                     class="nav-link {{ request()->routeIs('CpInterest') ? 'active' : '' }}">
@@ -120,7 +120,7 @@
     <!-- Mobile Navigation Menu -->
     <div id="mobile-menu" class="hidden lg:hidden">
         <div class="px-4 pt-2 pb-4 space-y-1">
-            <a href="{{ route('dashBoardFunction') }}" class="mobile-nav-link block">Dashboard</a>
+            <a href="{{ route('dashBoardFunction') }}" class="mobile-nav-link block">Home</a>
             <a href="{{ route('CpInterest') }}" class="mobile-nav-link block">Channel Partner</a>
             <a href="{{ route('installationPartner') }}" class="mobile-nav-link block">Installation Partner</a>
             <a href="{{ route('ourTeam') }}" class="mobile-nav-link block">Our Team</a>

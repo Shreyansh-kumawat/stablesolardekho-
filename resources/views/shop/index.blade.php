@@ -80,6 +80,12 @@
         cursor: pointer; text-decoration: none; transition: all 0.2s;
     }
     .shop-clear-btn:hover { color: var(--text); border-color: var(--text); }
+    .shop-search-input-clear {
+        position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+        background: none; border: none; color: var(--muted); font-size: 1.1rem;
+        cursor: pointer; padding: 2px 6px; display: none;
+    }
+    .shop-search-input-clear:hover { color: var(--text); }
 
     /* ── Layout ── */
     .shop-wrap { max-width: 1220px; margin: 0 auto; padding: 36px 20px 72px; }
@@ -261,12 +267,13 @@
 
 {{-- Search & Filter --}}
 <div class="shop-search-bar">
-    <form class="shop-search-inner" method="GET" action="{{ isset($activeCategory) ? route('shop.category', $activeCategory->slug) : route('shop') }}">
+    <form class="shop-search-inner" id="shopFilterForm" method="GET" action="{{ isset($activeCategory) ? route('shop.category', $activeCategory->slug) : route('shop') }}">
         <div class="shop-search-wrap">
             <span class="shop-search-icon">&#128269;</span>
-            <input type="text" name="search" class="shop-search-input" placeholder="Search by name, brand, code..." value="{{ request('search') }}">
+            <input type="text" name="search" id="shopSearchInput" class="shop-search-input" placeholder="Search by name, brand, code..." value="{{ request('search') }}" autocomplete="off">
+            <button type="button" class="shop-search-input-clear" id="searchClearBtn">&times;</button>
         </div>
-        <select name="sort" class="shop-sort-select">
+        <select name="sort" id="shopSortSelect" class="shop-sort-select">
             <option value="">Latest First</option>
             <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low to High</option>
             <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price: High to Low</option>
@@ -274,10 +281,6 @@
             <option value="name_desc" {{ request('sort') == 'name_desc' ? 'selected' : '' }}>Name: Z to A</option>
             <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Oldest First</option>
         </select>
-        <button type="submit" class="shop-search-btn">Search</button>
-        @if(request('search') || request('sort'))
-            <a href="{{ isset($activeCategory) ? route('shop.category', $activeCategory->slug) : route('shop') }}" class="shop-clear-btn">Clear</a>
-        @endif
     </form>
 </div>
 
@@ -292,7 +295,12 @@
         @if($products->count())
         <div class="shop-grid">
             @foreach($products as $product)
-            <a href="{{ route('product.show', $product->slug) }}" class="prod-card">
+            <a href="{{ route('product.show', $product->slug) }}" class="prod-card"
+               data-name="{{ strtolower($product->item_name) }}"
+               data-brand="{{ strtolower($product->brand ?? '') }}"
+               data-code="{{ strtolower($product->item_code ?? '') }}"
+               data-category="{{ strtolower($product->category->category_name ?? '') }}"
+               data-price="{{ $product->current_sale_price ?? 0 }}">
                 <div class="prod-img">
                     @if($product->image)
                         <img src="{{ Storage::url($product->image) }}" alt="{{ $product->item_name }}">
@@ -359,4 +367,66 @@
     </div>
 </div>
 
+@endsection
+
+@section('js')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var searchInput = document.getElementById('shopSearchInput');
+    var sortSelect = document.getElementById('shopSortSelect');
+    var clearBtn = document.getElementById('searchClearBtn');
+    var cards = document.querySelectorAll('.prod-card');
+    var countEl = document.querySelector('.shop-topbar-count');
+    var grid = document.querySelector('.shop-grid');
+    var emptyEl = document.querySelector('.shop-empty');
+    var form = document.getElementById('shopFilterForm');
+
+    if (form) form.addEventListener('submit', function(e) { e.preventDefault(); });
+
+    function toggleClearBtn() {
+        if (clearBtn) clearBtn.style.display = searchInput.value.length > 0 ? 'block' : 'none';
+    }
+
+    function filterAndSort() {
+        var term = searchInput.value.toLowerCase().trim();
+        var sort = sortSelect.value;
+        var visible = [];
+
+        cards.forEach(function(card) {
+            var name = card.dataset.name || '';
+            var brand = card.dataset.brand || '';
+            var code = card.dataset.code || '';
+            var category = card.dataset.category || '';
+            var match = !term || name.indexOf(term) > -1 || brand.indexOf(term) > -1 || code.indexOf(term) > -1 || category.indexOf(term) > -1;
+            card.style.display = match ? '' : 'none';
+            if (match) visible.push(card);
+        });
+
+        if (sort && grid) {
+            visible.sort(function(a, b) {
+                if (sort === 'price_low') return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+                if (sort === 'price_high') return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+                if (sort === 'name_asc') return a.dataset.name.localeCompare(b.dataset.name);
+                if (sort === 'name_desc') return b.dataset.name.localeCompare(a.dataset.name);
+                return 0;
+            });
+            visible.forEach(function(card) { grid.appendChild(card); });
+        }
+
+        if (countEl) countEl.textContent = visible.length + ' product' + (visible.length !== 1 ? 's' : '') + ' found';
+        if (emptyEl) emptyEl.style.display = visible.length === 0 ? '' : 'none';
+
+        toggleClearBtn();
+    }
+
+    if (searchInput) searchInput.addEventListener('input', filterAndSort);
+    if (sortSelect) sortSelect.addEventListener('change', filterAndSort);
+    if (clearBtn) clearBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        filterAndSort();
+    });
+
+    toggleClearBtn();
+});
+</script>
 @endsection
