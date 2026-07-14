@@ -403,8 +403,12 @@
                     <div>
                         <label class="form-label">Category Image <span style="color:#94a3b8; font-weight:400;">(leave empty to keep existing)</span></label>
                         <input type="file" class="form-control" name="image" accept="image/*" id="editCatImageInput">
-                        <div class="img-preview-box" id="editCatPreviewBox" style="display:none;">
-                            <img id="editCatPreviewImg" src="" alt="Current Image">
+                        <div class="img-preview-box" id="editCatPreviewBox" style="display:none;position:relative;display:inline-block;">
+                            <img id="editCatPreviewImg" src="" alt="Current Image" style="max-width:80px;border-radius:6px;border:1px solid #dee2e6;">
+                            <button type="button" id="delCatImgBtn" style="position:absolute;top:-5px;right:-5px;width:20px;height:20px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0;"
+                                title="Delete image">
+                                <svg width="10" height="10" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
                             <p style="margin:6px 0 0; font-size:0.75rem; color:#636e72;">Current image</p>
                         </div>
                     </div>
@@ -562,6 +566,38 @@ $(document).ready(function () {
             previewBox.querySelector('p').textContent = 'New image preview';
         };
         reader.readAsDataURL(file);
+    });
+
+    document.getElementById('delCatImgBtn').addEventListener('click', function () {
+        var catId = document.getElementById('editCatId').value;
+        if (!catId) return;
+        Swal.fire({
+            title: 'Delete Image?',
+            text: 'This will permanently remove the category image.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e03131',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Delete',
+            cancelButtonText: 'Cancel'
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/admin/categories/' + catId + '/image',
+                    type: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    success: function () {
+                        document.getElementById('editCatPreviewBox').style.display = 'none';
+                        document.getElementById('editCatPreviewImg').src = '';
+                        document.getElementById('editCatImageInput').value = '';
+                        Swal.fire({ icon: 'success', title: 'Deleted', text: 'Category image removed.', timer: 1500, showConfirmButton: false });
+                    },
+                    error: function () {
+                        Swal.fire({ icon: 'error', title: 'Error', text: 'Could not delete the image.' });
+                    }
+                });
+            }
+        });
     });
 
 });

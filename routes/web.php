@@ -122,6 +122,7 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::get('/products/{id}/images', [ProductController::class, 'getProductImages'])->name('product.images');
     Route::delete('/product-images/{id}', [ProductController::class, 'deleteProductImage'])->name('product.image.delete');
     Route::delete('/products/{id}/main-image', [ProductController::class, 'deleteMainImage'])->name('product.mainImage.delete');
+    Route::delete('/categories/{id}/image', [ProductController::class, 'deleteCategoryImage'])->name('category.image.delete');
     Route::delete('/categories/{id}', [ProductController::class, 'deleteCategory'])->name('category.delete');
     Route::delete('/products/{id}', [ProductController::class, 'deleteProduct'])->name('product.delete');
     Route::get('/get-sub-categories', [ProductController::class, 'getSubCategories'])->name('getSubCategory');
