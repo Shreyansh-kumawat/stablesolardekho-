@@ -1239,6 +1239,23 @@
                 });
             });
 
+            // Delete main product image
+            $(document).on('click', '.del-main-img', function() {
+                const btn = $(this);
+                const productId = btn.data('product-id');
+                if (!confirm('Delete main image?')) return;
+                $.ajax({
+                    url: '{{ url("admin/products") }}/' + productId + '/main-image',
+                    type: 'POST',
+                    data: { _token: '{{ csrf_token() }}', _method: 'DELETE' },
+                    success: function(res) {
+                        if (res.success) {
+                            btn.closest('.gallery-thumb').remove();
+                        }
+                    }
+                });
+            });
+
             // Edit Product
             $(document).on('click', '.edit-product-btn', function () {
                 const btn = $(this);
@@ -1297,10 +1314,18 @@
                 }
                 $('#editUomList .mdd-opt').removeClass('mdd-active');
 
-                // Show existing main image
+                // Show existing main image with delete button
                 const img = btn.data('image');
-                if (img) { $('#editImgPreview').html(`<img src="${img}" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #dee2e6;">`); }
-                else { $('#editImgPreview').empty(); }
+                if (img) {
+                    $('#editImgPreview').html(`
+                        <div class="gallery-thumb" style="position:relative;display:inline-block;">
+                            <img src="${img}" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #dee2e6;">
+                            <button type="button" class="del-main-img" data-product-id="${id}"
+                                style="position:absolute;top:-5px;right:-5px;width:17px;height:17px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:9px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;">
+                                <svg width="9" height="9" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>`);
+                } else { $('#editImgPreview').empty(); }
 
                 // Reset gallery
                 editGalleryFiles = [];

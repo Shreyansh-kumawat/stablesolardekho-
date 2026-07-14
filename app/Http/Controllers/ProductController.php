@@ -328,6 +328,18 @@ class ProductController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function deleteMainImage($id)
+    {
+        abort_unless(auth()->user()->hasAdminPermission('products.edit'), 403);
+        $product = Product::findOrFail($id);
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+            $product->image = null;
+            $product->save();
+        }
+        return response()->json(['success' => true]);
+    }
+
     public function deleteCategory($id)
     {
         abort_unless(auth()->user()->hasAdminPermission('categories.delete'), 403);
