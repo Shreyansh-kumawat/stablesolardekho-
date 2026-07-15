@@ -25,11 +25,6 @@
                         </button>
                         <div id="profileMenu"
                             class="absolute right-0 mt-1 w-40 border rounded-lg shadow-lg hidden z-50">
-                            <a href="{{ route('profile.edit') }}"
-                                class="flex items-center gap-2 px-3 py-2 text-xs font-semibold transition-colors border-b first:rounded-t-lg">
-                                <i class="fa fa-lock" style="font-size: 11px;"></i>
-                                Change Password
-                            </a>
                             <form id="logoutForm" method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit"
