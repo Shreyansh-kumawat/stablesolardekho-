@@ -552,9 +552,7 @@ class UserController extends Controller
                 if ($user) {
                     $user->role_id = 4;
                     $user->cp_id = $cp->id;
-                    if (\Schema::hasColumn('users', 'cp_permissions')) {
-                        $user->cp_permissions = json_encode(['new_request', 'view_requests', 'product_pricing', 'view_inventory']);
-                    }
+                    $user->cp_permissions = ['new_request', 'view_requests', 'product_pricing', 'view_inventory'];
                     $user->save();
                 }
             }
