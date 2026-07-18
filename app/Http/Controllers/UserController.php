@@ -358,8 +358,13 @@ class UserController extends Controller
             $cp->active_status = 1;
             $cp->save();
 
-            // Send registration email to the channel partner
-            // Mail::to(users: $cp->email)->send(new CpRegistrationEmail($cp));
+            $user = User::where('email', $cp->email)->first();
+            if ($user) {
+                $user->role_id = 4;
+                $user->cp_id = $cp->id;
+                $user->cp_permissions = ['new_request', 'view_requests', 'product_pricing', 'view_inventory'];
+                $user->save();
+            }
 
             return redirect()->route('cpList')->with('success', 'New Channel Partner "' . $cp->cp_name . '" added successfully.');
         } catch (Exception $e) {
