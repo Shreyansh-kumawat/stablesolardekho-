@@ -2,68 +2,74 @@
 @section('page_title', 'Referrals & Cashback')
 
 @section('content')
-<div class="p-4">
+<div style="padding:20px;">
 
     {{-- Stats --}}
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
-        <div class="bg-white rounded-xl shadow-sm p-5 text-center">
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Leads</p>
-            <p class="text-2xl font-bold text-gray-800">{{ $leads->count() }}</p>
+        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:20px;text-align:center;">
+            <p style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Total Leads</p>
+            <p style="font-size:1.75rem;font-weight:800;color:#1e293b;margin:0;">{{ $leads->count() }}</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm p-5 text-center">
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Active Codes</p>
-            <p class="text-2xl font-bold text-gray-800">{{ $codes->where('is_active', true)->count() }}</p>
+        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:20px;text-align:center;">
+            <p style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Active Codes</p>
+            <p style="font-size:1.75rem;font-weight:800;color:#1e293b;margin:0;">{{ $codes->where('is_active', true)->count() }}</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm p-5 text-center">
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Pending Cashback</p>
-            <p class="text-2xl font-bold text-amber-500">{{ $leads->where('status','payment_done')->count() }}</p>
+        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:20px;text-align:center;">
+            <p style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Pending Cashback</p>
+            <p style="font-size:1.75rem;font-weight:800;color:#d97706;margin:0;">{{ $leads->where('status','payment_done')->count() }}</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm p-5 text-center">
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Paid</p>
-            <p class="text-2xl font-bold text-emerald-600">₹{{ number_format($leads->flatMap(fn($l)=>$l->cashback?collect([$l->cashback]):collect())->where('status','paid')->sum('cashback_amount')) }}</p>
+        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:20px;text-align:center;">
+            <p style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Total Paid</p>
+            <p style="font-size:1.75rem;font-weight:800;color:#059669;margin:0;">₹{{ number_format($leads->flatMap(fn($l)=>$l->cashback?collect([$l->cashback]):collect())->where('status','paid')->sum('cashback_amount')) }}</p>
         </div>
     </div>
 
     {{-- Tabs --}}
-    <div class="flex gap-1 mb-4 border-b border-gray-200">
-        <button onclick="showTab('leads')" id="tab-leads" class="ref-tab px-4 py-2 text-sm font-semibold border-b-2 border-blue-600 text-blue-600">Referral Leads</button>
-        <button onclick="showTab('codes')" id="tab-codes" class="ref-tab px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700">Referral Codes</button>
-        <button onclick="showTab('cashback')" id="tab-cashback" class="ref-tab px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700">Cashback</button>
+    <div style="display:flex;gap:4px;border-bottom:2px solid #e5e7eb;margin-bottom:20px;">
+        <button onclick="showTab('leads')" id="tab-leads" class="ref-tab" style="padding:10px 20px;font-size:.85rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid #2563eb;color:#2563eb;margin-bottom:-2px;">Referral Leads</button>
+        <button onclick="showTab('codes')" id="tab-codes" class="ref-tab" style="padding:10px 20px;font-size:.85rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:#6b7280;margin-bottom:-2px;">Referral Codes</button>
+        <button onclick="showTab('cashback')" id="tab-cashback" class="ref-tab" style="padding:10px 20px;font-size:.85rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:#6b7280;margin-bottom:-2px;">Cashback</button>
     </div>
 
     {{-- LEADS TAB --}}
     <div id="panel-leads" class="ref-panel">
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
+        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;">
+            <div style="overflow-x:auto;">
+                <table style="width:100%;font-size:.85rem;border-collapse:collapse;">
                     <thead>
-                        <tr class="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            <th class="px-4 py-3">#</th><th class="px-4 py-3">Referred Person</th><th class="px-4 py-3">Phone</th><th class="px-4 py-3">City</th><th class="px-4 py-3">System</th><th class="px-4 py-3">Referred By</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Date</th><th class="px-4 py-3">Actions</th>
+                        <tr style="background:#f8fafc;text-align:left;">
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">#</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Referred Person</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Phone</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">City</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">System</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Referred By</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Status</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Date</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody>
                         @forelse($leads as $lead)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3">{{ $lead->id }}</td>
-                            <td class="px-4 py-3"><span class="font-semibold">{{ $lead->name }}</span><br><span class="text-xs text-gray-400">{{ $lead->email }}</span></td>
-                            <td class="px-4 py-3">{{ $lead->phone }}</td>
-                            <td class="px-4 py-3">{{ $lead->city ?? '-' }}</td>
-                            <td class="px-4 py-3">{{ $lead->system_size ?? '-' }}</td>
-                            <td class="px-4 py-3">{{ $lead->referrer->name ?? 'N/A' }}</td>
-                            <td class="px-4 py-3">
-                                @php $colors = ['pending'=>'bg-gray-100 text-gray-600','contacted'=>'bg-blue-100 text-blue-700','installed'=>'bg-purple-100 text-purple-700','payment_done'=>'bg-amber-100 text-amber-700','cashback_approved'=>'bg-emerald-100 text-emerald-700','rejected'=>'bg-red-100 text-red-700']; @endphp
-                                <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold {{ $colors[$lead->status] ?? 'bg-gray-100 text-gray-600' }}">{{ ucwords(str_replace('_',' ',$lead->status)) }}</span>
-                            </td>
-                            <td class="px-4 py-3 text-xs text-gray-500">{{ $lead->created_at->format('d M Y') }}</td>
-                            <td class="px-4 py-3 flex gap-1">
-                                <button class="update-status-btn px-2 py-1 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-semibold" data-id="{{ $lead->id }}" data-status="{{ $lead->status }}" data-remarks="{{ $lead->admin_remarks }}"><i class="fas fa-edit"></i></button>
+                        @php $statusColors = ['pending'=>['#f3f4f6','#4b5563'],'contacted'=>['#dbeafe','#1d4ed8'],'installed'=>['#ede9fe','#6d28d9'],'payment_done'=>['#fef3c7','#b45309'],'cashback_approved'=>['#d1fae5','#047857'],'rejected'=>['#fee2e2','#b91c1c']]; $sc=$statusColors[$lead->status]??['#f3f4f6','#4b5563']; @endphp
+                        <tr style="border-top:1px solid #f1f5f9;">
+                            <td style="padding:12px 16px;">{{ $lead->id }}</td>
+                            <td style="padding:12px 16px;"><strong>{{ $lead->name }}</strong><br><span style="color:#9ca3af;font-size:.75rem;">{{ $lead->email }}</span></td>
+                            <td style="padding:12px 16px;">{{ $lead->phone }}</td>
+                            <td style="padding:12px 16px;">{{ $lead->city ?? '-' }}</td>
+                            <td style="padding:12px 16px;">{{ $lead->system_size ?? '-' }}</td>
+                            <td style="padding:12px 16px;">{{ $lead->referrer->name ?? 'N/A' }}</td>
+                            <td style="padding:12px 16px;"><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:600;background:{{ $sc[0] }};color:{{ $sc[1] }};">{{ ucwords(str_replace('_',' ',$lead->status)) }}</span></td>
+                            <td style="padding:12px 16px;font-size:.78rem;color:#6b7280;">{{ $lead->created_at->format('d M Y') }}</td>
+                            <td style="padding:12px 16px;">
+                                <button class="update-status-btn" data-id="{{ $lead->id }}" data-status="{{ $lead->status }}" data-remarks="{{ $lead->admin_remarks }}" style="padding:4px 10px;font-size:.75rem;background:#eff6ff;color:#2563eb;border:none;border-radius:4px;cursor:pointer;font-weight:600;"><i class="fas fa-edit"></i></button>
                                 @if($lead->status == 'payment_done' && !$lead->cashback)
-                                <button class="create-cashback-btn px-2 py-1 text-xs bg-emerald-50 text-emerald-600 rounded hover:bg-emerald-100 font-semibold" data-id="{{ $lead->id }}" data-name="{{ $lead->name }}"><i class="fas fa-coins"></i> Cashback</button>
+                                <button class="create-cashback-btn" data-id="{{ $lead->id }}" data-name="{{ $lead->name }}" style="padding:4px 10px;font-size:.75rem;background:#ecfdf5;color:#059669;border:none;border-radius:4px;cursor:pointer;font-weight:600;"><i class="fas fa-coins"></i> Cashback</button>
                                 @endif
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="9" class="px-4 py-8 text-center text-gray-400">No referral leads yet</td></tr>
+                        <tr><td colspan="9" style="padding:32px;text-align:center;color:#9ca3af;">No referral leads yet</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -72,36 +78,41 @@
     </div>
 
     {{-- CODES TAB --}}
-    <div id="panel-codes" class="ref-panel hidden">
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-                <h3 class="font-semibold text-gray-700">Referral Codes</h3>
-                <button onclick="document.getElementById('genCodeModal').classList.add('active')" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700"><i class="fas fa-plus mr-1"></i>Generate Code</button>
+    <div id="panel-codes" class="ref-panel" style="display:none;">
+        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #f1f5f9;">
+                <h3 style="font-weight:700;color:#374151;margin:0;font-size:.95rem;">Referral Codes</h3>
+                <button onclick="document.getElementById('genCodeModal').classList.add('active')" style="padding:6px 14px;background:#2563eb;color:#fff;font-size:.78rem;font-weight:600;border:none;border-radius:8px;cursor:pointer;"><i class="fas fa-plus" style="margin-right:4px;"></i>Generate Code</button>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
+            <div style="overflow-x:auto;">
+                <table style="width:100%;font-size:.85rem;border-collapse:collapse;">
                     <thead>
-                        <tr class="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            <th class="px-4 py-3">User</th><th class="px-4 py-3">Code</th><th class="px-4 py-3">Referral Link</th><th class="px-4 py-3">Leads</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Created</th>
+                        <tr style="background:#f8fafc;text-align:left;">
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">User</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Code</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Referral Link</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Leads</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Status</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Created</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody>
                         @forelse($codes as $rc)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3">{{ $rc->user->name ?? 'Deleted' }}</td>
-                            <td class="px-4 py-3"><code class="text-sm font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded">{{ $rc->code }}</code></td>
-                            <td class="px-4 py-3">
-                                <div class="flex gap-1 items-center">
-                                    <input type="text" readonly value="{{ url('/refer/'.$rc->code) }}" class="text-xs border border-gray-200 rounded px-2 py-1 w-56 bg-gray-50" id="link-{{ $rc->id }}">
-                                    <button class="copy-link-btn px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200" data-target="link-{{ $rc->id }}"><i class="fas fa-copy"></i></button>
+                        <tr style="border-top:1px solid #f1f5f9;">
+                            <td style="padding:12px 16px;">{{ $rc->user->name ?? 'Deleted' }}</td>
+                            <td style="padding:12px 16px;"><code style="font-size:.9rem;font-weight:700;color:#ea580c;background:#fff7ed;padding:2px 8px;border-radius:4px;">{{ $rc->code }}</code></td>
+                            <td style="padding:12px 16px;">
+                                <div style="display:flex;gap:6px;align-items:center;">
+                                    <input type="text" readonly value="{{ url('/refer/'.$rc->code) }}" id="link-{{ $rc->id }}" style="font-size:.75rem;border:1px solid #e5e7eb;border-radius:4px;padding:4px 8px;width:220px;background:#f9fafb;">
+                                    <button class="copy-link-btn" data-target="link-{{ $rc->id }}" style="padding:4px 8px;font-size:.75rem;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:4px;cursor:pointer;"><i class="fas fa-copy"></i></button>
                                 </div>
                             </td>
-                            <td class="px-4 py-3">{{ \App\Models\ReferralLead::where('referrer_id', $rc->user_id)->count() }}</td>
-                            <td class="px-4 py-3"><span class="inline-block px-2 py-1 rounded-full text-xs font-semibold {{ $rc->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500' }}">{{ $rc->is_active ? 'Active' : 'Inactive' }}</span></td>
-                            <td class="px-4 py-3 text-xs text-gray-500">{{ $rc->created_at->format('d M Y') }}</td>
+                            <td style="padding:12px 16px;">{{ \App\Models\ReferralLead::where('referrer_id', $rc->user_id)->count() }}</td>
+                            <td style="padding:12px 16px;"><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:600;background:{{ $rc->is_active?'#d1fae5':'#f3f4f6' }};color:{{ $rc->is_active?'#047857':'#6b7280' }};">{{ $rc->is_active ? 'Active' : 'Inactive' }}</span></td>
+                            <td style="padding:12px 16px;font-size:.78rem;color:#6b7280;">{{ $rc->created_at->format('d M Y') }}</td>
                         </tr>
                         @empty
-                        <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">No referral codes generated yet</td></tr>
+                        <tr><td colspan="6" style="padding:32px;text-align:center;color:#9ca3af;">No referral codes generated yet</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -110,40 +121,47 @@
     </div>
 
     {{-- CASHBACK TAB --}}
-    <div id="panel-cashback" class="ref-panel hidden">
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
+    <div id="panel-cashback" class="ref-panel" style="display:none;">
+        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;">
+            <div style="overflow-x:auto;">
+                <table style="width:100%;font-size:.85rem;border-collapse:collapse;">
                     <thead>
-                        <tr class="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            <th class="px-4 py-3">#</th><th class="px-4 py-3">Referrer</th><th class="px-4 py-3">Lead</th><th class="px-4 py-3">Deal Amt</th><th class="px-4 py-3">%</th><th class="px-4 py-3">Cashback</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Actions</th>
+                        <tr style="background:#f8fafc;text-align:left;">
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">#</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Referrer</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Lead</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Deal Amt</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">%</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Cashback</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Status</th>
+                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody>
                         @php $cashbacks = \App\Models\CashbackTransaction::with(['referrer','lead'])->latest()->get(); @endphp
                         @forelse($cashbacks as $cb)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3">{{ $cb->id }}</td>
-                            <td class="px-4 py-3">{{ $cb->referrer->name ?? 'N/A' }}</td>
-                            <td class="px-4 py-3">{{ $cb->lead->name ?? 'N/A' }}</td>
-                            <td class="px-4 py-3">₹{{ number_format($cb->deal_amount) }}</td>
-                            <td class="px-4 py-3">{{ $cb->cashback_percentage }}%</td>
-                            <td class="px-4 py-3 font-bold text-emerald-600">₹{{ number_format($cb->cashback_amount) }}</td>
-                            <td class="px-4 py-3">
-                                @php $cbColors = ['pending'=>'bg-amber-100 text-amber-700','approved'=>'bg-blue-100 text-blue-700','paid'=>'bg-emerald-100 text-emerald-700','rejected'=>'bg-red-100 text-red-700']; @endphp
-                                <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold {{ $cbColors[$cb->status] ?? 'bg-gray-100' }}">{{ ucfirst($cb->status) }}</span>
-                                @if($cb->paid_at)<br><span class="text-xs text-gray-400">Paid {{ $cb->paid_at->format('d M') }}</span>@endif
+                        @php $cbColors=['pending'=>['#fef3c7','#b45309'],'approved'=>['#dbeafe','#1d4ed8'],'paid'=>['#d1fae5','#047857'],'rejected'=>['#fee2e2','#b91c1c']]; $cc=$cbColors[$cb->status]??['#f3f4f6','#4b5563']; @endphp
+                        <tr style="border-top:1px solid #f1f5f9;">
+                            <td style="padding:12px 16px;">{{ $cb->id }}</td>
+                            <td style="padding:12px 16px;">{{ $cb->referrer->name ?? 'N/A' }}</td>
+                            <td style="padding:12px 16px;">{{ $cb->lead->name ?? 'N/A' }}</td>
+                            <td style="padding:12px 16px;">₹{{ number_format($cb->deal_amount) }}</td>
+                            <td style="padding:12px 16px;">{{ $cb->cashback_percentage }}%</td>
+                            <td style="padding:12px 16px;font-weight:700;color:#059669;">₹{{ number_format($cb->cashback_amount) }}</td>
+                            <td style="padding:12px 16px;">
+                                <span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:600;background:{{ $cc[0] }};color:{{ $cc[1] }};">{{ ucfirst($cb->status) }}</span>
+                                @if($cb->paid_at)<br><span style="font-size:.72rem;color:#9ca3af;">Paid {{ $cb->paid_at->format('d M') }}</span>@endif
                             </td>
-                            <td class="px-4 py-3">
+                            <td style="padding:12px 16px;">
                                 @if($cb->status == 'pending')
-                                <button class="approve-cb-btn px-2 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-700 font-semibold" data-id="{{ $cb->id }}"><i class="fas fa-check"></i> Approve</button>
+                                <button class="approve-cb-btn" data-id="{{ $cb->id }}" style="padding:4px 12px;font-size:.75rem;background:#059669;color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:600;"><i class="fas fa-check"></i> Approve</button>
                                 @elseif($cb->status == 'approved')
-                                <button class="mark-paid-btn px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold" data-id="{{ $cb->id }}"><i class="fas fa-money-bill"></i> Mark Paid</button>
+                                <button class="mark-paid-btn" data-id="{{ $cb->id }}" style="padding:4px 12px;font-size:.75rem;background:#2563eb;color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:600;"><i class="fas fa-money-bill"></i> Mark Paid</button>
                                 @endif
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="8" class="px-4 py-8 text-center text-gray-400">No cashback transactions yet</td></tr>
+                        <tr><td colspan="8" style="padding:32px;text-align:center;color:#9ca3af;">No cashback transactions yet</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -152,7 +170,7 @@
     </div>
 </div>
 
-{{-- MODALS (inline styled, no Bootstrap CSS needed) --}}
+{{-- MODALS --}}
 <style>
 .ref-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:none;align-items:center;justify-content:center;}
 .ref-modal-overlay.active{display:flex;}
@@ -162,52 +180,40 @@
 .ref-modal-body{padding:20px;}
 .ref-modal-footer{padding:12px 20px;border-top:1px solid #e5e7eb;text-align:right;}
 .ref-modal label{display:block;font-size:.8rem;font-weight:600;color:#374151;margin-bottom:4px;}
-.ref-modal select,.ref-modal input,.ref-modal textarea{width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:.9rem;margin-bottom:12px;}
-.ref-modal .btn-primary{padding:8px 20px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;}
-.ref-modal .btn-success{padding:8px 20px;background:#059669;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;}
-.ref-modal .btn-close{background:none;border:none;font-size:1.2rem;cursor:pointer;color:#9ca3af;}
+.ref-modal select,.ref-modal input,.ref-modal textarea{width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:.9rem;margin-bottom:12px;box-sizing:border-box;}
+.ref-btn-primary{padding:8px 20px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;}
+.ref-btn-success{padding:8px 20px;background:#059669;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;}
+.ref-btn-close{background:none;border:none;font-size:1.4rem;cursor:pointer;color:#9ca3af;line-height:1;}
 </style>
 
-{{-- Update Status Modal --}}
-<div id="statusModal" class="ref-modal-overlay">
-<div class="ref-modal">
-    <div class="ref-modal-header"><h3>Update Lead Status</h3><button class="btn-close" onclick="document.getElementById('statusModal').classList.remove('active')">&times;</button></div>
+<div id="statusModal" class="ref-modal-overlay"><div class="ref-modal">
+    <div class="ref-modal-header"><h3>Update Lead Status</h3><button class="ref-btn-close" onclick="document.getElementById('statusModal').classList.remove('active')">&times;</button></div>
     <div class="ref-modal-body">
         <input type="hidden" id="statusLeadId">
         <label>Status</label>
-        <select id="statusSelect">
-            <option value="pending">Pending</option><option value="contacted">Contacted</option><option value="installed">Installed</option><option value="payment_done">Payment Done</option><option value="cashback_approved">Cashback Approved</option><option value="rejected">Rejected</option>
-        </select>
+        <select id="statusSelect"><option value="pending">Pending</option><option value="contacted">Contacted</option><option value="installed">Installed</option><option value="payment_done">Payment Done</option><option value="cashback_approved">Cashback Approved</option><option value="rejected">Rejected</option></select>
         <label>Admin Remarks</label>
         <textarea id="statusRemarks" rows="2"></textarea>
     </div>
-    <div class="ref-modal-footer"><button class="btn-primary" id="saveStatusBtn">Save</button></div>
-</div>
-</div>
+    <div class="ref-modal-footer"><button class="ref-btn-primary" id="saveStatusBtn">Save</button></div>
+</div></div>
 
-{{-- Create Cashback Modal --}}
-<div id="cashbackModal" class="ref-modal-overlay">
-<div class="ref-modal">
-    <div class="ref-modal-header"><h3>Create Cashback</h3><button class="btn-close" onclick="document.getElementById('cashbackModal').classList.remove('active')">&times;</button></div>
+<div id="cashbackModal" class="ref-modal-overlay"><div class="ref-modal">
+    <div class="ref-modal-header"><h3>Create Cashback</h3><button class="ref-btn-close" onclick="document.getElementById('cashbackModal').classList.remove('active')">&times;</button></div>
     <div class="ref-modal-body">
         <input type="hidden" id="cbLeadId">
         <p style="margin-bottom:12px;">Lead: <strong id="cbLeadName"></strong></p>
         <label>Deal Amount (₹)</label>
         <input type="number" id="cbDealAmount" placeholder="Total deal value">
         <label>Cashback Slab (%)</label>
-        <select id="cbPercentage">
-            <option value="5">5%</option><option value="6">6%</option><option value="7">7%</option><option value="8">8%</option><option value="10">10%</option>
-        </select>
+        <select id="cbPercentage"><option value="5">5%</option><option value="6">6%</option><option value="7">7%</option><option value="8">8%</option><option value="10">10%</option></select>
         <div id="cbPreview" style="display:none;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;padding:10px 14px;color:#065f46;font-weight:600;">Cashback: <span id="cbPreviewAmt">₹0</span></div>
     </div>
-    <div class="ref-modal-footer"><button class="btn-success" id="saveCashbackBtn">Create Cashback</button></div>
-</div>
-</div>
+    <div class="ref-modal-footer"><button class="ref-btn-success" id="saveCashbackBtn">Create Cashback</button></div>
+</div></div>
 
-{{-- Mark Paid Modal --}}
-<div id="paidModal" class="ref-modal-overlay">
-<div class="ref-modal">
-    <div class="ref-modal-header"><h3>Mark as Paid</h3><button class="btn-close" onclick="document.getElementById('paidModal').classList.remove('active')">&times;</button></div>
+<div id="paidModal" class="ref-modal-overlay"><div class="ref-modal">
+    <div class="ref-modal-header"><h3>Mark as Paid</h3><button class="ref-btn-close" onclick="document.getElementById('paidModal').classList.remove('active')">&times;</button></div>
     <div class="ref-modal-body">
         <input type="hidden" id="paidCbId">
         <label>Payment Mode</label>
@@ -217,14 +223,11 @@
         <label>Remarks</label>
         <textarea id="paidRemarks" rows="2"></textarea>
     </div>
-    <div class="ref-modal-footer"><button class="btn-primary" id="savePaidBtn">Confirm Payment</button></div>
-</div>
-</div>
+    <div class="ref-modal-footer"><button class="ref-btn-primary" id="savePaidBtn">Confirm Payment</button></div>
+</div></div>
 
-{{-- Generate Code Modal --}}
-<div id="genCodeModal" class="ref-modal-overlay">
-<div class="ref-modal">
-    <div class="ref-modal-header"><h3>Generate Referral Code</h3><button class="btn-close" onclick="document.getElementById('genCodeModal').classList.remove('active')">&times;</button></div>
+<div id="genCodeModal" class="ref-modal-overlay"><div class="ref-modal">
+    <div class="ref-modal-header"><h3>Generate Referral Code</h3><button class="ref-btn-close" onclick="document.getElementById('genCodeModal').classList.remove('active')">&times;</button></div>
     <div class="ref-modal-body">
         <label>Select User</label>
         <select id="genUserId">
@@ -233,20 +236,19 @@
             <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>
             @endforeach
         </select>
-        <div id="genResult" style="display:none;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;padding:10px 14px;color:#065f46;"></div>
+        <div id="genResult" style="display:none;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;padding:10px 14px;color:#065f46;margin-top:8px;"></div>
     </div>
-    <div class="ref-modal-footer"><button class="btn-primary" id="genCodeBtn">Generate</button></div>
-</div>
-</div>
+    <div class="ref-modal-footer"><button class="ref-btn-primary" id="genCodeBtn">Generate</button></div>
+</div></div>
 @endsection
 
 @section('js')
 <script>
 function showTab(name){
-    document.querySelectorAll('.ref-panel').forEach(p=>p.classList.add('hidden'));
-    document.querySelectorAll('.ref-tab').forEach(t=>{t.classList.remove('border-blue-600','text-blue-600');t.classList.add('border-transparent','text-gray-500');});
-    document.getElementById('panel-'+name).classList.add('active');
-    var tab=document.getElementById('tab-'+name);tab.classList.add('border-blue-600','text-blue-600');tab.classList.remove('border-transparent','text-gray-500');
+    document.querySelectorAll('.ref-panel').forEach(function(p){p.style.display='none';});
+    document.querySelectorAll('.ref-tab').forEach(function(t){t.style.borderBottomColor='transparent';t.style.color='#6b7280';});
+    document.getElementById('panel-'+name).style.display='block';
+    var tab=document.getElementById('tab-'+name);tab.style.borderBottomColor='#2563eb';tab.style.color='#2563eb';
 }
 var csrf='{{ csrf_token() }}';
 
