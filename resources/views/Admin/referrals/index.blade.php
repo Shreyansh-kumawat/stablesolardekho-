@@ -25,6 +25,14 @@
     </div>
 
     {{-- Tabs --}}
+    <script>
+    function showTab(name){
+        document.querySelectorAll('.ref-panel').forEach(function(p){p.style.display='none';});
+        document.querySelectorAll('.ref-tab').forEach(function(t){t.style.borderBottomColor='transparent';t.style.color='#6b7280';});
+        document.getElementById('panel-'+name).style.display='block';
+        var tab=document.getElementById('tab-'+name);tab.style.borderBottomColor='#2563eb';tab.style.color='#2563eb';
+    }
+    </script>
     <div style="display:flex;gap:4px;border-bottom:2px solid #e5e7eb;margin-bottom:20px;">
         <button onclick="showTab('leads')" id="tab-leads" class="ref-tab" style="padding:10px 20px;font-size:.85rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid #2563eb;color:#2563eb;margin-bottom:-2px;">Referral Leads</button>
         <button onclick="showTab('codes')" id="tab-codes" class="ref-tab" style="padding:10px 20px;font-size:.85rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:#6b7280;margin-bottom:-2px;">Referral Codes</button>
@@ -244,12 +252,6 @@
 
 @section('js')
 <script>
-function showTab(name){
-    document.querySelectorAll('.ref-panel').forEach(function(p){p.style.display='none';});
-    document.querySelectorAll('.ref-tab').forEach(function(t){t.style.borderBottomColor='transparent';t.style.color='#6b7280';});
-    document.getElementById('panel-'+name).style.display='block';
-    var tab=document.getElementById('tab-'+name);tab.style.borderBottomColor='#2563eb';tab.style.color='#2563eb';
-}
 var csrf='{{ csrf_token() }}';
 
 $('.update-status-btn').click(function(){
