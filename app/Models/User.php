@@ -70,6 +70,21 @@ class User extends Authenticatable
         return $this->hasMany(\App\Models\CustomerOrder::class, 'user_id');
     }
 
+    public function referralCode()
+    {
+        return $this->hasOne(ReferralCode::class);
+    }
+
+    public function referralLeads()
+    {
+        return $this->hasMany(ReferralLead::class, 'referrer_id');
+    }
+
+    public function cashbackTransactions()
+    {
+        return $this->hasMany(CashbackTransaction::class, 'referrer_id');
+    }
+
     public function hasCpPermission(string $permission): bool
     {
         $perms = $this->cp_permissions ?? [];

@@ -13,6 +13,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SolarRequirementsController;
+use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WarehouseController;
@@ -39,6 +40,10 @@ Route::get('ourTeam', [UserController::class, 'ourTeam'])->name('ourTeam');
 Route::post('QueryContactUs', [UserController::class, 'QueryContactUs'])->name('QueryContactUs');
 Route::get('allInstallationPhotos', [UserController::class, 'allInstallationPhotos'])->name('allInstallationPhotos');
 
+// Public referral form
+Route::get('/refer/{code}', [ReferralController::class, 'showReferralForm'])->name('referral.form');
+Route::post('/refer/{code}', [ReferralController::class, 'submitReferralForm'])->name('referral.submit');
+
 // Route::get('/dashboard', function () {
 //     return view('dashboard');
 // })->middleware(['auth', 'verified'])->name('dashboard');
@@ -59,6 +64,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/razorpay/callback', [CheckoutController::class, 'razorpayCallback'])->name('razorpay.callback');
     Route::get('/account', [UserController::class, 'account'])->name('user.account');
     Route::post('/account', [UserController::class, 'updateAccount'])->name('user.account.update');
+    Route::get('/my-referrals', [ReferralController::class, 'myReferrals'])->name('user.referrals');
 });
 
 Route::middleware('auth')->group(function () {
@@ -175,6 +181,14 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::post('/customer-orders/{id}/reject-payment', [OrderController::class, 'rejectPayment'])->name('admin.order.rejectPayment');
     Route::delete('/customer-orders/{id}', [OrderController::class, 'deleteCustomerOrder'])->name('admin.order.delete');
     Route::get('/razorpay-transactions', [OrderController::class, 'razorpayTransactions'])->name('razorpayTransactions');
+
+    // Referral routes
+    Route::get('/referrals', [ReferralController::class, 'adminIndex'])->name('admin.referrals');
+    Route::post('/referrals/leads/{id}/status', [ReferralController::class, 'updateLeadStatus'])->name('admin.referrals.updateStatus');
+    Route::post('/referrals/leads/{id}/cashback', [ReferralController::class, 'createCashback'])->name('admin.referrals.createCashback');
+    Route::post('/referrals/cashback/{id}/approve', [ReferralController::class, 'approveCashback'])->name('admin.referrals.approveCashback');
+    Route::post('/referrals/cashback/{id}/paid', [ReferralController::class, 'markCashbackPaid'])->name('admin.referrals.markPaid');
+    Route::post('/referrals/generate-code/{userId}', [ReferralController::class, 'generateCode'])->name('admin.referrals.generateCode');
 
     // Banner routes
     Route::get('/banners', [BannerController::class, 'index'])->name('admin.banners');

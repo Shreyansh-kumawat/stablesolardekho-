@@ -85,6 +85,9 @@
                             <a href="{{ route('user.orders') }}" class="block px-4 py-2.5 text-sm rounded-lg mx-2 {{ !in_array(Auth::user()->role_id, [1, 2, 4]) ? 'mt-2' : '' }}">
                                 My Orders
                             </a>
+                            <a href="{{ route('user.referrals') }}" class="block px-4 py-2.5 text-sm rounded-lg mx-2">
+                                My Referrals
+                            </a>
                             <a href="{{ route('user.account') }}" class="block px-4 py-2.5 text-sm rounded-lg mx-2">
                                 Account
                             </a>
