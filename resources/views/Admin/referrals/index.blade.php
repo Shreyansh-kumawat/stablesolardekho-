@@ -5,7 +5,7 @@
 <div class="p-4">
 
     {{-- Stats --}}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
         <div class="bg-white rounded-xl shadow-sm p-5 text-center">
             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Leads</p>
             <p class="text-2xl font-bold text-gray-800">{{ $leads->count() }}</p>
