@@ -76,7 +76,7 @@
         <div class="bg-white rounded-xl shadow-sm overflow-hidden">
             <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100">
                 <h3 class="font-semibold text-gray-700">Referral Codes</h3>
-                <button onclick="document.getElementById('genCodeModal').classList.remove('hidden')" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700"><i class="fas fa-plus mr-1"></i>Generate Code</button>
+                <button onclick="document.getElementById('genCodeModal').classList.add('active')" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700"><i class="fas fa-plus mr-1"></i>Generate Code</button>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
@@ -154,7 +154,8 @@
 
 {{-- MODALS (inline styled, no Bootstrap CSS needed) --}}
 <style>
-.ref-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:center;justify-content:center;}
+.ref-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:none;align-items:center;justify-content:center;}
+.ref-modal-overlay.active{display:flex;}
 .ref-modal{background:#fff;border-radius:12px;width:90%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
 .ref-modal-header{padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;}
 .ref-modal-header h3{font-size:1rem;font-weight:700;margin:0;}
@@ -168,9 +169,9 @@
 </style>
 
 {{-- Update Status Modal --}}
-<div id="statusModal" class="ref-modal-overlay hidden">
+<div id="statusModal" class="ref-modal-overlay">
 <div class="ref-modal">
-    <div class="ref-modal-header"><h3>Update Lead Status</h3><button class="btn-close" onclick="document.getElementById('statusModal').classList.add('hidden')">&times;</button></div>
+    <div class="ref-modal-header"><h3>Update Lead Status</h3><button class="btn-close" onclick="document.getElementById('statusModal').classList.remove('active')">&times;</button></div>
     <div class="ref-modal-body">
         <input type="hidden" id="statusLeadId">
         <label>Status</label>
@@ -185,9 +186,9 @@
 </div>
 
 {{-- Create Cashback Modal --}}
-<div id="cashbackModal" class="ref-modal-overlay hidden">
+<div id="cashbackModal" class="ref-modal-overlay">
 <div class="ref-modal">
-    <div class="ref-modal-header"><h3>Create Cashback</h3><button class="btn-close" onclick="document.getElementById('cashbackModal').classList.add('hidden')">&times;</button></div>
+    <div class="ref-modal-header"><h3>Create Cashback</h3><button class="btn-close" onclick="document.getElementById('cashbackModal').classList.remove('active')">&times;</button></div>
     <div class="ref-modal-body">
         <input type="hidden" id="cbLeadId">
         <p style="margin-bottom:12px;">Lead: <strong id="cbLeadName"></strong></p>
@@ -204,9 +205,9 @@
 </div>
 
 {{-- Mark Paid Modal --}}
-<div id="paidModal" class="ref-modal-overlay hidden">
+<div id="paidModal" class="ref-modal-overlay">
 <div class="ref-modal">
-    <div class="ref-modal-header"><h3>Mark as Paid</h3><button class="btn-close" onclick="document.getElementById('paidModal').classList.add('hidden')">&times;</button></div>
+    <div class="ref-modal-header"><h3>Mark as Paid</h3><button class="btn-close" onclick="document.getElementById('paidModal').classList.remove('active')">&times;</button></div>
     <div class="ref-modal-body">
         <input type="hidden" id="paidCbId">
         <label>Payment Mode</label>
@@ -221,9 +222,9 @@
 </div>
 
 {{-- Generate Code Modal --}}
-<div id="genCodeModal" class="ref-modal-overlay hidden">
+<div id="genCodeModal" class="ref-modal-overlay">
 <div class="ref-modal">
-    <div class="ref-modal-header"><h3>Generate Referral Code</h3><button class="btn-close" onclick="document.getElementById('genCodeModal').classList.add('hidden')">&times;</button></div>
+    <div class="ref-modal-header"><h3>Generate Referral Code</h3><button class="btn-close" onclick="document.getElementById('genCodeModal').classList.remove('active')">&times;</button></div>
     <div class="ref-modal-body">
         <label>Select User</label>
         <select id="genUserId">
@@ -244,14 +245,14 @@
 function showTab(name){
     document.querySelectorAll('.ref-panel').forEach(p=>p.classList.add('hidden'));
     document.querySelectorAll('.ref-tab').forEach(t=>{t.classList.remove('border-blue-600','text-blue-600');t.classList.add('border-transparent','text-gray-500');});
-    document.getElementById('panel-'+name).classList.remove('hidden');
+    document.getElementById('panel-'+name).classList.add('active');
     var tab=document.getElementById('tab-'+name);tab.classList.add('border-blue-600','text-blue-600');tab.classList.remove('border-transparent','text-gray-500');
 }
 var csrf='{{ csrf_token() }}';
 
 $('.update-status-btn').click(function(){
     $('#statusLeadId').val($(this).data('id'));$('#statusSelect').val($(this).data('status'));$('#statusRemarks').val($(this).data('remarks'));
-    document.getElementById('statusModal').classList.remove('hidden');
+    document.getElementById('statusModal').classList.add('active');
 });
 $('#saveStatusBtn').click(function(){
     $.post('/admin/referrals/leads/'+$('#statusLeadId').val()+'/status',{_token:csrf,status:$('#statusSelect').val(),admin_remarks:$('#statusRemarks').val()},function(){location.reload();});
@@ -259,7 +260,7 @@ $('#saveStatusBtn').click(function(){
 
 $('.create-cashback-btn').click(function(){
     $('#cbLeadId').val($(this).data('id'));$('#cbLeadName').text($(this).data('name'));$('#cbDealAmount').val('');$('#cbPreview').hide();
-    document.getElementById('cashbackModal').classList.remove('hidden');
+    document.getElementById('cashbackModal').classList.add('active');
 });
 $('#cbDealAmount,#cbPercentage').on('input change',function(){
     var a=parseFloat($('#cbDealAmount').val())||0,p=parseFloat($('#cbPercentage').val())||0;
@@ -275,7 +276,7 @@ $('.approve-cb-btn').click(function(){
 });
 
 $('.mark-paid-btn').click(function(){
-    $('#paidCbId').val($(this).data('id'));document.getElementById('paidModal').classList.remove('hidden');
+    $('#paidCbId').val($(this).data('id'));document.getElementById('paidModal').classList.add('active');
 });
 $('#savePaidBtn').click(function(){
     $.post('/admin/referrals/cashback/'+$('#paidCbId').val()+'/paid',{_token:csrf,payment_mode:$('#paidMode').val(),transaction_reference:$('#paidRef').val(),admin_remarks:$('#paidRemarks').val()},function(){location.reload();});
