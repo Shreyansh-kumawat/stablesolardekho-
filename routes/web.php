@@ -56,6 +56,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
     Route::get('/checkout', [CheckoutController::class, 'show'])->name('order.checkout');
     Route::post('/checkout/place', [CheckoutController::class, 'placeOrder'])->name('order.place');
+    Route::get('/dashboard', [UserController::class, 'dashboard'])->name('user.dashboard');
     Route::get('/my-orders', [CheckoutController::class, 'myOrders'])->name('user.orders');
     Route::get('/my-orders/{id}', [CheckoutController::class, 'orderDetail'])->name('user.order.detail');
     Route::get('/order-payment/{id}', [CheckoutController::class, 'paymentPage'])->name('user.order.payment');

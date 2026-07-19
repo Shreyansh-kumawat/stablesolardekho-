@@ -82,7 +82,10 @@
                                 <i class="fas fa-chart-line" style="margin-right:4px;"></i> CP Dashboard
                             </a>
                             @endif
-                            <a href="{{ route('user.orders') }}" class="block px-4 py-2.5 text-sm rounded-lg mx-2 {{ !in_array(Auth::user()->role_id, [1, 2, 4]) ? 'mt-2' : '' }}">
+                            <a href="{{ route('user.dashboard') }}" class="block px-4 py-2.5 text-sm rounded-lg mx-2 {{ !in_array(Auth::user()->role_id, [1, 2, 4]) ? 'mt-2' : '' }}" style="font-weight:600;">
+                                <i class="fas fa-th-large" style="margin-right:4px;color:#f97316;"></i> Dashboard
+                            </a>
+                            <a href="{{ route('user.orders') }}" class="block px-4 py-2.5 text-sm rounded-lg mx-2">
                                 My Orders
                             </a>
                             <a href="{{ route('user.referrals') }}" class="block px-4 py-2.5 text-sm rounded-lg mx-2">

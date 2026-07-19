@@ -191,6 +191,20 @@ class UserController extends Controller
         ));
     }
 
+    public function dashboard()
+    {
+        $user = Auth::user();
+        $orders = \App\Models\CustomerOrder::where('user_id', $user->id)->latest()->take(5)->get();
+        $totalOrders = \App\Models\CustomerOrder::where('user_id', $user->id)->count();
+        $referralCode = \App\Models\ReferralCode::where('user_id', $user->id)->first();
+        $referralLeads = \App\Models\ReferralLead::where('referrer_id', $user->id)->latest()->take(5)->get();
+        $totalReferrals = \App\Models\ReferralLead::where('referrer_id', $user->id)->count();
+        $cashbacks = \App\Models\CashbackTransaction::where('referrer_id', $user->id)->get();
+        $totalEarned = $cashbacks->where('status', 'paid')->sum('cashback_amount');
+        $pendingCashback = $cashbacks->whereIn('status', ['pending', 'approved'])->sum('cashback_amount');
+        return view('user.dashboard', compact('user', 'orders', 'totalOrders', 'referralCode', 'referralLeads', 'totalReferrals', 'totalEarned', 'pendingCashback'));
+    }
+
     public function account()
     {
         return view('user.account');
