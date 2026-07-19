@@ -66,6 +66,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/account', [UserController::class, 'account'])->name('user.account');
     Route::post('/account', [UserController::class, 'updateAccount'])->name('user.account.update');
     Route::get('/my-referrals', [ReferralController::class, 'myReferrals'])->name('user.referrals');
+    Route::post('/password/send-otp', [UserController::class, 'sendPasswordOtp'])->name('user.password.sendOtp');
+    Route::post('/password/verify-otp', [UserController::class, 'verifyPasswordOtp'])->name('user.password.verifyOtp');
+    Route::post('/password/change', [UserController::class, 'changePassword'])->name('user.password.change');
 });
 
 Route::middleware('auth')->group(function () {

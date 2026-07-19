@@ -272,43 +272,14 @@
 
                         {{-- User Dropdown --}}
                         <div style="position:relative;">
-                            <button id="user-menu-btn" onclick="toggleUserMenu()"
-                                style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); padding:6px 12px 6px 6px; border-radius:999px; cursor:pointer; transition:background 0.2s;"
+                            <a href="{{ route('user.dashboard') }}" id="user-menu-btn"
+                                style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); padding:6px 12px 6px 6px; border-radius:999px; cursor:pointer; transition:background 0.2s; text-decoration:none;"
                                 onmouseover="this.style.background='rgba(255,255,255,0.14)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
                                 <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=4A90E2&color=fff&size=32"
                                      style="width:28px; height:28px; border-radius:50%;">
                                 <span style="color:#e2e8f0; font-size:0.82rem; font-weight:600; max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ Auth::user()->name }}</span>
-                                <svg width="12" height="12" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
-                            </button>
+                            </a>
 
-                            <div id="user-dropdown" style="display:none; position:absolute; right:0; top:calc(100% + 8px); background:rgba(11,18,32,0.97); border:1px solid rgba(255,255,255,0.12); border-radius:14px; min-width:180px; z-index:999; box-shadow:0 20px 50px rgba(0,0,0,0.4); overflow:hidden;">
-                                <div style="padding:10px 14px 8px; border-bottom:1px solid rgba(255,255,255,0.08);">
-                                    <p style="color:#e2e8f0; font-size:0.82rem; font-weight:700; margin:0;">{{ Auth::user()->name }}</p>
-                                    <p style="color:#94a3b8; font-size:0.72rem; margin:2px 0 0; overflow:hidden; text-overflow:ellipsis;">{{ Auth::user()->email }}</p>
-                                </div>
-                                <div style="padding:6px;">
-                                    @if(Auth::user()->role_id == 1)
-                                    <a href="{{ route('masterAdminDashboard') }}" style="display:block; padding:8px 10px; border-radius:8px; color:#60a5fa; font-size:0.82rem; text-decoration:none; font-weight:600;"
-                                       onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='transparent'">Admin Panel</a>
-                                    @elseif(Auth::user()->role_id == 2)
-                                    <a href="/secondary-admin" style="display:block; padding:8px 10px; border-radius:8px; color:#60a5fa; font-size:0.82rem; text-decoration:none; font-weight:600;"
-                                       onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='transparent'">Admin Panel</a>
-                                    @elseif(Auth::user()->role_id == 4)
-                                    <a href="{{ route('cpDashboard') }}" style="display:block; padding:8px 10px; border-radius:8px; color:#60a5fa; font-size:0.82rem; text-decoration:none; font-weight:600;"
-                                       onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='transparent'">CP Dashboard</a>
-                                    @endif
-                                    <a href="{{ route('user.orders') }}" style="display:block; padding:8px 10px; border-radius:8px; color:#e2e8f0; font-size:0.82rem; text-decoration:none;"
-                                       onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='transparent'">My Orders</a>
-                                    <a href="{{ route('user.account') }}" style="display:block; padding:8px 10px; border-radius:8px; color:#e2e8f0; font-size:0.82rem; text-decoration:none;"
-                                       onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='transparent'">Account</a>
-                                    <div style="border-top:1px solid rgba(255,255,255,0.08); margin:4px 0;"></div>
-                                    <form action="{{ route('logout') }}" method="POST">
-                                        @csrf
-                                        <button type="submit" style="width:100%; text-align:left; padding:8px 10px; border-radius:8px; color:#f87171; font-size:0.82rem; background:none; border:none; cursor:pointer;"
-                                            onmouseover="this.style.background='rgba(239,68,68,0.08)'" onmouseout="this.style.background='transparent'">Sign Out</button>
-                                    </form>
-                                </div>
-                            </div>
                         </div>
                         @else
                         <a href="{{ route('login') }}"

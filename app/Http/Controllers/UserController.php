@@ -205,6 +205,58 @@ class UserController extends Controller
         return view('user.dashboard', compact('user', 'orders', 'totalOrders', 'referralCode', 'referralLeads', 'totalReferrals', 'totalEarned', 'pendingCashback'));
     }
 
+    public function sendPasswordOtp()
+    {
+        $user = Auth::user();
+        $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        session(['password_otp' => $otp, 'password_otp_expires' => now()->addMinutes(10)]);
+
+        try {
+            \Illuminate\Support\Facades\Mail::raw("Your verification code for password change is: {$otp}\n\nThis code expires in 10 minutes.\n\n- Stable Solar Dekho", function ($msg) use ($user) {
+                $msg->to($user->email)->subject('Password Change Verification Code - Stable Solar Dekho');
+            });
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to send email. Please try again.'], 500);
+        }
+    }
+
+    public function verifyPasswordOtp(Request $request)
+    {
+        $otp = $request->input('otp');
+        $storedOtp = session('password_otp');
+        $expires = session('password_otp_expires');
+
+        if (!$storedOtp || !$expires || now()->gt($expires)) {
+            return response()->json(['error' => 'Code expired. Please request a new one.'], 422);
+        }
+        if ($otp !== $storedOtp) {
+            return response()->json(['error' => 'Invalid code. Please try again.'], 422);
+        }
+        session(['password_otp_verified' => true]);
+        return response()->json(['success' => true]);
+    }
+
+    public function changePassword(Request $request)
+    {
+        if (!session('password_otp_verified')) {
+            return response()->json(['error' => 'Please verify your email first.'], 422);
+        }
+        $password = $request->input('password');
+        $confirmation = $request->input('password_confirmation');
+        if (!$password || strlen($password) < 8) {
+            return response()->json(['error' => 'Password must be at least 8 characters.'], 422);
+        }
+        if ($password !== $confirmation) {
+            return response()->json(['error' => 'Passwords do not match.'], 422);
+        }
+        $user = Auth::user();
+        $user->password = Hash::make($password);
+        $user->save();
+        session()->forget(['password_otp', 'password_otp_expires', 'password_otp_verified']);
+        return response()->json(['success' => true]);
+    }
+
     public function account()
     {
         return view('user.account');
