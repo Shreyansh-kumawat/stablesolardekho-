@@ -221,6 +221,58 @@
         border-bottom: 1px solid rgba(255,255,255,0.08);
     }
     .error-text { color: #f87171; font-size: .78rem; margin-top: 4px; }
+
+    /* Custom dropdown */
+    .cp-dd { position: relative; }
+    .cp-dd-trigger {
+        width: 100%; padding: 10px 14px;
+        border-radius: 10px;
+        border: 1.5px solid rgba(255,255,255,0.12);
+        background: rgba(255,255,255,0.04);
+        color: #e2e8f0; font-size: .9rem;
+        display: flex; align-items: center; justify-content: space-between;
+        cursor: pointer; user-select: none;
+        transition: border-color 0.2s;
+    }
+    .cp-dd-trigger:hover { border-color: rgba(255,255,255,0.25); }
+    .cp-dd-trigger.is-open {
+        border-color: #f97316;
+        box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
+    }
+    .cp-dd-trigger .cp-dd-placeholder { color: #475569; }
+    .cp-dd-arrow {
+        width: 16px; height: 16px; flex-shrink: 0;
+        color: #64748b; transition: transform 0.2s;
+    }
+    .cp-dd-trigger.is-open .cp-dd-arrow { transform: rotate(180deg); color: #f97316; }
+    .cp-dd-panel {
+        display: none; position: absolute; left: 0; right: 0; top: 100%;
+        margin-top: 4px; z-index: 50;
+        background: #1e293b; border: 1.5px solid rgba(249,115,22,0.3);
+        border-radius: 10px; overflow: hidden;
+        box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+        max-height: 220px;
+    }
+    .cp-dd-panel.is-open { display: block; }
+    .cp-dd-search {
+        width: 100%; padding: 9px 12px;
+        border: none; border-bottom: 1px solid rgba(255,255,255,0.08);
+        background: transparent; color: #e2e8f0;
+        font-size: .85rem; outline: none;
+    }
+    .cp-dd-search::placeholder { color: #475569; }
+    .cp-dd-list { overflow-y: auto; max-height: 176px; }
+    .cp-dd-opt {
+        padding: 9px 12px; font-size: .86rem;
+        color: #94a3b8; cursor: pointer;
+        transition: background 0.12s, color 0.12s;
+    }
+    .cp-dd-opt:hover { background: rgba(249,115,22,0.1); color: #f97316; }
+    .cp-dd-opt.active { background: rgba(249,115,22,0.15); color: #f97316; font-weight: 700; }
+    .cp-dd-empty {
+        padding: 14px 12px; text-align: center;
+        color: #475569; font-size: .84rem;
+    }
 </style>
 @endsection
 
@@ -344,22 +396,40 @@
                     </div>
                     @php $userState = old('state', auth()->user()->state); $userCity = old('city', auth()->user()->city); @endphp
                     <div>
-                        <label class="cp-label" for="state">State</label>
-                        <select class="cp-input" id="state" name="state" required>
-                            <option value="" disabled {{ $userState ? '' : 'selected' }}>Select state</option>
-                            @foreach($states as $s)
-                                <option value="{{ $s }}" {{ $userState == $s ? 'selected' : '' }}>{{ $s }}</option>
-                            @endforeach
-                        </select>
+                        <label class="cp-label">State</label>
+                        <input type="hidden" name="state" id="stateHidden" value="{{ $userState }}" required>
+                        <div class="cp-dd" id="stateDd">
+                            <div class="cp-dd-trigger" id="stateTrigger">
+                                <span id="stateLabel">{{ $userState ?: '' }}</span>
+                                <svg class="cp-dd-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                            <div class="cp-dd-panel" id="statePanel">
+                                <input type="text" class="cp-dd-search" id="stateSearch" placeholder="Search state...">
+                                <div class="cp-dd-list" id="stateList">
+                                    @foreach($states as $s)
+                                    <div class="cp-dd-opt {{ $userState == $s ? 'active' : '' }}" data-val="{{ $s }}">{{ $s }}</div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div>
-                        <label class="cp-label" for="city">City</label>
-                        <select class="cp-input" id="city" name="city" required>
-                            <option value="" disabled {{ $userCity ? '' : 'selected' }}>Select city</option>
-                            @foreach($cities as $c)
-                                <option value="{{ $c }}" {{ $userCity == $c ? 'selected' : '' }}>{{ $c }}</option>
-                            @endforeach
-                        </select>
+                        <label class="cp-label">City</label>
+                        <input type="hidden" name="city" id="cityHidden" value="{{ $userCity }}" required>
+                        <div class="cp-dd" id="cityDd">
+                            <div class="cp-dd-trigger" id="cityTrigger">
+                                <span id="cityLabel">{{ $userCity ?: '' }}</span>
+                                <svg class="cp-dd-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                            <div class="cp-dd-panel" id="cityPanel">
+                                <input type="text" class="cp-dd-search" id="citySearch" placeholder="Search city...">
+                                <div class="cp-dd-list" id="cityList">
+                                    @foreach($cities as $c)
+                                    <div class="cp-dd-opt {{ $userCity == $c ? 'active' : '' }}" data-val="{{ $c }}">{{ $c }}</div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label class="cp-label" for="pin_code">Pin Code</label>
@@ -406,5 +476,87 @@
     @if(Session::has('error'))
         toastr.error({!! json_encode(Session::get('error')) !!}, 'Error');
     @endif
+
+    (function() {
+        function initDd(triggerId, panelId, searchId, listId, hiddenId, labelId) {
+            var trigger = document.getElementById(triggerId);
+            var panel = document.getElementById(panelId);
+            var search = document.getElementById(searchId);
+            var list = document.getElementById(listId);
+            var hidden = document.getElementById(hiddenId);
+            var label = document.getElementById(labelId);
+            if (!trigger || !panel) return;
+
+            var placeholder = 'Select ' + (triggerId === 'stateTrigger' ? 'state' : 'city') + '...';
+            if (!hidden.value) {
+                label.textContent = placeholder;
+                label.classList.add('cp-dd-placeholder');
+            }
+
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var open = panel.classList.contains('is-open');
+                closeAll();
+                if (!open) {
+                    panel.classList.add('is-open');
+                    trigger.classList.add('is-open');
+                    search.value = '';
+                    filterOpts(list, '');
+                    search.focus();
+                }
+            });
+
+            search.addEventListener('input', function() {
+                filterOpts(list, this.value);
+            });
+            search.addEventListener('click', function(e) { e.stopPropagation(); });
+
+            list.addEventListener('click', function(e) {
+                var opt = e.target.closest('.cp-dd-opt');
+                if (!opt) return;
+                var val = opt.dataset.val;
+                hidden.value = val;
+                label.textContent = val;
+                label.classList.remove('cp-dd-placeholder');
+                list.querySelectorAll('.cp-dd-opt').forEach(function(o) {
+                    o.classList.toggle('active', o.dataset.val === val);
+                });
+                panel.classList.remove('is-open');
+                trigger.classList.remove('is-open');
+            });
+        }
+
+        function filterOpts(list, q) {
+            q = q.toLowerCase();
+            var found = 0;
+            list.querySelectorAll('.cp-dd-opt').forEach(function(o) {
+                var match = o.textContent.toLowerCase().indexOf(q) > -1;
+                o.style.display = match ? '' : 'none';
+                if (match) found++;
+            });
+            var empty = list.querySelector('.cp-dd-empty');
+            if (!found) {
+                if (!empty) {
+                    empty = document.createElement('div');
+                    empty.className = 'cp-dd-empty';
+                    empty.textContent = 'No results found';
+                    list.appendChild(empty);
+                }
+                empty.style.display = '';
+            } else if (empty) {
+                empty.style.display = 'none';
+            }
+        }
+
+        function closeAll() {
+            document.querySelectorAll('.cp-dd-panel').forEach(function(p) { p.classList.remove('is-open'); });
+            document.querySelectorAll('.cp-dd-trigger').forEach(function(t) { t.classList.remove('is-open'); });
+        }
+
+        document.addEventListener('click', closeAll);
+
+        initDd('stateTrigger', 'statePanel', 'stateSearch', 'stateList', 'stateHidden', 'stateLabel');
+        initDd('cityTrigger', 'cityPanel', 'citySearch', 'cityList', 'cityHidden', 'cityLabel');
+    })();
 </script>
 @endsection
