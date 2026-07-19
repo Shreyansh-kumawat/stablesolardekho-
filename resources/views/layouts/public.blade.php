@@ -272,7 +272,7 @@
 
                         {{-- User Dropdown --}}
                         <div style="position:relative;">
-                            <a href="{{ route('user.dashboard') }}" id="user-menu-btn"
+                            <a href="{{ Auth::user()->role_id == 1 || Auth::user()->role_id == 2 ? route('masterAdminDashboard') : (Auth::user()->role_id == 4 ? route('cpDashboard') : route('user.dashboard')) }}" id="user-menu-btn"
                                 style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); padding:6px 12px 6px 6px; border-radius:999px; cursor:pointer; transition:background 0.2s; text-decoration:none;"
                                 onmouseover="this.style.background='rgba(255,255,255,0.14)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
                                 <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=4A90E2&color=fff&size=32"

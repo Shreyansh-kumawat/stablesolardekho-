@@ -24,12 +24,19 @@
                             </svg>
                         </button>
                         <div id="profileMenu"
-                            class="absolute right-0 mt-1 w-40 border rounded-lg shadow-lg hidden z-50">
+                            class="absolute right-0 mt-1 w-40 border rounded-lg shadow-lg hidden z-50" style="background:#fff;">
+                            <a href="{{ route('user.dashboard') }}"
+                                style="display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:12px;font-weight:600;color:#374151;text-decoration:none;border-bottom:1px solid #f1f5f9;"
+                                onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'">
+                                <i class="fa fa-user" style="font-size:11px;"></i>
+                                My Account
+                            </a>
                             <form id="logoutForm" method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit"
-                                    class="w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-semibold transition-colors last:rounded-b-lg">
-                                    <i class="fa fa-sign-out-alt" style="font-size: 11px;"></i>
+                                    style="width:100%;text-align:left;display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:12px;font-weight:600;color:#dc2626;border:none;background:none;cursor:pointer;"
+                                    onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='transparent'">
+                                    <i class="fa fa-sign-out-alt" style="font-size:11px;"></i>
                                     Logout
                                 </button>
                             </form>
