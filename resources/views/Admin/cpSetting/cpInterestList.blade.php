@@ -159,13 +159,13 @@
                     <form action="{{ route('approveCpInterest', $i->id) }}" method="POST">
                         @csrf
                         <button type="submit" class="cpi-act-btn cpi-act-approve" onclick="return confirm('Approve {{ addslashes($i->company_name) }} as Channel Partner?')">
-                            <i class="fas fa-check"></i> Approve
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Approve
                         </button>
                     </form>
                     <form action="{{ route('rejectCpInterest', $i->id) }}" method="POST">
                         @csrf
                         <button type="submit" class="cpi-act-btn cpi-act-reject" onclick="return confirm('Reject this application?')">
-                            <i class="fas fa-times"></i> Reject
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg> Reject
                         </button>
                     </form>
                 </div>
