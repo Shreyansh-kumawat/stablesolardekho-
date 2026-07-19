@@ -487,20 +487,41 @@
     <div class="card shadow">
         <div class="card-body">
 
-            <!-- Toolbar: search + count -->
-            <div class="prod-toolbar">
+            <!-- Toolbar: search + filters + count -->
+            <div class="prod-toolbar" style="flex-wrap:wrap;">
                 <div class="prod-search-wrap">
                     <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     <input type="text" class="prod-search" id="prodSearch" placeholder="Search by name, code or category…">
                 </div>
-                <span class="prod-count" id="prodCount"></span>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <select id="filterCategory" style="padding:0.5rem 0.75rem;border:1px solid #e1e8ed;border-radius:7px;font-size:0.85rem;background:#fff;color:#2d3436;outline:none;cursor:pointer;min-width:150px;">
+                        <option value="">All Categories</option>
+                        @foreach($categories as $cat)
+                        <option value="{{ strtolower($cat->category_name) }}">{{ $cat->category_name }}</option>
+                        @endforeach
+                    </select>
+                    <select id="filterStatus" style="padding:0.5rem 0.75rem;border:1px solid #e1e8ed;border-radius:7px;font-size:0.85rem;background:#fff;color:#2d3436;outline:none;cursor:pointer;min-width:120px;">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                    <select id="filterFeatured" style="padding:0.5rem 0.75rem;border:1px solid #e1e8ed;border-radius:7px;font-size:0.85rem;background:#fff;color:#2d3436;outline:none;cursor:pointer;min-width:120px;">
+                        <option value="">All Products</option>
+                        <option value="featured">Featured</option>
+                        <option value="not-featured">Not Featured</option>
+                    </select>
+                    <span class="prod-count" id="prodCount"></span>
+                </div>
             </div>
 
             <!-- Card Grid -->
             <div class="prod-grid" id="prodGrid">
                 @forelse($product_list as $product)
                 <div class="pcard"
-                     data-search="{{ strtolower($product->item_name . ' ' . ($product->item_code ?? '') . ' ' . ($product->category->category_name ?? '')) }}">
+                     data-search="{{ strtolower($product->item_name . ' ' . ($product->item_code ?? '') . ' ' . ($product->category->category_name ?? '')) }}"
+                     data-category="{{ strtolower($product->category->category_name ?? '') }}"
+                     data-active="{{ $product->is_active ? '1' : '0' }}"
+                     data-featured="{{ $product->is_featured ? '1' : '0' }}">
 
                     {{-- Image --}}
                     <div class="pcard-img">
@@ -988,7 +1009,18 @@
 
             function applyFilter() {
                 const q = document.getElementById('prodSearch').value.toLowerCase().trim();
-                filtered = allCards().filter(c => !q || c.dataset.search.includes(q));
+                const cat = document.getElementById('filterCategory').value;
+                const status = document.getElementById('filterStatus').value;
+                const feat = document.getElementById('filterFeatured').value;
+                filtered = allCards().filter(c => {
+                    if (q && !c.dataset.search.includes(q)) return false;
+                    if (cat && c.dataset.category !== cat) return false;
+                    if (status === 'active' && c.dataset.active !== '1') return false;
+                    if (status === 'inactive' && c.dataset.active !== '0') return false;
+                    if (feat === 'featured' && c.dataset.featured !== '1') return false;
+                    if (feat === 'not-featured' && c.dataset.featured !== '0') return false;
+                    return true;
+                });
                 currentPage = 1;
                 render();
             }
@@ -1049,6 +1081,9 @@
             }
 
             document.getElementById('prodSearch').addEventListener('input', applyFilter);
+            document.getElementById('filterCategory').addEventListener('change', applyFilter);
+            document.getElementById('filterStatus').addEventListener('change', applyFilter);
+            document.getElementById('filterFeatured').addEventListener('change', applyFilter);
             applyFilter(); // init
 
             // ── Modal Custom Dropdown functions ──────────────────────
@@ -1362,6 +1397,7 @@
                         btn.data('featured', res.is_featured ? 1 : 0);
                         btn.text(res.is_featured ? 'Featured' : 'Not Featured');
                         btn.css({ background: res.is_featured ? '#e7f5ff' : '#f1f3f5', color: res.is_featured ? '#1c7ed6' : '#868e96', borderColor: res.is_featured ? '#a5d8ff' : '#dee2e6' });
+                        btn.closest('.pcard').attr('data-featured', res.is_featured ? '1' : '0');
                     }
                 });
             });
@@ -1375,6 +1411,7 @@
                         btn.data('active', res.is_active ? 1 : 0);
                         btn.text(res.is_active ? 'Active' : 'Inactive');
                         btn.css({ background: res.is_active ? '#ebfbee' : '#fff5f5', color: res.is_active ? '#2f9e44' : '#c92a2a', borderColor: res.is_active ? '#8ce99a' : '#ffa8a8' });
+                        btn.closest('.pcard').attr('data-active', res.is_active ? '1' : '0');
                     }
                 });
             });

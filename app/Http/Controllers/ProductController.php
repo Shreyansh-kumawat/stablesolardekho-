@@ -147,7 +147,7 @@ class ProductController extends Controller
     public function manageProducts()
     {
         abort_unless(auth()->user()->hasAdminPermission('products'), 403);
-        $product_list = Product::with(['category', 'subCategory'])->get();
+        $product_list = Product::with(['category', 'subCategory'])->latest()->get();
         $categories = ProductCategory::all();
         return view('Admin.productSetting.manageProducts')
             ->with('product_list', $product_list)

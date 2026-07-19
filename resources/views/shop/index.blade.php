@@ -281,6 +281,10 @@
             <option value="name_desc" {{ request('sort') == 'name_desc' ? 'selected' : '' }}>Name: Z to A</option>
             <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Oldest First</option>
         </select>
+        <button type="submit" class="shop-search-btn">Search</button>
+        @if(request('search') || request('sort'))
+        <a href="{{ isset($activeCategory) ? route('shop.category', $activeCategory->slug) : route('shop') }}" class="shop-clear-btn">Clear</a>
+        @endif
     </form>
 </div>
 
@@ -344,9 +348,27 @@
         @if($products->hasPages())
         <div class="shop-pagination">
             <a class="pg {{ $products->onFirstPage() ? 'off' : '' }}" href="{{ $products->previousPageUrl() }}">&laquo; Prev</a>
-            @foreach($products->getUrlRange(1, $products->lastPage()) as $page => $url)
-                <a class="pg {{ $page == $products->currentPage() ? 'active' : '' }}" href="{{ $url }}">{{ $page }}</a>
+            @php
+                $current = $products->currentPage();
+                $last = $products->lastPage();
+                $start = max(1, $current - 2);
+                $end = min($last, $current + 2);
+                if ($end - $start < 4) {
+                    $start = max(1, $end - 4);
+                    $end = min($last, $start + 4);
+                }
+            @endphp
+            @if($start > 1)
+                <a class="pg" href="{{ $products->url(1) }}">1</a>
+                @if($start > 2)<span class="pg off" style="pointer-events:none;border:none;opacity:0.5;">...</span>@endif
+            @endif
+            @foreach($products->getUrlRange($start, $end) as $page => $url)
+                <a class="pg {{ $page == $current ? 'active' : '' }}" href="{{ $url }}">{{ $page }}</a>
             @endforeach
+            @if($end < $last)
+                @if($end < $last - 1)<span class="pg off" style="pointer-events:none;border:none;opacity:0.5;">...</span>@endif
+                <a class="pg" href="{{ $products->url($last) }}">{{ $last }}</a>
+            @endif
             <a class="pg {{ !$products->hasMorePages() ? 'off' : '' }}" href="{{ $products->nextPageUrl() }}">Next &raquo;</a>
         </div>
         @endif
@@ -375,58 +397,27 @@ document.addEventListener('DOMContentLoaded', function() {
     var searchInput = document.getElementById('shopSearchInput');
     var sortSelect = document.getElementById('shopSortSelect');
     var clearBtn = document.getElementById('searchClearBtn');
-    var cards = document.querySelectorAll('.prod-card');
-    var countEl = document.querySelector('.shop-topbar-count');
-    var grid = document.querySelector('.shop-grid');
-    var emptyEl = document.querySelector('.shop-empty');
     var form = document.getElementById('shopFilterForm');
 
-    if (form) form.addEventListener('submit', function(e) { e.preventDefault(); });
-
     function toggleClearBtn() {
-        if (clearBtn) clearBtn.style.display = searchInput.value.length > 0 ? 'block' : 'none';
+        if (clearBtn) clearBtn.style.display = searchInput && searchInput.value.length > 0 ? 'block' : 'none';
     }
 
-    function filterAndSort() {
-        var term = searchInput.value.toLowerCase().trim();
-        var sort = sortSelect.value;
-        var visible = [];
-
-        cards.forEach(function(card) {
-            var name = card.dataset.name || '';
-            var brand = card.dataset.brand || '';
-            var code = card.dataset.code || '';
-            var category = card.dataset.category || '';
-            var match = !term || name.indexOf(term) > -1 || brand.indexOf(term) > -1 || code.indexOf(term) > -1 || category.indexOf(term) > -1;
-            card.style.display = match ? '' : 'none';
-            if (match) visible.push(card);
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            if (form) form.submit();
         });
-
-        if (sort && grid) {
-            visible.sort(function(a, b) {
-                if (sort === 'price_low') return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
-                if (sort === 'price_high') return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
-                if (sort === 'name_asc') return a.dataset.name.localeCompare(b.dataset.name);
-                if (sort === 'name_desc') return b.dataset.name.localeCompare(a.dataset.name);
-                return 0;
-            });
-            visible.forEach(function(card) { grid.appendChild(card); });
-        }
-
-        if (countEl) countEl.textContent = visible.length + ' product' + (visible.length !== 1 ? 's' : '') + ' found';
-        if (emptyEl) emptyEl.style.display = visible.length === 0 ? '' : 'none';
-
-        toggleClearBtn();
     }
 
-    if (searchInput) searchInput.addEventListener('input', filterAndSort);
-    if (sortSelect) sortSelect.addEventListener('change', filterAndSort);
-    if (clearBtn) clearBtn.addEventListener('click', function() {
-        searchInput.value = '';
-        filterAndSort();
-    });
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            if (searchInput) searchInput.value = '';
+            if (form) form.submit();
+        });
+    }
 
     toggleClearBtn();
+    if (searchInput) searchInput.addEventListener('input', toggleClearBtn);
 });
 </script>
 @endsection
