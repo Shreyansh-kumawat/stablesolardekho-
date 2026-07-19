@@ -99,14 +99,14 @@ class OrderController extends Controller
     {
         $orders = CpOrder::with(relations: 'channelPartner')->where('status', 'pending')->orderBy('created_at', 'desc')->get();
         CpOrder::where('viewed_by_admin', 0)->update(['viewed_by_admin' => 1]);
-        \App\Models\AdminLastSeen::markSeen(auth()->id(), 'cp_orders');
+        try { \App\Models\AdminLastSeen::markSeen(auth()->id(), 'cp_orders'); } catch (\Exception $e) {}
         return view('Admin.orders.pendingOrders', compact('orders'));
     }
     public function manageOrdersAdmin()
     {
         $orders = CpOrder::with(relations: 'channelPartner')->orderBy('created_at', 'desc')->get();
         CpOrder::where('viewed_by_admin', 0)->update(['viewed_by_admin' => 1]);
-        \App\Models\AdminLastSeen::markSeen(auth()->id(), 'cp_orders');
+        try { \App\Models\AdminLastSeen::markSeen(auth()->id(), 'cp_orders'); } catch (\Exception $e) {}
         return view('Admin.orders.manageOrderAdmin', compact('orders'));
     }
 
@@ -194,7 +194,7 @@ class OrderController extends Controller
         abort_unless(auth()->user()->hasAdminPermission('orders'), 403);
         $orders = CustomerOrder::with('user')->latest()->get();
         CustomerOrder::where('viewed_by_admin', 0)->update(['viewed_by_admin' => 1]);
-        \App\Models\AdminLastSeen::markSeen(auth()->id(), 'orders');
+        try { \App\Models\AdminLastSeen::markSeen(auth()->id(), 'orders'); } catch (\Exception $e) {}
         return view('Admin.orders.customerOrdersList', compact('orders'));
     }
 

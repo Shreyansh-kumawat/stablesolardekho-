@@ -610,7 +610,7 @@ class UserController extends Controller
     public function cpInterestList()
     {
         $interests = CpInterest::orderBy('created_at', 'desc')->get();
-        \App\Models\AdminLastSeen::markSeen(auth()->id(), 'cp_interest');
+        try { \App\Models\AdminLastSeen::markSeen(auth()->id(), 'cp_interest'); } catch (\Exception $e) {}
         return view('Admin.cpSetting.cpInterestList', compact('interests'));
     }
 
@@ -727,7 +727,7 @@ class UserController extends Controller
             ])
             ->latest()
             ->get();
-        \App\Models\AdminLastSeen::markSeen(auth()->id(), 'users');
+        try { \App\Models\AdminLastSeen::markSeen(auth()->id(), 'users'); } catch (\Exception $e) {}
         return view('Admin.userSetting.ecommerceCustomers', compact('users'));
     }
 

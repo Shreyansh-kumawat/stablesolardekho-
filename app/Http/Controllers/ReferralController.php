@@ -53,7 +53,7 @@ class ReferralController extends Controller
         $leads = ReferralLead::with(['referrer', 'cashback'])->latest()->get();
         $codes = ReferralCode::with('user')->latest()->get();
         $slabs = $this->getSlabConfig();
-        \App\Models\AdminLastSeen::markSeen(auth()->id(), 'referrals');
+        try { \App\Models\AdminLastSeen::markSeen(auth()->id(), 'referrals'); } catch (\Exception $e) {}
         return view('Admin.referrals.index', compact('leads', 'codes', 'slabs'));
     }
 
