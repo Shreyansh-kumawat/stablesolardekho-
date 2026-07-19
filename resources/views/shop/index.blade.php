@@ -296,8 +296,7 @@
             <span class="shop-topbar-count">{{ $products->total() }} product{{ $products->total() != 1 ? 's' : '' }} found</span>
         </div>
 
-        @if($products->count())
-        <div class="shop-grid">
+        <div class="shop-grid" @if(!$products->count()) style="display:none;" @endif>
             @foreach($products as $product)
             <a href="{{ route('product.show', $product->slug) }}" class="prod-card"
                data-name="{{ strtolower($product->item_name) }}"
@@ -373,19 +372,11 @@
         </div>
         @endif
 
-        @else
-        <div class="shop-empty">
+        <div class="shop-empty" @if($products->count()) style="display:none;" @endif>
             <p style="color:#fff;font-size:1.1rem;font-weight:700;margin:0 0 8px;">No products found</p>
-            <p style="color:var(--muted);font-size:0.88rem;margin:0 0 24px;">
-                @if(request('search'))
-                    No results for "{{ request('search') }}". Try a different search term.
-                @else
-                    Try a different category.
-                @endif
-            </p>
+            <p style="color:var(--muted);font-size:0.88rem;margin:0 0 24px;">Try a different search term or category.</p>
             <a href="{{ route('shop') }}" style="background:var(--orange);color:#fff;padding:10px 26px;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.9rem;">View All Products</a>
         </div>
-        @endif
     </div>
 </div>
 
@@ -397,27 +388,100 @@ document.addEventListener('DOMContentLoaded', function() {
     var searchInput = document.getElementById('shopSearchInput');
     var sortSelect = document.getElementById('shopSortSelect');
     var clearBtn = document.getElementById('searchClearBtn');
+    var grid = document.querySelector('.shop-grid');
+    var countEl = document.querySelector('.shop-topbar-count');
+    var emptyEl = document.querySelector('.shop-empty');
+    var pagWrap = document.querySelector('.shop-pagination');
     var form = document.getElementById('shopFilterForm');
+    var ajaxUrl = "{{ route('shop.ajax.search') }}";
+    var categorySlug = "{{ isset($activeCategory) ? $activeCategory->slug : '' }}";
+    var debounceTimer = null;
 
     function toggleClearBtn() {
         if (clearBtn) clearBtn.style.display = searchInput && searchInput.value.length > 0 ? 'block' : 'none';
     }
 
-    if (sortSelect) {
-        sortSelect.addEventListener('change', function() {
-            if (form) form.submit();
+    function doSearch(page) {
+        var params = new URLSearchParams();
+        if (searchInput && searchInput.value.trim()) params.set('search', searchInput.value.trim());
+        if (sortSelect && sortSelect.value) params.set('sort', sortSelect.value);
+        if (categorySlug) params.set('category_slug', categorySlug);
+        if (page && page > 1) params.set('page', page);
+
+        fetch(ajaxUrl + '?' + params.toString(), {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (grid) {
+                grid.innerHTML = data.html;
+                grid.style.display = data.total > 0 ? '' : 'none';
+            }
+            if (countEl) countEl.textContent = data.total + ' product' + (data.total !== 1 ? 's' : '') + ' found';
+
+            if (pagWrap) {
+                pagWrap.outerHTML = data.pagination || '';
+                pagWrap = document.querySelector('.shop-pagination');
+            } else if (data.pagination) {
+                var gridEl = document.querySelector('.shop-grid');
+                if (gridEl) gridEl.insertAdjacentHTML('afterend', data.pagination);
+                pagWrap = document.querySelector('.shop-pagination');
+            }
+
+            if (emptyEl) {
+                emptyEl.style.display = data.total === 0 ? '' : 'none';
+            } else if (data.total === 0 && grid) {
+                grid.insertAdjacentHTML('afterend', '<div class="shop-empty"><p style="color:#fff;font-size:1.1rem;font-weight:700;margin:0 0 8px;">No products found</p><p style="color:var(--muted);font-size:0.88rem;margin:0;">Try a different search term.</p></div>');
+                emptyEl = document.querySelector('.shop-empty');
+            }
+
+            bindPaginationClicks();
         });
+    }
+
+    function bindPaginationClicks() {
+        var pagEl = document.querySelector('.shop-pagination');
+        if (!pagEl) return;
+        pagEl.querySelectorAll('a.pg:not(.off)').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = new URL(link.href);
+                var page = url.searchParams.get('page') || 1;
+                doSearch(page);
+                window.scrollTo({ top: grid ? grid.offsetTop - 100 : 0, behavior: 'smooth' });
+            });
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            toggleClearBtn();
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function() { doSearch(1); }, 350);
+        });
+    }
+
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() { doSearch(1); });
     }
 
     if (clearBtn) {
         clearBtn.addEventListener('click', function() {
             if (searchInput) searchInput.value = '';
-            if (form) form.submit();
+            toggleClearBtn();
+            doSearch(1);
+        });
+    }
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            doSearch(1);
         });
     }
 
     toggleClearBtn();
-    if (searchInput) searchInput.addEventListener('input', toggleClearBtn);
+    bindPaginationClicks();
 });
 </script>
 @endsection

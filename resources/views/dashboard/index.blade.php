@@ -427,7 +427,7 @@ $catGradients = [
             <h2 class="sec-title">Explore Categories</h2>
             <p class="sec-sub">Find solar products by type</p>
         </div>
-        <a href="{{ route('shop') }}" class="view-all">View All</a>
+        <a href="{{ route('categories') }}" class="view-all">View All</a>
     </div>
     @if($categories->count())
     <div class="cat-scroll">

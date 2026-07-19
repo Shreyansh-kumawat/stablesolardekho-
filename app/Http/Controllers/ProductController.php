@@ -13,6 +13,12 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
+    public function categoriesPage()
+    {
+        $categories = ProductCategory::withCount(['products' => fn($q) => $q->where('is_active', true)])->orderBy('id', 'desc')->get();
+        return view('shop.categories', compact('categories'));
+    }
+
     public function shopPage(Request $request, $slug = null)
     {
         $categories = ProductCategory::withCount(['products' => fn($q) => $q->where('is_active', true)])->orderBy('id', 'desc')->get();
@@ -50,6 +56,99 @@ class ProductController extends Controller
         $products = $query->paginate(12)->appends($request->query());
 
         return view('shop.index', compact('products', 'categories', 'activeCategory'));
+    }
+
+    public function shopSearch(Request $request)
+    {
+        $query = Product::with('category')->where('is_active', true);
+
+        if ($request->filled('category_slug')) {
+            $cat = ProductCategory::where('slug', $request->category_slug)->first();
+            if ($cat) $query->where('category_id', $cat->id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('item_name', 'like', "%{$search}%")
+                  ->orWhere('item_code', 'like', "%{$search}%")
+                  ->orWhere('brand', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('sort')) {
+            match ($request->sort) {
+                'price_low'  => $query->orderBy('current_sale_price', 'asc'),
+                'price_high' => $query->orderBy('current_sale_price', 'desc'),
+                'name_asc'   => $query->orderBy('item_name', 'asc'),
+                'name_desc'  => $query->orderBy('item_name', 'desc'),
+                'oldest'     => $query->orderBy('id', 'asc'),
+                default      => $query->latest(),
+            };
+        } else {
+            $query->latest();
+        }
+
+        $products = $query->paginate(12)->appends($request->query());
+
+        $html = '';
+        foreach ($products as $product) {
+            $url = route('product.show', $product->slug);
+            $imgHtml = $product->image
+                ? '<img src="' . asset('storage/' . $product->image) . '" alt="' . e($product->item_name) . '">'
+                : '<div class="prod-img-empty"><span style="color:rgba(249,115,22,0.2);font-size:2rem;font-weight:900;">' . strtoupper(substr($product->item_name, 0, 2)) . '</span></div>';
+            $featBadge = $product->is_featured ? '<span class="prod-featured-badge">FEATURED</span>' : '';
+            $catName = $product->category->category_name ?? '';
+            $priceHtml = $product->current_sale_price
+                ? '₹' . number_format($product->current_sale_price, 0)
+                : '<span style="color:var(--muted);font-size:0.8rem;font-weight:500;">Price on request</span>';
+
+            $specsHtml = '';
+            if ($product->brand || $product->manufacturer_warranty || $product->mnre_approved) {
+                $specsHtml = '<div style="font-size:0.72rem;color:var(--muted);line-height:1.55;margin-top:2px;">';
+                if ($product->brand) $specsHtml .= '<div>Brand: <span style="color:var(--text);">' . e($product->brand) . '</span></div>';
+                if ($product->manufacturer_warranty) $specsHtml .= '<div>Warranty: <span style="color:var(--text);">' . e($product->manufacturer_warranty) . '</span></div>';
+                if ($product->mnre_approved) $specsHtml .= '<div>MNRE: <span style="color:var(--text);">' . e($product->mnre_approved) . '</span></div>';
+                $specsHtml .= '</div>';
+            }
+
+            $html .= '<a href="' . $url . '" class="prod-card">'
+                . '<div class="prod-img">' . $imgHtml . '<div class="prod-img-overlay"><div class="prod-overlay-btn">View Product</div></div>' . $featBadge . '</div>'
+                . '<div class="prod-body"><div class="prod-cat">' . e($catName) . '</div><div class="prod-name">' . e($product->item_name) . '</div>' . $specsHtml
+                . '<div class="prod-footer"><div class="prod-price">' . $priceHtml . '</div><div class="prod-arrow">&#8594;</div></div></div></a>';
+        }
+
+        $pagHtml = '';
+        if ($products->hasPages()) {
+            $current = $products->currentPage();
+            $last = $products->lastPage();
+            $start = max(1, $current - 2);
+            $end = min($last, $current + 2);
+            if ($end - $start < 4) { $start = max(1, $end - 4); $end = min($last, $start + 4); }
+
+            $pagHtml = '<div class="shop-pagination">';
+            $pagHtml .= '<a class="pg ' . ($products->onFirstPage() ? 'off' : '') . '" href="' . $products->previousPageUrl() . '">&laquo; Prev</a>';
+            if ($start > 1) {
+                $pagHtml .= '<a class="pg" href="' . $products->url(1) . '">1</a>';
+                if ($start > 2) $pagHtml .= '<span class="pg off" style="pointer-events:none;border:none;opacity:0.5;">...</span>';
+            }
+            foreach ($products->getUrlRange($start, $end) as $page => $url) {
+                $pagHtml .= '<a class="pg ' . ($page == $current ? 'active' : '') . '" href="' . $url . '">' . $page . '</a>';
+            }
+            if ($end < $last) {
+                if ($end < $last - 1) $pagHtml .= '<span class="pg off" style="pointer-events:none;border:none;opacity:0.5;">...</span>';
+                $pagHtml .= '<a class="pg" href="' . $products->url($last) . '">' . $last . '</a>';
+            }
+            $pagHtml .= '<a class="pg ' . (!$products->hasMorePages() ? 'off' : '') . '" href="' . $products->nextPageUrl() . '">Next &raquo;</a>';
+            $pagHtml .= '</div>';
+        }
+
+        return response()->json([
+            'html' => $html,
+            'pagination' => $pagHtml,
+            'total' => $products->total(),
+        ]);
     }
 
     public function featuredPage(Request $request)
