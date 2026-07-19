@@ -208,6 +208,22 @@ class OrderController extends Controller
         $order = CustomerOrder::findOrFail($id);
         $order->status = $request->status;
         $order->save();
+
+        if ($request->status === 'delivered' && $order->user_id) {
+            $existing = \App\Models\ReferralCode::where('user_id', $order->user_id)->first();
+            if (!$existing) {
+                $user = \App\Models\User::find($order->user_id);
+                if ($user) {
+                    $namePart = strtoupper(\Illuminate\Support\Str::substr(preg_replace('/[^a-zA-Z]/', '', $user->name), 0, 4));
+                    $code = $namePart . rand(1000, 9999);
+                    while (\App\Models\ReferralCode::where('code', $code)->exists()) {
+                        $code = $namePart . rand(1000, 9999);
+                    }
+                    \App\Models\ReferralCode::create(['user_id' => $order->user_id, 'code' => $code]);
+                }
+            }
+        }
+
         return redirect()->back()->with('success', 'Order status updated successfully');
     }
 

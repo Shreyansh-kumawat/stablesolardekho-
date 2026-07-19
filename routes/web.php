@@ -189,6 +189,8 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::post('/referrals/cashback/{id}/approve', [ReferralController::class, 'approveCashback'])->name('admin.referrals.approveCashback');
     Route::post('/referrals/cashback/{id}/paid', [ReferralController::class, 'markCashbackPaid'])->name('admin.referrals.markPaid');
     Route::post('/referrals/generate-code/{userId}', [ReferralController::class, 'generateCode'])->name('admin.referrals.generateCode');
+    Route::post('/referrals/slabs', [ReferralController::class, 'saveSlabs'])->name('admin.referrals.saveSlabs');
+    Route::get('/referrals/leads/{id}/slab-info', [ReferralController::class, 'getLeadSlabInfo'])->name('admin.referrals.slabInfo');
 
     // Banner routes
     Route::get('/banners', [BannerController::class, 'index'])->name('admin.banners');

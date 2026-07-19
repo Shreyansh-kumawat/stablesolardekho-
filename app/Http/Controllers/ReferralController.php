@@ -11,6 +11,40 @@ use Illuminate\Support\Str;
 
 class ReferralController extends Controller
 {
+    private function getSlabConfig()
+    {
+        $path = storage_path('app/referral_slabs.json');
+        if (file_exists($path)) {
+            $data = json_decode(file_get_contents($path), true);
+            if (is_array($data) && !empty($data)) return $data;
+        }
+        return [
+            ['min' => 1, 'max' => 3, 'percentage' => 5],
+            ['min' => 4, 'max' => 7, 'percentage' => 6],
+            ['min' => 8, 'max' => 12, 'percentage' => 7],
+            ['min' => 13, 'max' => 999, 'percentage' => 8],
+        ];
+    }
+
+    private function saveSlabConfig(array $slabs)
+    {
+        file_put_contents(storage_path('app/referral_slabs.json'), json_encode($slabs));
+    }
+
+    private function getSlabPercentage($referrerId)
+    {
+        $successCount = CashbackTransaction::where('referrer_id', $referrerId)
+            ->whereIn('status', ['pending', 'approved', 'paid'])->count();
+        $nextCount = $successCount + 1;
+        $slabs = $this->getSlabConfig();
+        foreach ($slabs as $slab) {
+            if ($nextCount >= $slab['min'] && $nextCount <= $slab['max']) {
+                return $slab['percentage'];
+            }
+        }
+        return $slabs[count($slabs) - 1]['percentage'] ?? 5;
+    }
+
     // ─── ADMIN ───
 
     public function adminIndex()
@@ -18,7 +52,35 @@ class ReferralController extends Controller
         abort_unless(auth()->user()->hasAdminPermission('referrals'), 403);
         $leads = ReferralLead::with(['referrer', 'cashback'])->latest()->get();
         $codes = ReferralCode::with('user')->latest()->get();
-        return view('Admin.referrals.index', compact('leads', 'codes'));
+        $slabs = $this->getSlabConfig();
+        return view('Admin.referrals.index', compact('leads', 'codes', 'slabs'));
+    }
+
+    public function saveSlabs(Request $request)
+    {
+        abort_unless(auth()->user()->hasAdminPermission('referrals'), 403);
+        $slabs = [];
+        $mins = $request->input('min', []);
+        $maxs = $request->input('max', []);
+        $pcts = $request->input('percentage', []);
+        for ($i = 0; $i < count($mins); $i++) {
+            if (isset($mins[$i], $maxs[$i], $pcts[$i]) && $mins[$i] !== '' && $maxs[$i] !== '' && $pcts[$i] !== '') {
+                $slabs[] = ['min' => (int)$mins[$i], 'max' => (int)$maxs[$i], 'percentage' => (float)$pcts[$i]];
+            }
+        }
+        if (empty($slabs)) return response()->json(['error' => 'At least one slab is required'], 422);
+        $this->saveSlabConfig($slabs);
+        return response()->json(['success' => true]);
+    }
+
+    public function getLeadSlabInfo($leadId)
+    {
+        abort_unless(auth()->user()->hasAdminPermission('referrals'), 403);
+        $lead = ReferralLead::findOrFail($leadId);
+        $percentage = $this->getSlabPercentage($lead->referrer_id);
+        $successCount = CashbackTransaction::where('referrer_id', $lead->referrer_id)
+            ->whereIn('status', ['pending', 'approved', 'paid'])->count();
+        return response()->json(['percentage' => $percentage, 'successful_referrals' => $successCount]);
     }
 
     public function updateLeadStatus(Request $request, $id)

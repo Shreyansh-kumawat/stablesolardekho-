@@ -37,6 +37,7 @@
         <button onclick="showTab('leads')" id="tab-leads" class="ref-tab" style="padding:10px 20px;font-size:.85rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid #2563eb;color:#2563eb;margin-bottom:-2px;">Referral Leads</button>
         <button onclick="showTab('codes')" id="tab-codes" class="ref-tab" style="padding:10px 20px;font-size:.85rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:#6b7280;margin-bottom:-2px;">Referral Codes</button>
         <button onclick="showTab('cashback')" id="tab-cashback" class="ref-tab" style="padding:10px 20px;font-size:.85rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:#6b7280;margin-bottom:-2px;">Cashback</button>
+        <button onclick="showTab('slabs')" id="tab-slabs" class="ref-tab" style="padding:10px 20px;font-size:.85rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:#6b7280;margin-bottom:-2px;">Slab Settings</button>
     </div>
 
     {{-- LEADS TAB --}}
@@ -178,6 +179,29 @@
     </div>
 </div>
 
+    {{-- SLAB SETTINGS TAB --}}
+    <div id="panel-slabs" class="ref-panel" style="display:none;">
+        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:24px;">
+            <h3 style="font-weight:700;color:#374151;margin:0 0 6px;font-size:.95rem;">Cashback Slab Configuration</h3>
+            <p style="color:#6b7280;font-size:.8rem;margin:0 0 20px;">Define cashback percentage based on number of successful referrals by a referrer. System auto-suggests slab % when creating cashback. Admin can still override.</p>
+            <div id="slabRows">
+                @foreach($slabs as $i => $slab)
+                <div class="slab-row" style="display:flex;gap:12px;align-items:center;margin-bottom:10px;">
+                    <div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">From (referrals)</label><input type="number" name="min[]" value="{{ $slab['min'] }}" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>
+                    <div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">To (referrals)</label><input type="number" name="max[]" value="{{ $slab['max'] }}" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>
+                    <div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">Cashback %</label><input type="number" step="0.5" name="percentage[]" value="{{ $slab['percentage'] }}" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>
+                    <button onclick="this.closest('.slab-row').remove()" style="margin-top:16px;background:#fee2e2;color:#b91c1c;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.8rem;"><i class="fas fa-trash"></i></button>
+                </div>
+                @endforeach
+            </div>
+            <div style="display:flex;gap:10px;margin-top:16px;">
+                <button onclick="addSlabRow()" style="padding:8px 16px;background:#eff6ff;color:#2563eb;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.82rem;"><i class="fas fa-plus" style="margin-right:4px;"></i> Add Slab</button>
+                <button onclick="saveSlabs()" style="padding:8px 16px;background:#059669;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.82rem;"><i class="fas fa-save" style="margin-right:4px;"></i> Save Slabs</button>
+            </div>
+            <div id="slabMsg" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;font-size:.82rem;font-weight:600;"></div>
+        </div>
+    </div>
+
 {{-- MODALS --}}
 <style>
 .ref-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:none;align-items:center;justify-content:center;}
@@ -211,10 +235,14 @@
     <div class="ref-modal-body">
         <input type="hidden" id="cbLeadId">
         <p style="margin-bottom:12px;">Lead: <strong id="cbLeadName"></strong></p>
+        <div id="cbSlabInfo" style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:.82rem;color:#1e40af;display:none;">
+            <i class="fas fa-info-circle" style="margin-right:4px;"></i>
+            Referrer has <strong id="cbRefCount">0</strong> successful referrals. Auto slab: <strong id="cbAutoSlab">5</strong>%
+        </div>
         <label>Deal Amount (₹)</label>
         <input type="number" id="cbDealAmount" placeholder="Total deal value">
-        <label>Cashback Slab (%)</label>
-        <select id="cbPercentage"><option value="5">5%</option><option value="6">6%</option><option value="7">7%</option><option value="8">8%</option><option value="10">10%</option></select>
+        <label>Cashback % <span style="font-weight:400;color:#9ca3af;">(auto-filled from slab, you can override)</span></label>
+        <input type="number" step="0.5" id="cbPercentage" placeholder="Cashback %" value="5">
         <div id="cbPreview" style="display:none;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;padding:10px 14px;color:#065f46;font-weight:600;">Cashback: <span id="cbPreviewAmt">₹0</span></div>
     </div>
     <div class="ref-modal-footer"><button class="ref-btn-success" id="saveCashbackBtn">Create Cashback</button></div>
@@ -263,7 +291,12 @@ $('#saveStatusBtn').click(function(){
 });
 
 $('.create-cashback-btn').click(function(){
-    $('#cbLeadId').val($(this).data('id'));$('#cbLeadName').text($(this).data('name'));$('#cbDealAmount').val('');$('#cbPreview').hide();
+    var lid=$(this).data('id');
+    $('#cbLeadId').val(lid);$('#cbLeadName').text($(this).data('name'));$('#cbDealAmount').val('');$('#cbPreview').hide();$('#cbSlabInfo').hide();
+    $.get('/admin/referrals/leads/'+lid+'/slab-info',function(res){
+        $('#cbRefCount').text(res.successful_referrals);$('#cbAutoSlab').text(res.percentage);
+        $('#cbPercentage').val(res.percentage);$('#cbSlabInfo').show();
+    });
     document.getElementById('cashbackModal').classList.add('active');
 });
 $('#cbDealAmount,#cbPercentage').on('input change',function(){
@@ -297,5 +330,27 @@ $('.copy-link-btn').click(function(){
     var i=document.getElementById($(this).data('target'));i.select();document.execCommand('copy');
     $(this).html('<i class="fas fa-check"></i>');var b=$(this);setTimeout(function(){b.html('<i class="fas fa-copy"></i>');},1500);
 });
+
+function addSlabRow(){
+    var html='<div class="slab-row" style="display:flex;gap:12px;align-items:center;margin-bottom:10px;">';
+    html+='<div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">From</label><input type="number" name="min[]" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>';
+    html+='<div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">To</label><input type="number" name="max[]" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>';
+    html+='<div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">%</label><input type="number" step="0.5" name="percentage[]" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>';
+    html+='<button onclick="this.closest(\'.slab-row\').remove()" style="margin-top:16px;background:#fee2e2;color:#b91c1c;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.8rem;"><i class="fas fa-trash"></i></button>';
+    html+='</div>';
+    document.getElementById('slabRows').insertAdjacentHTML('beforeend',html);
+}
+function saveSlabs(){
+    var mins=[],maxs=[],pcts=[];
+    document.querySelectorAll('#slabRows input[name="min[]"]').forEach(function(e){mins.push(e.value);});
+    document.querySelectorAll('#slabRows input[name="max[]"]').forEach(function(e){maxs.push(e.value);});
+    document.querySelectorAll('#slabRows input[name="percentage[]"]').forEach(function(e){pcts.push(e.value);});
+    $.post('/admin/referrals/slabs',{_token:csrf,min:mins,max:maxs,percentage:pcts},function(){
+        var m=document.getElementById('slabMsg');m.style.display='block';m.style.background='#ecfdf5';m.style.color='#065f46';m.textContent='Slabs saved successfully!';
+        setTimeout(function(){m.style.display='none';},3000);
+    }).fail(function(xhr){
+        var m=document.getElementById('slabMsg');m.style.display='block';m.style.background='#fee2e2';m.style.color='#b91c1c';m.textContent=xhr.responseJSON?.error||'Error saving slabs';
+    });
+}
 </script>
 @endsection
