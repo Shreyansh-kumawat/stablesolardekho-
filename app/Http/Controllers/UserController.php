@@ -202,7 +202,23 @@ class UserController extends Controller
         $cashbacks = \App\Models\CashbackTransaction::where('referrer_id', $user->id)->get();
         $totalEarned = $cashbacks->where('status', 'paid')->sum('cashback_amount');
         $pendingCashback = $cashbacks->whereIn('status', ['pending', 'approved'])->sum('cashback_amount');
-        return view('user.dashboard', compact('user', 'orders', 'totalOrders', 'referralCode', 'referralLeads', 'totalReferrals', 'totalEarned', 'pendingCashback'));
+
+        $successfulReferrals = $cashbacks->whereIn('status', ['pending', 'approved', 'paid'])->count();
+        $slabPath = storage_path('app/referral_slabs.json');
+        $slabs = file_exists($slabPath) ? (json_decode(file_get_contents($slabPath), true) ?: []) : [];
+        if (empty($slabs)) {
+            $slabs = [['min'=>1,'max'=>3,'percentage'=>5],['min'=>4,'max'=>7,'percentage'=>6],['min'=>8,'max'=>12,'percentage'=>7],['min'=>13,'max'=>999,'percentage'=>8]];
+        }
+        $nextCount = $successfulReferrals + 1;
+        $currentSlabPct = $slabs[count($slabs) - 1]['percentage'] ?? 5;
+        foreach ($slabs as $slab) {
+            if ($nextCount >= $slab['min'] && $nextCount <= $slab['max']) {
+                $currentSlabPct = $slab['percentage'];
+                break;
+            }
+        }
+
+        return view('user.dashboard', compact('user', 'orders', 'totalOrders', 'referralCode', 'referralLeads', 'totalReferrals', 'totalEarned', 'pendingCashback', 'successfulReferrals', 'currentSlabPct', 'slabs'));
     }
 
     public function sendPasswordOtp()

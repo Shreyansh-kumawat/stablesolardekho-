@@ -74,6 +74,25 @@
                     <button onclick="document.getElementById('refLink').select();document.execCommand('copy');this.textContent='Copied!';var b=this;setTimeout(function(){b.textContent='Copy Link';},2000);">Copy Link</button>
                 </div>
             </div>
+
+            {{-- Slab Info --}}
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:18px 20px;margin-bottom:24px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
+                    <div>
+                        <p style="color:#94a3b8;font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;margin:0 0 4px;">Your Cashback Slab</p>
+                        <p style="color:#fff;font-size:1rem;font-weight:700;margin:0;">{{ $successfulReferrals }} successful referral{{ $successfulReferrals != 1 ? 's' : '' }} &mdash; <span style="color:#f97316;">{{ $currentSlabPct }}%</span> cashback on next referral</p>
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    @foreach($slabs as $slab)
+                    @php $isActive = ($successfulReferrals + 1) >= $slab['min'] && ($successfulReferrals + 1) <= $slab['max']; @endphp
+                    <div style="flex:1;min-width:100px;padding:10px 12px;border-radius:10px;text-align:center;border:1px solid {{ $isActive ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.07)' }};background:{{ $isActive ? 'rgba(249,115,22,0.1)' : 'rgba(255,255,255,0.03)' }};">
+                        <p style="font-size:1.1rem;font-weight:800;color:{{ $isActive ? '#f97316' : '#64748b' }};margin:0;">{{ $slab['percentage'] }}%</p>
+                        <p style="font-size:.7rem;color:#64748b;margin:2px 0 0;">{{ $slab['min'] }}–{{ $slab['max'] >= 999 ? '∞' : $slab['max'] }} referrals</p>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
             @else
             <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:16px;text-align:center;margin-bottom:24px;">
                 <p style="color:#64748b;font-size:.85rem;margin:0;"><i class="fas fa-info-circle" style="margin-right:6px;"></i> Your referral code will be generated once your solar installation is delivered.</p>
