@@ -1,241 +1,181 @@
 @extends('layouts.adminLayout')
+@section('title', 'My Orders')
+
 @section('css')
-    <link rel="stylesheet" href="/assets/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="/assets/css/buttons.bootstrap5.min.css">
-    <link rel="stylesheet" href="{{ asset('stable/css/datatableListCss.css') }}">
-    <link rel="stylesheet" href="/assets/css/bootstrap-icons.min.css">
+<style>
+    .cpo-wrap { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem; }
+    .cpo-header { margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; }
+    .cpo-header-left { display: flex; align-items: center; gap: .75rem; }
+    .cpo-header-left h1 { font-size: 1.3rem; font-weight: 800; color: #1f2937; margin: 0; }
+    .cpo-header-left p { font-size: .8rem; color: #6b7280; margin: .15rem 0 0; }
+    .cpo-icon-box { width: 40px; height: 40px; background: #2563eb; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; }
+    .cpo-badge { padding: 5px 14px; border-radius: 20px; font-size: .78rem; font-weight: 600; background: #eff6ff; color: #1d4ed8; }
 
-    <style>
-        /* Export buttons */
-        #buttons_export .dt-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-        #buttons_export .dt-button {
-            border-radius: 0.375rem;
-            padding: 0.35rem 0.75rem;
-            font-size: 0.875rem;
-        }
+    .cpo-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; }
+    .cpo-card .dataTables_wrapper { padding: 12px 16px; }
+    .cpo-card .dataTables_filter input {
+        border: 1px solid #e5e7eb; border-radius: 6px; padding: 6px 10px; font-size: .85rem; outline: none;
+    }
+    .cpo-card .dataTables_filter input:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.1); }
+    .cpo-card .dataTables_length select { border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 8px; font-size: .85rem; }
 
-        /* Pagination */
-        .dataTables_wrapper .dataTables_paginate {
-            display: flex;
-            justify-content: flex-end;
+    #cpoTable { width: 100%; border-collapse: collapse; }
+    #cpoTable thead th {
+        background: #f9fafb; padding: 10px 14px;
+        font-size: .7rem; font-weight: 700; color: #6b7280;
+        text-transform: uppercase; letter-spacing: .05em;
+        text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;
+    }
+    #cpoTable tbody td {
+        padding: 10px 14px; font-size: .84rem; color: #374151;
+        border-bottom: 1px solid #f3f4f6; vertical-align: middle;
+    }
+    #cpoTable tbody tr:hover { background: #f9fafb; }
+
+    .cpo-pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: .72rem; font-weight: 600; white-space: nowrap; }
+    .cpo-pill-yellow { background: #fef9c3; color: #92400e; }
+    .cpo-pill-green { background: #dcfce7; color: #166534; }
+    .cpo-pill-red { background: #fee2e2; color: #991b1b; }
+    .cpo-pill-blue { background: #dbeafe; color: #1e40af; }
+    .cpo-pill-gray { background: #f3f4f6; color: #374151; }
+
+    .cpo-amount { font-weight: 700; color: #1f2937; white-space: nowrap; }
+    .cpo-date { font-size: .78rem; color: #9ca3af; white-space: nowrap; }
+    .cpo-order-id { font-family: monospace; font-weight: 600; font-size: .8rem; color: #1f2937; }
+
+    .cpo-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; font-size: .75rem; font-weight: 600; border-radius: 6px; text-decoration: none; white-space: nowrap; transition: background .15s; }
+    .cpo-btn-view { background: #2563eb; color: #fff; }
+    .cpo-btn-view:hover { background: #1d4ed8; color: #fff; }
+    .cpo-btn-pay { background: #dcfce7; color: #166534; }
+    .cpo-btn-pay:hover { background: #bbf7d0; color: #166534; }
+    .cpo-actions { display: flex; align-items: center; gap: 6px; }
+
+    @media (max-width: 768px) {
+        .cpo-wrap { padding: 12px; }
+        #cpoTable thead { display: none; }
+        #cpoTable tbody tr {
+            display: block; background: #fff; border: 1px solid #e5e7eb;
+            border-radius: 10px; margin-bottom: 10px; padding: 12px;
         }
-        .dataTables_wrapper .dataTables_paginate .pagination {
-            margin: 0;
-            gap: 0.25rem;
+        #cpoTable tbody td {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 5px 0; border-bottom: 1px solid #f3f4f6;
         }
-        .dataTables_wrapper .dataTables_paginate .page-item .page-link {
-            border-radius: 0.375rem;
-            padding: 0.35rem 0.65rem;
+        #cpoTable tbody td:last-child { border-bottom: none; }
+        #cpoTable tbody td::before {
+            content: attr(data-label); font-weight: 700; color: #9ca3af;
+            font-size: .68rem; text-transform: uppercase; letter-spacing: .05em;
+            flex-shrink: 0; margin-right: 10px;
         }
-        .dataTables_wrapper .dataTables_paginate .page-item.active .page-link {
-            background-color: #2563eb;
-            border-color: #2563eb;
-        }
-    </style>
+    }
+</style>
 @endsection
 
 @section('content')
-    <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Header -->
-            <div class="mb-6">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="p-2 bg-blue-600 rounded-lg">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M12 4.354a4 4 0 110 5.292M15 21H3.545a1.5 1.5 0 01-1.5-1.5V5.455c0-.82.67-1.5 1.5-1.5h15.91c.83 0 1.5.67 1.5 1.5v12.045M9 12h6m-3 3v3" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h1 class="text-2xl font-bold text-slate-900">My Orders</h1>
-                            <p class="text-sm text-slate-600">Track your orders and their status</p>
-                        </div>
-                    </div>
-
-                </div>
+<div class="cpo-wrap">
+    <div class="cpo-header">
+        <div class="cpo-header-left">
+            <div class="cpo-icon-box">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
             </div>
-
-            <!-- Main Card -->
-            <div class="bg-white rounded-xl shadow-lg border border-slate-200">
-                <div class="p-6">
-                    <!-- Controls Section -->
-                    <div class="controls-top">
-                        {{-- <div>
-                            <label class="text-sm font-medium text-slate-700">Show entries:</label>
-                            <select id="userTable_length" class="rounded border-slate-300">
-                                <option value="10">10</option>
-                                <option value="25">25</option>
-                                <option value="50">50</option>
-                                <option value="100">100</option>
-                                <option value="-1">All</option>
-                            </select>
-                        </div> --}}
-                        <div id="buttons_export" style="flex: 1;"></div>
-                        {{-- <div style="flex: 1;">
-                            <input type="text" id="userTable_filter_input" placeholder="Search users..."
-                                class="w-full rounded border-slate-300">
-                        </div> --}}
-                    </div>
-
-                    <!-- Table -->
-                    <div class="table-responsive">
-                        <table id="userTable" class="table table-striped table-hover dataTable" style="width:100%">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Order ID</th>
-                                    <th>Order Date</th>
-                                    <th>Status</th>
-                                    <th>Payment</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($orders as $order)
-                                    <tr>
-                                        <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $order->order_id }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($order->order_date)->format('d M Y') }}</td>
-                                        <td>
-                                            @if($order->status == 'pending')
-                                                <span class="badge bg-warning text-dark">Pending</span>
-                                            @elseif($order->status == 'completed')
-                                                <span class="badge bg-success">Approved</span>
-                                            @elseif($order->status == 'cancelled')
-                                                <span class="badge bg-danger">Cancelled</span>
-                                            @else
-                                                <span class="badge bg-secondary">{{ ucfirst($order->status) }}</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($order->payment_status === 'verification_pending')
-                                                <span class="badge bg-info text-white">Receipt Uploaded</span>
-                                            @elseif($order->payment_status === 'paid')
-                                                <span class="badge bg-success">Payment Verified</span>
-                                            @elseif($order->payment_status === 'failed')
-                                                <span class="badge bg-danger">Payment Rejected</span>
-                                            @else
-                                                <span class="badge bg-secondary">Unpaid</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <div class="d-flex gap-1">
-                                                <a href="{{ route('viewSingleOrderCp', ['id' => $order->id]) }}"
-                                                    class="btn btn-sm btn-primary-theme d-inline-flex align-items-center gap-1">
-                                                    <i class="bi bi-eye"></i><span>View</span>
-                                                </a>
-                                                @if(!in_array($order->payment_status, ['paid', 'verification_pending']))
-                                                <a href="{{ route('cpOrderPayment', $order->id) }}"
-                                                    class="btn btn-sm btn-success d-inline-flex align-items-center gap-1">
-                                                    <i class="bi bi-upload"></i><span>Pay</span>
-                                                </a>
-                                                @endif
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Info Card -->
-            <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" stroke-width="2"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-                    </svg>
-                    <div>
-                        <h4 class="text-sm font-semibold text-blue-900">Tips</h4>
-                        <ul class="text-sm text-blue-800 space-y-1 list-disc list-inside mt-1">
-                            <li>Use search box to quickly find orders by Order ID or Date</li>
-                            <li>Export data in Excel or CSV format</li>
-                            <li>Pending orders are awaiting admin approval</li>
-                        </ul>
-                    </div>
-                </div>
+            <div>
+                <h1>My Orders</h1>
+                <p>Track your orders and their status</p>
             </div>
         </div>
+        <span class="cpo-badge">Total: {{ $orders->count() }}</span>
     </div>
+
+    <div class="cpo-card">
+        <div style="overflow-x:auto;">
+            <table id="cpoTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Order ID</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Payment</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($orders as $order)
+                    <tr>
+                        <td data-label="#">{{ $loop->iteration }}</td>
+                        <td data-label="Order ID">
+                            <span class="cpo-order-id">{{ $order->order_id }}</span>
+                        </td>
+                        <td data-label="Date">
+                            <span class="cpo-date">{{ \Carbon\Carbon::parse($order->order_date)->format('d M Y') }}</span>
+                        </td>
+                        <td data-label="Amount">
+                            @if($order->grand_total)
+                                <span class="cpo-amount">&#8377;{{ number_format($order->grand_total, 0) }}</span>
+                            @else
+                                <span style="color:#9ca3af;font-size:.78rem;">Pending</span>
+                            @endif
+                        </td>
+                        <td data-label="Status">
+                            @if($order->status == 'pending')
+                                <span class="cpo-pill cpo-pill-yellow">Pending</span>
+                            @elseif($order->status == 'completed')
+                                <span class="cpo-pill cpo-pill-green">Approved</span>
+                            @elseif($order->status == 'cancelled')
+                                <span class="cpo-pill cpo-pill-red">Cancelled</span>
+                            @else
+                                <span class="cpo-pill cpo-pill-gray">{{ ucfirst($order->status) }}</span>
+                            @endif
+                        </td>
+                        <td data-label="Payment">
+                            @if($order->payment_status === 'verification_pending')
+                                <span class="cpo-pill cpo-pill-blue">Receipt Uploaded</span>
+                            @elseif($order->payment_status === 'paid')
+                                <span class="cpo-pill cpo-pill-green">Verified</span>
+                            @elseif($order->payment_status === 'failed')
+                                <span class="cpo-pill cpo-pill-red">Rejected</span>
+                            @else
+                                <span class="cpo-pill cpo-pill-gray">Unpaid</span>
+                            @endif
+                        </td>
+                        <td data-label="Action">
+                            <div class="cpo-actions">
+                                <a href="{{ route('viewSingleOrderCp', $order->id) }}" class="cpo-btn cpo-btn-view">
+                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    View
+                                </a>
+                                @if(!in_array($order->payment_status, ['paid', 'verification_pending']))
+                                <a href="{{ route('cpOrderPayment', $order->id) }}" class="cpo-btn cpo-btn-pay">
+                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+                                    Pay
+                                </a>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('js')
-    <script src="/assets/js/jquery-3.7.0.min.js"></script>
-    <script src="/assets/js/jquery.dataTables.min.js"></script>
-    <script src="/assets/js/dataTables.bootstrap5.min.js"></script>
-    <script src="/assets/js/dataTables.buttons.min.js"></script>
-    <script src="/assets/js/buttons.bootstrap5.min.js"></script>
-    <script src="/assets/js/jszip.min.js"></script>
-    <script src="/assets/js/pdfmake.min.js"></script>
-    <script src="/assets/js/vfs_fonts.min.js"></script>
-    <script src="/assets/js/buttons.html5.min.js"></script>
-    <script src="/assets/js/buttons.print.min.js"></script>
-
-    <script>
-        $(document).ready(function () {
-            var table = $('#userTable').DataTable({
-                dom: 'Blfrtip',
-                buttons: [
-                    {
-                        extend: 'excelHtml5',
-                        text: '<i class="bi bi-file-earmark-spreadsheet"></i> Export Excel',
-                        className: 'btn btn-sm btn-success',
-                        title: 'Pending Orders',
-                        exportOptions: {
-                            columns: ':visible'
-                        }
-                    },
-                    {
-                        extend: 'csvHtml5',
-                        text: '<i class="bi bi-file-earmark-text"></i> Export CSV',
-                        className: 'btn btn-sm btn-info',
-                        title: 'Pending Orders',
-                        exportOptions: {
-                            columns: ':visible'
-                        }
-                    },
-                    {
-                        extend: 'print',
-                        text: '<i class="bi bi-printer"></i> Print',
-                        className: 'btn btn-sm btn-warning',
-                        exportOptions: {
-                            columns: ':visible'
-                        }
-                    }
-                ],
-                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
-                pageLength: 10,
-                orderCellsTop: true,
-                autoWidth: false,
-                responsive: true,
-                language: {
-                    search: "",
-                    searchPlaceholder: "Search Orders...",
-                    lengthMenu: "Show _MENU_ entries"
-                }
-            });
-
-            // Move buttons to custom div
-            table.buttons().container().appendTo('#buttons_export');
-
-            // Custom search functionality
-            $('#userTable_filter_input').on('keyup', function () {
-                table.search(this.value).draw();
-            });
-
-            // Handle length change
-            $('#userTable_length').on('change', function () {
-                table.page.len(this.value).draw();
-            });
+<script>
+$(document).ready(function () {
+    if ($('#cpoTable tbody tr').length > 0) {
+        $('#cpoTable').DataTable({
+            order: [[2, 'desc']],
+            pageLength: 25,
+            language: {
+                emptyTable: 'No orders yet',
+                search: '',
+                searchPlaceholder: 'Search orders...',
+            }
         });
-    </script>
+    }
+});
+</script>
 @endsection

@@ -1,13 +1,13 @@
 ﻿@extends('layouts.adminLayout')
+@section('title', 'New Order')
 @section('css')
-    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="/assets/css/select2.min.css" rel="stylesheet" />
     <style>
         :root {
-            --primary-blue: #4A90E2;
-            --primary-light: #f8f9fa;
-            --text-primary: #2d3436;
-            --text-secondary: #636e72;
+            --primary-blue: #2563eb;
+            --primary-light: #f8fafc;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
             --border-color: #dee2e6;
         }
 
@@ -144,13 +144,28 @@
             margin: 0.75rem 0;
         }
 
+        .row { display: flex; flex-wrap: wrap; margin: 0 -4px; }
+        .row > [class*="col-"] { padding: 0 4px; margin-bottom: 4px; }
+        .col-lg-1 { flex: 0 0 8.33%; max-width: 8.33%; }
+        .col-lg-3 { flex: 0 0 25%; max-width: 25%; }
+        .col-lg-4 { flex: 0 0 33.33%; max-width: 33.33%; }
+        .col-md-2 { flex: 0 0 16.66%; max-width: 16.66%; }
+        .col-md-4 { flex: 0 0 33.33%; max-width: 33.33%; }
+        .col-md-6 { flex: 0 0 50%; max-width: 50%; }
+        .d-flex { display: flex; }
+        .align-items-end { align-items: flex-end; }
+        .d-none { display: none !important; }
+        .w-100 { width: 100%; }
+        .text-danger { color: #dc2626; }
+        .text-muted { color: #9ca3af; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-3 { margin-top: 1rem; }
+        .g-2 { gap: 0.5rem; }
+
         @media (max-width: 768px) {
-            .product-row {
-                padding: 0.5rem !important;
-            }
-            .form-label {
-                font-size: 0.75rem;
-            }
+            .product-row { padding: 0.5rem !important; }
+            .form-label { font-size: 0.75rem; }
+            [class*="col-lg-"], [class*="col-md-"] { flex: 0 0 100%; max-width: 100%; }
         }
     </style>
 @endsection
@@ -158,7 +173,7 @@
 @section('content')
     <div class="page-header">
         <div class="container-fluid">
-            <h1><i class="fas fa-box me-2"></i>New Order</h1>
+            <h1 style="display:flex;align-items:center;gap:8px;"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>New Order</h1>
             <p>Select products, quantities and upload payment proof to place an order</p>
         </div>
     </div>
@@ -200,7 +215,7 @@
                         </div>
                         <div class="col-lg-1 col-md-2 d-flex align-items-end">
                             <button type="button" class="btn btn-danger btn-sm remove-row w-100 d-none">
-                                <i class="fas fa-times"></i>
+                                &times;
                             </button>
                         </div>
                     </div>
@@ -209,7 +224,7 @@
 
             <div class="btn-group-compact">
                 <button type="button" class="btn btn-primary btn-sm" id="addRow">
-                    <i class="fas fa-plus me-1"></i> Add Row
+                    + Add Row
                 </button>
             </div>
 
@@ -219,7 +234,7 @@
             </div>
 
             <div class="mt-3" style="background:#f0f7ff;border:1px solid #b3d4fc;border-radius:6px;padding:1rem;">
-                <h6 class="section-title" style="color:#1a56db;margin-bottom:0.5rem;"><i class="fas fa-camera me-1"></i> Payment Proof</h6>
+                <h6 class="section-title" style="color:#1a56db;margin-bottom:0.5rem;">Payment Proof</h6>
                 <p style="font-size:0.78rem;color:#555;margin:0 0 0.5rem;">Upload a screenshot of the payment (UPI, bank transfer, etc.)</p>
                 <input type="file" class="form-control" name="payment_screenshot" id="paymentScreenshot" accept="image/*" required>
                 <div id="paymentPreview" style="margin-top:0.5rem;display:none;">
@@ -232,12 +247,8 @@
             </div>
 
             <div class="btn-group-compact mt-3">
-                <button type="submit" class="btn btn-success">
-                    <i class="fas fa-check me-1"></i> Submit Order
-                </button>
-                <a href="{{ route('orderReportCp') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left me-1"></i> Back
-                </a>
+                <button type="submit" class="btn btn-success">Submit Order</button>
+                <a href="{{ route('orderReportCp') }}" class="btn btn-secondary">Back</a>
             </div>
         </form>
     </div>
@@ -287,7 +298,7 @@ $(document).ready(function() {
                     </div>
                     <div class="col-lg-1 col-md-2 d-flex align-items-end">
                         <button type="button" class="btn btn-danger btn-sm remove-row w-100">
-                            <i class="fas fa-times"></i>
+                            &times;
                         </button>
                     </div>
                 </div>

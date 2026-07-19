@@ -489,6 +489,34 @@ class UserController extends Controller
         }
     }
 
+    public function cpProfilePage()
+    {
+        $user = Auth::user();
+        $cp = ChannelPartner::find($user->cp_id);
+        if (!$cp) return redirect()->route('cpDashboard')->with('error', 'Channel Partner not found.');
+        return view('channelPartner.cpProfile', compact('cp'));
+    }
+
+    public function cpProfileUpdate(Request $request)
+    {
+        $user = Auth::user();
+        $cp = ChannelPartner::find($user->cp_id);
+        if (!$cp) return redirect()->route('cpDashboard')->with('error', 'Channel Partner not found.');
+
+        $request->validate([
+            'contact_person' => 'required|string|max:255',
+            'phone_number' => 'required|string|max:20',
+            'email' => 'required|email|max:255',
+            'full_address' => 'nullable|string|max:500',
+            'city' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'zip_code' => 'nullable|string|max:10',
+        ]);
+
+        $cp->update($request->only(['contact_person', 'phone_number', 'email', 'full_address', 'city', 'state', 'zip_code']));
+        return redirect()->route('cpProfile')->with('success', 'Profile updated successfully.');
+    }
+
     public function cpList()
     {
         $cp_list = ChannelPartner::with('role', 'associateUsers', 'wallet')->orderBy('created_at', 'desc')->get();
