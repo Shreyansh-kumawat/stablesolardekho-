@@ -52,8 +52,8 @@
                     <p class="text-sm text-orange-700 mb-3">Customer has uploaded a payment screenshot. Please verify the payment and approve or reject.</p>
                     <div class="mb-4">
                         <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Payment Screenshot</p>
-                        <a href="{{ Storage::url($order->payment_screenshot) }}" target="_blank">
-                            <img src="{{ Storage::url($order->payment_screenshot) }}" class="max-w-xs rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer" alt="Payment Screenshot">
+                        <a href="{{ asset('storage/' . $order->payment_screenshot) }}" target="_blank">
+                            <img src="{{ asset('storage/' . $order->payment_screenshot) }}" style="max-width:320px;border-radius:8px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.1);cursor:pointer;" alt="Payment Screenshot">
                         </a>
                     </div>
                     @if($order->payment_reference)
@@ -62,18 +62,18 @@
                         <p class="font-mono text-sm font-medium text-gray-800 mt-0.5">{{ $order->payment_reference }}</p>
                     </div>
                     @endif
-                    <div class="flex gap-3">
-                        <form action="{{ route('admin.order.approvePayment', $order->id) }}" method="POST" class="flex-1">
+                    <div style="display:flex;gap:12px;">
+                        <form action="{{ route('admin.order.approvePayment', $order->id) }}" method="POST" style="flex:1;">
                             @csrf
-                            <button type="submit" class="w-full py-2.5 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                            <button type="submit" style="width:100%;padding:10px;background:#16a34a;color:#fff;font-size:14px;font-weight:700;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+                                <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
                                 Approve Payment
                             </button>
                         </form>
-                        <form action="{{ route('admin.order.rejectPayment', $order->id) }}" method="POST" class="flex-1">
+                        <form action="{{ route('admin.order.rejectPayment', $order->id) }}" method="POST" style="flex:1;">
                             @csrf
-                            <button type="submit" class="w-full py-2.5 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <button type="submit" style="width:100%;padding:10px;background:#dc2626;color:#fff;font-size:14px;font-weight:700;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+                                <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                 Reject Payment
                             </button>
                         </form>
@@ -91,7 +91,7 @@
                     @foreach($order->items as $item)
                     <div class="px-6 py-4 flex items-center gap-4">
                         @if($item->product && $item->product->image)
-                        <img src="{{ Storage::url($item->product->image) }}" class="w-14 h-14 object-cover rounded-lg border border-gray-200" alt="{{ $item->product_name }}">
+                        <img src="{{ asset('storage/' . $item->product->image) }}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;" alt="{{ $item->product_name }}">
                         @else
                         <div class="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center">
                             <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -154,7 +154,7 @@
                     @if($order->payment_screenshot && $order->payment_status !== 'verification_pending')
                     <div>
                         <p class="text-xs text-gray-500 uppercase tracking-wide">Screenshot</p>
-                        <a href="{{ Storage::url($order->payment_screenshot) }}" target="_blank" class="text-indigo-600 text-xs font-medium hover:underline mt-0.5 inline-block">View Screenshot</a>
+                        <a href="{{ asset('storage/' . $order->payment_screenshot) }}" target="_blank" style="color:#4f46e5;font-size:12px;font-weight:500;text-decoration:underline;margin-top:2px;display:inline-block;">View Screenshot</a>
                     </div>
                     @endif
                     <div>
@@ -234,7 +234,7 @@
                             @endforeach
                         </div>
                         <button type="submit"
-                            class="mt-4 w-full py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                            style="margin-top:16px;width:100%;padding:10px;background:#4f46e5;color:#fff;font-size:14px;font-weight:600;border-radius:8px;border:none;cursor:pointer;">
                             Update Status
                         </button>
                     </form>
