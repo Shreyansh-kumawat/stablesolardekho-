@@ -167,6 +167,51 @@ textarea.acc-input{resize:vertical;min-height:64px;padding-top:11px;}
             </div>
         </div>
 
+        <div class="acc-card">
+            <div class="acc-card-header">
+                <div class="acc-card-icon" style="background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(16,185,129,0.05));">
+                    <svg width="20" height="20" fill="none" stroke="#10b981" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"/></svg>
+                </div>
+                <div><h3>Bank Account Details</h3><span>Required for receiving cashback payments</span></div>
+            </div>
+            <div class="acc-card-body">
+                <p class="acc-hint">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>
+                    Please provide your bank details to receive referral cashback directly to your account.
+                </p>
+                <div class="acc-grid">
+                    <div class="acc-field">
+                        <label class="acc-label">Account Holder Name</label>
+                        <div class="acc-input-wrap">
+                            <span class="acc-input-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg></span>
+                            <input type="text" name="bank_account_holder" value="{{ Auth::user()->bank_account_holder }}" placeholder="Name as per bank account" class="acc-input">
+                        </div>
+                    </div>
+                    <div class="acc-field">
+                        <label class="acc-label">Bank Name</label>
+                        <div class="acc-input-wrap">
+                            <span class="acc-input-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"/></svg></span>
+                            <input type="text" name="bank_name" value="{{ Auth::user()->bank_name }}" placeholder="e.g. State Bank of India" class="acc-input">
+                        </div>
+                    </div>
+                    <div class="acc-field">
+                        <label class="acc-label">Account Number</label>
+                        <div class="acc-input-wrap">
+                            <span class="acc-input-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg></span>
+                            <input type="text" name="bank_account_number" value="{{ Auth::user()->bank_account_number }}" placeholder="Enter account number" class="acc-input">
+                        </div>
+                    </div>
+                    <div class="acc-field">
+                        <label class="acc-label">IFSC Code</label>
+                        <div class="acc-input-wrap">
+                            <span class="acc-input-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z"/></svg></span>
+                            <input type="text" name="bank_ifsc" value="{{ Auth::user()->bank_ifsc }}" placeholder="e.g. SBIN0001234" maxlength="11" style="text-transform:uppercase;" class="acc-input">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <button type="submit" class="acc-btn">
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
             Save Changes

@@ -272,17 +272,25 @@ class UserController extends Controller
             'state'         => 'nullable|string|max:100',
             'district'      => 'nullable|string|max:100',
             'city'          => 'nullable|string|max:100',
-            'pincode'       => 'nullable|string|max:10',
-            'password'      => 'nullable|min:8|confirmed',
+            'pincode'             => 'nullable|string|max:10',
+            'bank_account_number' => 'nullable|string|max:30',
+            'bank_ifsc'           => 'nullable|string|max:20',
+            'bank_name'           => 'nullable|string|max:100',
+            'bank_account_holder' => 'nullable|string|max:100',
+            'password'            => 'nullable|min:8|confirmed',
         ]);
 
-        $user->name          = $request->name;
-        $user->mobile_number = $request->mobile_number;
-        $user->address       = $request->address;
-        $user->state         = $request->state;
-        $user->district      = $request->district;
-        $user->city          = $request->city;
-        $user->pincode       = $request->pincode;
+        $user->name                = $request->name;
+        $user->mobile_number       = $request->mobile_number;
+        $user->address             = $request->address;
+        $user->state               = $request->state;
+        $user->district            = $request->district;
+        $user->city                = $request->city;
+        $user->pincode             = $request->pincode;
+        $user->bank_account_number = $request->bank_account_number;
+        $user->bank_ifsc           = $request->bank_ifsc;
+        $user->bank_name           = $request->bank_name;
+        $user->bank_account_holder = $request->bank_account_holder;
 
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);

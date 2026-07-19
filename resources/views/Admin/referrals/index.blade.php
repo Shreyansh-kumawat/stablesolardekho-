@@ -42,48 +42,67 @@
 
     {{-- LEADS TAB --}}
     <div id="panel-leads" class="ref-panel">
-        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;">
-            <div style="overflow-x:auto;">
-                <table style="width:100%;font-size:.85rem;border-collapse:collapse;">
-                    <thead>
-                        <tr style="background:#f8fafc;text-align:left;">
-                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">#</th>
-                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Referred Person</th>
-                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Phone</th>
-                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">City</th>
-                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">System</th>
-                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Referred By</th>
-                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Status</th>
-                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Date</th>
-                            <th style="padding:12px 16px;font-size:.7rem;font-weight:700;color:#6b7280;text-transform:uppercase;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($leads as $lead)
-                        @php $statusColors = ['pending'=>['#f3f4f6','#4b5563'],'contacted'=>['#dbeafe','#1d4ed8'],'installed'=>['#ede9fe','#6d28d9'],'payment_done'=>['#fef3c7','#b45309'],'cashback_approved'=>['#d1fae5','#047857'],'rejected'=>['#fee2e2','#b91c1c']]; $sc=$statusColors[$lead->status]??['#f3f4f6','#4b5563']; @endphp
-                        <tr style="border-top:1px solid #f1f5f9;">
-                            <td style="padding:12px 16px;">{{ $lead->id }}</td>
-                            <td style="padding:12px 16px;"><strong>{{ $lead->name }}</strong><br><span style="color:#9ca3af;font-size:.75rem;">{{ $lead->email }}</span></td>
-                            <td style="padding:12px 16px;">{{ $lead->phone }}</td>
-                            <td style="padding:12px 16px;">{{ $lead->city ?? '-' }}</td>
-                            <td style="padding:12px 16px;">{{ $lead->system_size ?? '-' }}</td>
-                            <td style="padding:12px 16px;">{{ $lead->referrer->name ?? 'N/A' }}</td>
-                            <td style="padding:12px 16px;"><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:600;background:{{ $sc[0] }};color:{{ $sc[1] }};">{{ ucwords(str_replace('_',' ',$lead->status)) }}</span></td>
-                            <td style="padding:12px 16px;font-size:.78rem;color:#6b7280;">{{ $lead->created_at->format('d M Y') }}</td>
-                            <td style="padding:12px 16px;">
-                                <button class="update-status-btn" data-id="{{ $lead->id }}" data-status="{{ $lead->status }}" data-remarks="{{ $lead->admin_remarks }}" style="padding:4px 10px;font-size:.75rem;background:#eff6ff;color:#2563eb;border:none;border-radius:4px;cursor:pointer;font-weight:600;"><i class="fas fa-edit"></i></button>
-                                @if($lead->status == 'payment_done' && !$lead->cashback)
-                                <button class="create-cashback-btn" data-id="{{ $lead->id }}" data-name="{{ $lead->name }}" style="padding:4px 10px;font-size:.75rem;background:#ecfdf5;color:#059669;border:none;border-radius:4px;cursor:pointer;font-weight:600;"><i class="fas fa-coins"></i> Cashback</button>
-                                @endif
-                            </td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="9" style="padding:32px;text-align:center;color:#9ca3af;">No referral leads yet</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+        @forelse($leads as $lead)
+        @php $statusColors = ['pending'=>['#f3f4f6','#4b5563'],'contacted'=>['#dbeafe','#1d4ed8'],'installed'=>['#ede9fe','#6d28d9'],'payment_done'=>['#fef3c7','#b45309'],'cashback_approved'=>['#d1fae5','#047857'],'rejected'=>['#fee2e2','#b91c1c']]; $sc=$statusColors[$lead->status]??['#f3f4f6','#4b5563']; @endphp
+        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:14px;border:1px solid #f1f5f9;overflow:hidden;">
+            {{-- Top row: status badge + date + actions --}}
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:#f8fafc;border-bottom:1px solid #f1f5f9;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="display:inline-block;padding:3px 12px;border-radius:20px;font-size:.72rem;font-weight:700;background:{{ $sc[0] }};color:{{ $sc[1] }};">{{ ucwords(str_replace('_',' ',$lead->status)) }}</span>
+                    <span style="font-size:.78rem;color:#9ca3af;">{{ $lead->created_at->format('d M Y') }}</span>
+                </div>
+                <div style="display:flex;gap:6px;">
+                    <button class="update-status-btn" data-id="{{ $lead->id }}" data-status="{{ $lead->status }}" data-remarks="{{ $lead->admin_remarks }}" style="padding:5px 12px;font-size:.75rem;background:#eff6ff;color:#2563eb;border:none;border-radius:6px;cursor:pointer;font-weight:600;"><i class="fas fa-edit" style="margin-right:3px;"></i> Update</button>
+                    @if($lead->status == 'payment_done' && !$lead->cashback)
+                    <button class="create-cashback-btn" data-id="{{ $lead->id }}" data-name="{{ $lead->name }}" style="padding:5px 12px;font-size:.75rem;background:#ecfdf5;color:#059669;border:none;border-radius:6px;cursor:pointer;font-weight:600;"><i class="fas fa-coins" style="margin-right:3px;"></i> Cashback</button>
+                    @endif
+                </div>
+            </div>
+            {{-- Body: two columns --}}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+                {{-- Left: Referred Person --}}
+                <div style="padding:16px 18px;border-right:1px solid #f1f5f9;">
+                    <p style="font-size:.68rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin:0 0 8px;">Referred Person</p>
+                    <p style="font-weight:700;color:#1e293b;font-size:.92rem;margin:0 0 4px;">{{ $lead->name }}</p>
+                    <p style="color:#6b7280;font-size:.8rem;margin:0 0 2px;">{{ $lead->email }}</p>
+                    <p style="color:#6b7280;font-size:.8rem;margin:0 0 2px;">{{ $lead->phone }}</p>
+                    <div style="display:flex;gap:16px;margin-top:8px;">
+                        @if($lead->city)<span style="font-size:.78rem;color:#4b5563;"><i class="fas fa-map-marker-alt" style="color:#9ca3af;margin-right:3px;"></i>{{ $lead->city }}@if($lead->state), {{ $lead->state }}@endif</span>@endif
+                        @if($lead->system_size)<span style="font-size:.78rem;color:#4b5563;"><i class="fas fa-solar-panel" style="color:#9ca3af;margin-right:3px;"></i>{{ $lead->system_size }}</span>@endif
+                    </div>
+                </div>
+                {{-- Right: Referred By + Bank Details --}}
+                <div style="padding:16px 18px;">
+                    <p style="font-size:.68rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin:0 0 8px;">Referred By</p>
+                    @if($lead->referrer)
+                    <p style="font-weight:700;color:#1e293b;font-size:.92rem;margin:0 0 4px;">{{ $lead->referrer->name }}</p>
+                    <p style="color:#6b7280;font-size:.8rem;margin:0 0 2px;">{{ $lead->referrer->email }}</p>
+                    @if($lead->referrer->mobile_number)<p style="color:#6b7280;font-size:.8rem;margin:0 0 2px;">{{ $lead->referrer->mobile_number }}</p>@endif
+                    {{-- Bank Details --}}
+                    @if($lead->referrer->bank_account_number && $lead->referrer->bank_ifsc)
+                    <div style="margin-top:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 12px;">
+                        <p style="font-size:.68rem;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px;"><i class="fas fa-university" style="margin-right:4px;"></i>Bank Details</p>
+                        @if($lead->referrer->bank_account_holder)<p style="font-size:.8rem;color:#166534;margin:0 0 2px;"><strong>Holder:</strong> {{ $lead->referrer->bank_account_holder }}</p>@endif
+                        <p style="font-size:.8rem;color:#166534;margin:0 0 2px;"><strong>A/C:</strong> {{ $lead->referrer->bank_account_number }}</p>
+                        <p style="font-size:.8rem;color:#166534;margin:0 0 2px;"><strong>IFSC:</strong> {{ $lead->referrer->bank_ifsc }}</p>
+                        @if($lead->referrer->bank_name)<p style="font-size:.8rem;color:#166534;margin:0;"><strong>Bank:</strong> {{ $lead->referrer->bank_name }}</p>@endif
+                    </div>
+                    @else
+                    <div style="margin-top:10px;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;">
+                        <p style="font-size:.78rem;color:#92400e;margin:0;"><i class="fas fa-exclamation-triangle" style="margin-right:4px;"></i>Bank details not provided</p>
+                    </div>
+                    @endif
+                    @else
+                    <p style="color:#9ca3af;font-size:.85rem;margin:0;">N/A</p>
+                    @endif
+                </div>
             </div>
         </div>
+        @empty
+        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:48px;text-align:center;">
+            <p style="color:#9ca3af;font-size:.9rem;margin:0;">No referral leads yet</p>
+        </div>
+        @endforelse
     </div>
 
     {{-- CODES TAB --}}
