@@ -24,14 +24,38 @@ class AppServiceProvider extends ServiceProvider
         Schema::defaultStringLength(191);
 
         View::composer('layouts.partials.menuEcommercePartials', function ($view) {
-            $cpOrderBadge = 0;
-            $customerOrderBadge = 0;
+            $badges = ['orders' => 0, 'referrals' => 0, 'users' => 0, 'cp_interest' => 0, 'cp_orders' => 0];
             try {
-                $cpOrderBadge = \App\Models\CpOrder::where('viewed_by_admin', 0)->count();
-                $customerOrderBadge = \App\Models\CustomerOrder::where('viewed_by_admin', 0)->count();
+                $user = auth()->user();
+                if ($user && in_array($user->role_id, [1, 2])) {
+                    $seen = [];
+                    $records = \App\Models\AdminLastSeen::where('user_id', $user->id)->get();
+                    foreach ($records as $r) {
+                        $seen[$r->section] = $r->seen_at;
+                    }
+
+                    $q = \App\Models\CustomerOrder::query();
+                    if (isset($seen['orders'])) $q->where('created_at', '>', $seen['orders']);
+                    $badges['orders'] = $q->count();
+
+                    $q = \App\Models\ReferralLead::query();
+                    if (isset($seen['referrals'])) $q->where('created_at', '>', $seen['referrals']);
+                    $badges['referrals'] = $q->count();
+
+                    $q = \App\Models\User::where('role_id', 3);
+                    if (isset($seen['users'])) $q->where('created_at', '>', $seen['users']);
+                    $badges['users'] = $q->count();
+
+                    $q = \App\Models\CpInterest::query();
+                    if (isset($seen['cp_interest'])) $q->where('created_at', '>', $seen['cp_interest']);
+                    $badges['cp_interest'] = $q->count();
+
+                    $q = \App\Models\CpOrder::query();
+                    if (isset($seen['cp_orders'])) $q->where('created_at', '>', $seen['cp_orders']);
+                    $badges['cp_orders'] = $q->count();
+                }
             } catch (\Exception $e) {}
-            $view->with('cpOrderBadge', $cpOrderBadge);
-            $view->with('customerOrderBadge', $customerOrderBadge);
+            $view->with('sidebarBadges', $badges);
         });
 
     }
