@@ -82,10 +82,10 @@
                     @if($lead->referrer->bank_account_number && $lead->referrer->bank_ifsc)
                     <div style="margin-top:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 12px;">
                         <p style="font-size:.68rem;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px;"><i class="fas fa-university" style="margin-right:4px;"></i>Bank Details</p>
-                        @if($lead->referrer->bank_account_holder)<p style="font-size:.8rem;color:#166534;margin:0 0 2px;"><strong>Holder:</strong> {{ $lead->referrer->bank_account_holder }}</p>@endif
-                        <p style="font-size:.8rem;color:#166534;margin:0 0 2px;"><strong>A/C:</strong> {{ $lead->referrer->bank_account_number }}</p>
-                        <p style="font-size:.8rem;color:#166534;margin:0 0 2px;"><strong>IFSC:</strong> {{ $lead->referrer->bank_ifsc }}</p>
-                        @if($lead->referrer->bank_name)<p style="font-size:.8rem;color:#166534;margin:0;"><strong>Bank:</strong> {{ $lead->referrer->bank_name }}</p>@endif
+                        @if($lead->referrer->bank_account_holder)<p style="font-size:.8rem;color:#166534;margin:0 0 3px;display:flex;align-items:center;gap:6px;"><strong>Holder:</strong> <span>{{ $lead->referrer->bank_account_holder }}</span><button onclick="copyText(this,'{{ $lead->referrer->bank_account_holder }}')" style="background:none;border:none;cursor:pointer;color:#15803d;padding:0;line-height:1;" title="Copy"><i class="fas fa-copy" style="font-size:11px;"></i></button></p>@endif
+                        <p style="font-size:.8rem;color:#166534;margin:0 0 3px;display:flex;align-items:center;gap:6px;"><strong>A/C:</strong> <span>{{ $lead->referrer->bank_account_number }}</span><button onclick="copyText(this,'{{ $lead->referrer->bank_account_number }}')" style="background:none;border:none;cursor:pointer;color:#15803d;padding:0;line-height:1;" title="Copy"><i class="fas fa-copy" style="font-size:11px;"></i></button></p>
+                        <p style="font-size:.8rem;color:#166534;margin:0 0 3px;display:flex;align-items:center;gap:6px;"><strong>IFSC:</strong> <span>{{ $lead->referrer->bank_ifsc }}</span><button onclick="copyText(this,'{{ $lead->referrer->bank_ifsc }}')" style="background:none;border:none;cursor:pointer;color:#15803d;padding:0;line-height:1;" title="Copy"><i class="fas fa-copy" style="font-size:11px;"></i></button></p>
+                        @if($lead->referrer->bank_name)<p style="font-size:.8rem;color:#166534;margin:0;display:flex;align-items:center;gap:6px;"><strong>Bank:</strong> <span>{{ $lead->referrer->bank_name }}</span><button onclick="copyText(this,'{{ $lead->referrer->bank_name }}')" style="background:none;border:none;cursor:pointer;color:#15803d;padding:0;line-height:1;" title="Copy"><i class="fas fa-copy" style="font-size:11px;"></i></button></p>@endif
                     </div>
                     @else
                     <div style="margin-top:10px;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;">
@@ -300,6 +300,13 @@
 @section('js')
 <script>
 var csrf='{{ csrf_token() }}';
+
+function copyText(btn,text){
+    navigator.clipboard.writeText(text).then(function(){
+        var icon=btn.querySelector('i');icon.className='fas fa-check';btn.style.color='#047857';
+        setTimeout(function(){icon.className='fas fa-copy';btn.style.color='#15803d';},1500);
+    });
+}
 
 $('.update-status-btn').click(function(){
     $('#statusLeadId').val($(this).data('id'));$('#statusSelect').val($(this).data('status'));$('#statusRemarks').val($(this).data('remarks'));
