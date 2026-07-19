@@ -25,18 +25,20 @@
         padding: 2px 8px; border-radius: 99px;
         font-size: 11px; font-weight: 500;
     }
-    .customer-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .customer-actions { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
     .customer-actions .btn-act {
-        display: inline-flex; align-items: center; gap: 4px;
-        padding: 5px 10px; border-radius: 6px;
-        font-size: 12px; font-weight: 500;
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 6px 12px; border-radius: 6px;
+        font-size: 11px; font-weight: 600;
         text-decoration: none; border: none; cursor: pointer;
-        transition: background 0.15s;
+        transition: background 0.15s; width: fit-content;
     }
     .btn-orders { background: #4f46e5; color: white; }
     .btn-orders:hover { background: #4338ca; }
     .btn-admin { background: #7c3aed; color: white; }
     .btn-admin:hover { background: #6d28d9; }
+    .btn-remove-admin { background: #f59e0b; color: white; }
+    .btn-remove-admin:hover { background: #d97706; }
     .btn-delete { background: #dc2626; color: white; }
     .btn-delete:hover { background: #b91c1c; }
 
@@ -96,11 +98,9 @@
                         <span class="tag bg-blue-50 text-blue-600">
                             {{ $user->created_at ? $user->created_at->format('d M Y') : '—' }}
                         </span>
-                        @if($user->role)
-                        <span class="tag {{ $user->role_id == 4 ? 'bg-purple-100 text-purple-700' : ($user->role_id == 2 ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-500') }}">
-                            {{ $user->role_id == 4 ? 'CP' : ($user->role_id == 2 ? 'Admin' : 'User') }}
+                        <span class="tag {{ $user->role_id == 4 ? 'bg-purple-100 text-purple-700' : ($user->role_id == 2 ? 'bg-orange-100 text-orange-700' : ($user->role_id == 1 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500')) }}">
+                            {{ $user->role_id == 1 ? 'Master Admin' : ($user->role_id == 2 ? 'Secondary Admin' : ($user->role_id == 4 ? 'CP' : 'User')) }}
                         </span>
-                        @endif
                     </div>
                 </div>
                 <div class="flex items-center gap-1.5 flex-shrink-0">
@@ -119,19 +119,32 @@
             </div>
             <div class="customer-actions">
                 <a href="{{ route('adminUserOrders', $user->id) }}" class="btn-act btn-orders">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
+                    <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
                     Orders
                 </a>
+                @if(Auth::user()->role_id == 1 && $user->role_id == 2)
+                {{-- Remove Secondary Admin --}}
+                <form action="{{ route('removeSecondaryAdmin', $user->id) }}" method="POST" class="remove-admin-form" style="margin:0;">
+                    @csrf
+                    <button type="button" class="btn-act btn-remove-admin remove-admin-btn" data-name="{{ $user->name }}">
+                        <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Remove Admin
+                    </button>
+                </form>
+                @endif
                 @if(Auth::user()->role_id == 1 && !in_array($user->role_id, [1, 2]))
+                {{-- Make Secondary Admin --}}
                 <form action="{{ route('addSecondaryAdmin') }}" method="POST" class="make-admin-form" style="margin:0;">
                     @csrf
                     <input type="hidden" name="email" value="{{ $user->email }}">
                     <button type="button" class="btn-act btn-admin make-admin-btn" data-name="{{ $user->name }}">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
-                        Make Admin
+                        <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                        Make Secondary Admin
                     </button>
                 </form>
                 @endif
+                @if($user->role_id != 1)
+                {{-- Delete (not for master admin, not for secondary admin until demoted) --}}
                 @if($user->role_id != 2)
                 <form action="{{ route('admin.customer.delete', $user->id) }}" method="POST" class="delete-customer-form" style="margin:0;">
                     @csrf
@@ -141,10 +154,11 @@
                         data-pending="{{ $user->pending_orders_count }}"
                         data-delivered="{{ $user->delivered_orders_count }}"
                         data-total="{{ $user->customer_orders_count }}">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         Delete
                     </button>
                 </form>
+                @endif
                 @endif
             </div>
         </div>
@@ -184,6 +198,25 @@ $(document).on('click', '.make-admin-btn', function () {
     }).then(function (result) {
         if (result.isConfirmed) {
             btn.closest('.make-admin-form').submit();
+        }
+    });
+});
+
+$(document).on('click', '.remove-admin-btn', function () {
+    var btn = $(this);
+    var name = btn.data('name');
+    Swal.fire({
+        title: 'Remove Secondary Admin?',
+        html: 'Are you sure you want to remove <strong>"' + name + '"</strong> from Secondary Admin role?<br><small class="text-gray-500">They will become a regular user. You can delete them after removing admin access.</small>',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f59e0b',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, Remove Admin',
+        cancelButtonText: 'Cancel'
+    }).then(function (result) {
+        if (result.isConfirmed) {
+            btn.closest('.remove-admin-form').submit();
         }
     });
 });
