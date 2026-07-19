@@ -92,6 +92,7 @@ class RegisteredUserController extends Controller
             'email' => $regData['email'],
             'password' => Hash::make($regData['password']),
             'mobile_number' => $regData['mobile_number'] ?? null,
+            'role_id' => 3,
             'email_verified_at' => now(),
         ]);
 

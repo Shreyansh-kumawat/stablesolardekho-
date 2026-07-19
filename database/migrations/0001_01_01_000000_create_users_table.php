@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('mobile_number')->nullable()->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->integer('role_id')->default(2);
+            $table->integer('role_id')->default(3);
             $table->integer('cp_id')->nullable();
             $table->boolean('is_active')->default(true);
             $table->rememberToken();
