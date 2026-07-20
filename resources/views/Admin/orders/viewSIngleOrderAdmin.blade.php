@@ -197,7 +197,9 @@
                 </thead>
                 <tbody>
                     @php
-                        $products = is_array($order->products) ? $order->products : json_decode($order->products, true);
+                        $products = $order->products;
+                        if (is_string($products)) $products = json_decode($products, true);
+                        if (!is_array($products)) $products = [];
                         $productIndex = 0;
                     @endphp
 
