@@ -37,12 +37,18 @@ class ReferralController extends Controller
             ->whereIn('status', ['pending', 'approved', 'paid'])->count();
         $nextCount = $successCount + 1;
         $slabs = $this->getSlabConfig();
+        $percentage = $slabs[count($slabs) - 1]['percentage'] ?? 5;
         foreach ($slabs as $slab) {
             if ($nextCount >= $slab['min'] && $nextCount <= $slab['max']) {
-                return $slab['percentage'];
+                $percentage = $slab['percentage'];
+                break;
             }
         }
-        return $slabs[count($slabs) - 1]['percentage'] ?? 5;
+        $referrer = User::find($referrerId);
+        if ($referrer && $referrer->role_id == 4) {
+            $percentage += 2;
+        }
+        return $percentage;
     }
 
     // ─── ADMIN ───
@@ -210,5 +216,19 @@ class ReferralController extends Controller
         $totalEarned = CashbackTransaction::where('referrer_id', $user->id)->where('status', 'paid')->sum('cashback_amount');
         $pendingAmount = CashbackTransaction::where('referrer_id', $user->id)->whereIn('status', ['pending', 'approved'])->sum('cashback_amount');
         return view('user.referrals', compact('referralCode', 'leads', 'cashbacks', 'totalEarned', 'pendingAmount'));
+    }
+
+    // ─── CP REFERRAL DASHBOARD ───
+
+    public function cpReferrals()
+    {
+        $user = auth()->user();
+        $referralCode = ReferralCode::where('user_id', $user->id)->first();
+        $leads = ReferralLead::where('referrer_id', $user->id)->latest()->get();
+        $cashbacks = CashbackTransaction::where('referrer_id', $user->id)->latest()->get();
+        $totalEarned = CashbackTransaction::where('referrer_id', $user->id)->where('status', 'paid')->sum('cashback_amount');
+        $pendingAmount = CashbackTransaction::where('referrer_id', $user->id)->whereIn('status', ['pending', 'approved'])->sum('cashback_amount');
+        $currentSlab = $this->getSlabPercentage($user->id);
+        return view('channelPartner.cpReferrals', compact('referralCode', 'leads', 'cashbacks', 'totalEarned', 'pendingAmount', 'currentSlab'));
     }
 }

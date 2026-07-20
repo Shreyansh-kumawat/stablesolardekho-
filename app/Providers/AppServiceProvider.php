@@ -34,25 +34,35 @@ class AppServiceProvider extends ServiceProvider
                         $seen[$r->section] = $r->seen_at;
                     }
 
-                    $q = \App\Models\CustomerOrder::query();
-                    if (isset($seen['orders'])) $q->where('created_at', '>', $seen['orders']);
-                    $badges['orders'] = $q->count();
+                    if ($user->hasAdminPermission('orders')) {
+                        $q = \App\Models\CustomerOrder::query();
+                        if (isset($seen['orders'])) $q->where('created_at', '>', $seen['orders']);
+                        $badges['orders'] = $q->count();
+                    }
 
-                    $q = \App\Models\ReferralLead::query();
-                    if (isset($seen['referrals'])) $q->where('created_at', '>', $seen['referrals']);
-                    $badges['referrals'] = $q->count();
+                    if ($user->hasAdminPermission('referrals')) {
+                        $q = \App\Models\ReferralLead::query();
+                        if (isset($seen['referrals'])) $q->where('created_at', '>', $seen['referrals']);
+                        $badges['referrals'] = $q->count();
+                    }
 
-                    $q = \App\Models\User::where('role_id', 3);
-                    if (isset($seen['users'])) $q->where('created_at', '>', $seen['users']);
-                    $badges['users'] = $q->count();
+                    if ($user->hasAdminPermission('users')) {
+                        $q = \App\Models\User::where('role_id', 3);
+                        if (isset($seen['users'])) $q->where('created_at', '>', $seen['users']);
+                        $badges['users'] = $q->count();
+                    }
 
-                    $q = \App\Models\CpInterest::query();
-                    if (isset($seen['cp_interest'])) $q->where('created_at', '>', $seen['cp_interest']);
-                    $badges['cp_interest'] = $q->count();
+                    if ($user->hasAdminPermission('cp_interest')) {
+                        $q = \App\Models\CpInterest::query();
+                        if (isset($seen['cp_interest'])) $q->where('created_at', '>', $seen['cp_interest']);
+                        $badges['cp_interest'] = $q->count();
+                    }
 
-                    $q = \App\Models\CpOrder::query();
-                    if (isset($seen['cp_orders'])) $q->where('created_at', '>', $seen['cp_orders']);
-                    $badges['cp_orders'] = $q->count();
+                    if ($user->hasAdminPermission('cp_orders')) {
+                        $q = \App\Models\CpOrder::query();
+                        if (isset($seen['cp_orders'])) $q->where('created_at', '>', $seen['cp_orders']);
+                        $badges['cp_orders'] = $q->count();
+                    }
                 }
             } catch (\Exception $e) {}
             $view->with('sidebarBadges', $badges);

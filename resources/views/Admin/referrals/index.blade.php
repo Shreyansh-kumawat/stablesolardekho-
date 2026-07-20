@@ -75,7 +75,7 @@
                 <div style="padding:16px 18px;">
                     <p style="font-size:.68rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin:0 0 8px;">Referred By</p>
                     @if($lead->referrer)
-                    <p style="font-weight:700;color:#1e293b;font-size:.92rem;margin:0 0 4px;">{{ $lead->referrer->name }}</p>
+                    <p style="font-weight:700;color:#1e293b;font-size:.92rem;margin:0 0 4px;">{{ $lead->referrer->name }}@if($lead->referrer->role_id == 4) <span style="display:inline-block;padding:1px 6px;border-radius:10px;font-size:.65rem;font-weight:700;background:#ede9fe;color:#6d28d9;vertical-align:middle;margin-left:4px;">CP</span>@endif</p>
                     <p style="color:#6b7280;font-size:.8rem;margin:0 0 2px;">{{ $lead->referrer->email }}</p>
                     @if($lead->referrer->mobile_number)<p style="color:#6b7280;font-size:.8rem;margin:0 0 2px;">{{ $lead->referrer->mobile_number }}</p>@endif
                     {{-- Bank Details --}}
@@ -127,7 +127,7 @@
                     <tbody>
                         @forelse($codes as $rc)
                         <tr style="border-top:1px solid #f1f5f9;">
-                            <td style="padding:12px 16px;">{{ $rc->user->name ?? 'Deleted' }}</td>
+                            <td style="padding:12px 16px;">{{ $rc->user->name ?? 'Deleted' }}@if($rc->user && $rc->user->role_id == 4) <span style="display:inline-block;padding:1px 6px;border-radius:10px;font-size:.65rem;font-weight:700;background:#ede9fe;color:#6d28d9;vertical-align:middle;margin-left:4px;">CP</span>@endif</td>
                             <td style="padding:12px 16px;"><code style="font-size:.9rem;font-weight:700;color:#ea580c;background:#fff7ed;padding:2px 8px;border-radius:4px;">{{ $rc->code }}</code></td>
                             <td style="padding:12px 16px;">
                                 <div style="display:flex;gap:6px;align-items:center;">
@@ -171,7 +171,7 @@
                         @php $cbColors=['pending'=>['#fef3c7','#b45309'],'approved'=>['#dbeafe','#1d4ed8'],'paid'=>['#d1fae5','#047857'],'rejected'=>['#fee2e2','#b91c1c']]; $cc=$cbColors[$cb->status]??['#f3f4f6','#4b5563']; @endphp
                         <tr style="border-top:1px solid #f1f5f9;">
                             <td style="padding:12px 16px;">{{ $cb->id }}</td>
-                            <td style="padding:12px 16px;">{{ $cb->referrer->name ?? 'N/A' }}</td>
+                            <td style="padding:12px 16px;">{{ $cb->referrer->name ?? 'N/A' }}@if($cb->referrer && $cb->referrer->role_id == 4) <span style="display:inline-block;padding:1px 6px;border-radius:10px;font-size:.65rem;font-weight:700;background:#ede9fe;color:#6d28d9;vertical-align:middle;margin-left:4px;">CP</span>@endif</td>
                             <td style="padding:12px 16px;">{{ $cb->lead->name ?? 'N/A' }}</td>
                             <td style="padding:12px 16px;">₹{{ number_format($cb->deal_amount) }}</td>
                             <td style="padding:12px 16px;">{{ $cb->cashback_percentage }}%</td>
@@ -202,7 +202,10 @@
     <div id="panel-slabs" class="ref-panel" style="display:none;">
         <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:24px;">
             <h3 style="font-weight:700;color:#374151;margin:0 0 6px;font-size:.95rem;">Cashback Slab Configuration</h3>
-            <p style="color:#6b7280;font-size:.8rem;margin:0 0 20px;">Define cashback percentage based on number of successful referrals by a referrer. System auto-suggests slab % when creating cashback. Admin can still override.</p>
+            <p style="color:#6b7280;font-size:.8rem;margin:0 0 12px;">Define cashback percentage based on number of successful referrals by a referrer. System auto-suggests slab % when creating cashback. Admin can still override.</p>
+            <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:10px 14px;margin-bottom:20px;font-size:.82rem;color:#1e40af;">
+                <strong>Note:</strong> Channel Partners (CPs) automatically get <strong>+2%</strong> on top of these slabs. E.g., if user slab is 5%, CP slab is 7%.
+            </div>
             <div id="slabRows">
                 @foreach($slabs as $i => $slab)
                 <div class="slab-row" style="display:flex;gap:12px;align-items:center;margin-bottom:10px;">

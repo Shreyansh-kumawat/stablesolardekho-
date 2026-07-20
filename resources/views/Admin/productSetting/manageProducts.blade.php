@@ -3,6 +3,8 @@
 @section('css')
 <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
 <style>
+    .modal:not(.show) { display: none !important; }
+    .modal.show { display: block !important; }
     :root {
         --primary-blue: #4A90E2;
         --primary-light: #f5f7fa;

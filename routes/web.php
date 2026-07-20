@@ -240,6 +240,8 @@ Route::prefix('channel-partner')->middleware(['auth', ChannelPartnerMiddleware::
     Route::get('/profile', [UserController::class, 'cpProfilePage'])->name('cpProfile');
     Route::post('/profile', [UserController::class, 'cpProfileUpdate'])->name('cpProfileUpdate');
 
+    Route::get('/my-referrals', [ReferralController::class, 'cpReferrals'])->name('cpReferrals');
+
     Route::middleware(ChannelPartnerMiddleware::class.':manual_installations')->group(function () {
         Route::get('/new-manual-entry', [ManualInstallationController::class, 'newEntry'])->name(name: 'newManualEntry');
         Route::post('/store-manual-installation', [ManualInstallationController::class, 'storeManualInstallation'])->name('storeManualInstallation');
