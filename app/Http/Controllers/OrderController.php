@@ -113,7 +113,7 @@ class OrderController extends Controller
     public function viewSingleOrder($id)
     {
         $order = CpOrder::with('channelPartner')->findOrFail($id);
-        return view('admin.orders.viewSIngleOrderAdmin', compact('order'));
+        return view('Admin.orders.viewSIngleOrderAdmin', compact('order'));
     }
 
     public function saveOrderPricing(Request $request)

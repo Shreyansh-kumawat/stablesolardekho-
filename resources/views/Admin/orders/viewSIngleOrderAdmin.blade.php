@@ -214,9 +214,9 @@
                             <td><strong>{{ $productIndex }}</strong></td>
                             <td>
                                 <div class="product-info">
-                                    <span class="product-name">{{ $productDetails->item_name ?? 'Unknown Product' }}</span>
+                                    <span class="product-name">{{ $productDetails ? $productDetails->item_name : 'Unknown Product' }}</span>
                                     <span class="product-meta">
-                                        <i class="bi bi-tag"></i> {{ $categoryDetails->category_name ?? 'N/A' }}
+                                        <i class="bi bi-tag"></i> {{ $categoryDetails ? $categoryDetails->category_name : 'N/A' }}
                                         @if($subcategoryDetails)
                                             / {{ $subcategoryDetails->sub_category_name }}
                                         @endif
