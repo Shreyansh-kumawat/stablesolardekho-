@@ -501,6 +501,7 @@ function calculateTotalDeposit() {
     $stable_deposit_value.value = total_deposit.toFixed(2);
 }
 
+
     });
 </script>
 
