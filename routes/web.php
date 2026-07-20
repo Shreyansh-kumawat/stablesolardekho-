@@ -200,6 +200,10 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::post('/referrals/cp-slabs', [ReferralController::class, 'saveCpSlabs'])->name('admin.referrals.saveCpSlabs');
     Route::get('/referrals/leads/{id}/slab-info', [ReferralController::class, 'getLeadSlabInfo'])->name('admin.referrals.slabInfo');
 
+    // Form Leads
+    Route::get('/form-leads', [LeadController::class, 'formLeads'])->name('admin.formLeads');
+    Route::delete('/form-leads/{id}', [LeadController::class, 'deleteFormLead'])->name('admin.formLead.delete');
+
     // Banner routes
     Route::get('/banners', [BannerController::class, 'index'])->name('admin.banners');
     Route::post('/banners', [BannerController::class, 'store'])->name('admin.banners.store');

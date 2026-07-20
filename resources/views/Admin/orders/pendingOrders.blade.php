@@ -25,6 +25,7 @@
     .po-badge-rejected { background: #fee2e2; color: #991b1b; }
     .po-badge-confirmed { background: #dbeafe; color: #1e40af; }
     .po-badge-delivered { background: #d1fae5; color: #065f46; }
+    .po-badge-shipped { background: #ede9fe; color: #6d28d9; }
     .po-badge-receipt { background: #e0e7ff; color: #3730a3; }
     .po-badge-no-receipt { background: #f1f5f9; color: #64748b; }
     .po-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: all 0.15s; }
@@ -100,18 +101,17 @@
                 </thead>
                 <tbody>
                     @foreach($orders as $order)
-                    @php
-                        $prods = $order->products;
-                        if (is_string($prods)) $prods = json_decode($prods, true);
-                        if (!is_array($prods)) $prods = [];
-                        $itemCount = count($prods);
-                    @endphp
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        <td><span class="po-order-id">{{ $order->order_id }}</span></td>
-                        <td><span class="po-cp-name">{{ $order->channelPartner->cp_name ?? 'N/A' }}</span></td>
-                        <td><span class="po-date">{{ \Carbon\Carbon::parse($order->order_date)->format('d M Y') }}</span></td>
-                        <td>{{ $itemCount }} {{ $itemCount === 1 ? 'item' : 'items' }}</td>
+                        <td>
+                            <span class="po-order-id">{{ $order->order_id }}</span>
+                            @if($order->type === 'customer_order')
+                                <span class="po-badge po-badge-confirmed" style="font-size:.6rem;margin-left:4px;">Shop</span>
+                            @endif
+                        </td>
+                        <td><span class="po-cp-name">{{ $order->cp_name }}</span></td>
+                        <td><span class="po-date">{{ \Carbon\Carbon::parse($order->date)->format('d M Y') }}</span></td>
+                        <td>{{ $order->items }} {{ $order->items === 1 ? 'item' : 'items' }}</td>
                         <td>
                             @if($order->payment_screenshot)
                                 <span class="po-badge po-badge-receipt">Receipt Uploaded</span>
@@ -123,16 +123,24 @@
                             @php
                                 $statusClass = match($order->status) {
                                     'confirmed' => 'po-badge-confirmed',
+                                    'shipped' => 'po-badge-shipped',
                                     'delivered' => 'po-badge-delivered',
                                     'approved' => 'po-badge-approved',
                                     'completed' => 'po-badge-completed',
                                     'rejected' => 'po-badge-rejected',
+                                    'cancelled' => 'po-badge-rejected',
                                     default => 'po-badge-pending',
                                 };
                             @endphp
                             <span class="po-badge {{ $statusClass }}">{{ ucfirst($order->status) }}</span>
                         </td>
                         <td style="display:flex;gap:6px;align-items:center;">
+                            @if($order->type === 'customer_order')
+                            <a href="{{ route('viewCustomerOrder', $order->id) }}" class="po-btn po-btn-review">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                Review
+                            </a>
+                            @else
                             <a href="{{ route('viewSingleOrder', ['id' => $order->id]) }}" class="po-btn po-btn-review">
                                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                 Review
@@ -145,6 +153,7 @@
                                     Deliver
                                 </button>
                             </form>
+                            @endif
                             @endif
                         </td>
                     </tr>

@@ -56,7 +56,35 @@ class OrderController extends Controller
 
     public function orderReportCp()
     {
-        $orders = CpOrder::where('cp_id', Auth::user()->cp_id)->orderBy('created_at', 'desc')->get();
+        $user = Auth::user();
+
+        $cpOrders = CpOrder::where('cp_id', $user->cp_id)->get()->map(function($o) {
+            return (object)[
+                'id' => $o->id,
+                'type' => 'cp_order',
+                'order_id' => $o->order_id,
+                'date' => $o->order_date,
+                'amount' => $o->grand_total ?? $o->quote_amount,
+                'status' => $o->status,
+                'payment_status' => $o->payment_status,
+                'created_at' => $o->created_at,
+            ];
+        });
+
+        $customerOrders = CustomerOrder::where('user_id', $user->id)->get()->map(function($o) {
+            return (object)[
+                'id' => $o->id,
+                'type' => 'customer_order',
+                'order_id' => $o->order_number,
+                'date' => $o->created_at,
+                'amount' => $o->total_amount,
+                'status' => $o->status,
+                'payment_status' => $o->payment_status,
+                'created_at' => $o->created_at,
+            ];
+        });
+
+        $orders = $cpOrders->concat($customerOrders)->sortByDesc('created_at')->values();
         return view('channelPartner.orders.orderReportCp', compact('orders'));
     }
 
@@ -97,10 +125,53 @@ class OrderController extends Controller
 
     public function pendingOrders()
     {
-        $orders = CpOrder::with(relations: 'channelPartner')->whereIn('status', ['pending', 'confirmed'])->orderBy('created_at', 'desc')->get();
+        $cpUserIds = \App\Models\User::where('role_id', 4)->pluck('id')->toArray();
+
+        $cpOrders = CpOrder::with('channelPartner')->whereIn('status', ['pending', 'confirmed'])->orderBy('created_at', 'desc')->get()->map(function($o) {
+            return (object)[
+                'id' => $o->id,
+                'type' => 'cp_order',
+                'order_id' => $o->order_id,
+                'cp_name' => $o->channelPartner->cp_name ?? 'N/A',
+                'date' => $o->order_date,
+                'items' => $this->getItemCount($o),
+                'amount' => $o->grand_total ?? $o->quote_amount,
+                'status' => $o->status,
+                'payment_status' => $o->payment_status,
+                'payment_screenshot' => $o->payment_screenshot,
+                'created_at' => $o->created_at,
+            ];
+        });
+
+        $customerOrders = CustomerOrder::with('user', 'items')->whereIn('user_id', $cpUserIds)->orderBy('created_at', 'desc')->get()->map(function($o) {
+            return (object)[
+                'id' => $o->id,
+                'type' => 'customer_order',
+                'order_id' => $o->order_number,
+                'cp_name' => $o->user->name ?? 'N/A',
+                'date' => $o->created_at,
+                'items' => $o->items->count(),
+                'amount' => $o->total_amount,
+                'status' => $o->status,
+                'payment_status' => $o->payment_status,
+                'payment_screenshot' => $o->payment_screenshot,
+                'created_at' => $o->created_at,
+            ];
+        });
+
+        $orders = $cpOrders->concat($customerOrders)->sortByDesc('created_at')->values();
+
         CpOrder::where('viewed_by_admin', 0)->update(['viewed_by_admin' => 1]);
         try { \App\Models\AdminLastSeen::markSeen(auth()->id(), 'cp_orders'); } catch (\Exception $e) {}
         return view('Admin.orders.pendingOrders', compact('orders'));
+    }
+
+    private function getItemCount($cpOrder)
+    {
+        $prods = $cpOrder->products;
+        if (is_string($prods)) $prods = json_decode($prods, true);
+        if (!is_array($prods)) $prods = [];
+        return count($prods);
     }
     public function manageOrdersAdmin()
     {

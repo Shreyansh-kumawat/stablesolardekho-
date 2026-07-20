@@ -2,32 +2,44 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SolarLead;
 use Illuminate\Http\Request;
 
 class LeadController extends Controller
 {
     public function userQuoteQuery(Request $request)
     {
-        // Validate the incoming request data
-        $validatedData = $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'mobile_number' => 'nullable|string|max:20',
-            'email_id' => 'nullable|email|max:255',
-            'monthly_bill' => 'nullable|string|max:50',
-            'connection_type' => 'required|string|max:100',
-            'pin_code' => 'nullable|string|max:20',
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'mob_no' => 'required|string|max:20',
+            'bill' => 'required|string|max:50',
+            'pin' => 'required|string|max:10',
             'city' => 'nullable|string|max:100',
-            'complete_address' => 'nullable|string|max:500',
-            'state_name' => 'nullable|string|max:100',
-            'proposed_capacity' => 'nullable|string|max:50',
-            'remarks' => 'nullable|string',
         ]);
 
-        // Here you can handle the logic to store the lead in the database
-        // For example:
-        // SolarLead::create($validatedData);
+        SolarLead::create([
+            'lead_id' => 'LEAD' . time() . rand(100, 999),
+            'customer_name' => $request->name,
+            'mobile_number' => $request->mob_no,
+            'monthly_bill' => $request->bill,
+            'connection_type' => 'residential',
+            'pin_code' => $request->pin,
+            'city' => $request->city,
+            'lead_status' => 0,
+        ]);
 
-        // Return a response, e.g., redirect back with a success message
         return redirect()->back()->with('success', 'Your quote request has been submitted successfully.');
+    }
+
+    public function formLeads()
+    {
+        $leads = SolarLead::latest()->get();
+        return view('Admin.leads.formLeads', compact('leads'));
+    }
+
+    public function deleteFormLead($id)
+    {
+        SolarLead::findOrFail($id)->delete();
+        return redirect()->back()->with('success', 'Lead deleted.');
     }
 }

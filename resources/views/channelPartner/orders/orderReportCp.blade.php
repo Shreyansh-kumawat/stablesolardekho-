@@ -106,13 +106,16 @@
                         <td data-label="#">{{ $loop->iteration }}</td>
                         <td data-label="Order ID">
                             <span class="cpo-order-id">{{ $order->order_id }}</span>
+                            @if($order->type === 'customer_order')
+                                <span class="cpo-pill cpo-pill-blue" style="font-size:.6rem;margin-left:4px;">Shop</span>
+                            @endif
                         </td>
                         <td data-label="Date">
-                            <span class="cpo-date">{{ \Carbon\Carbon::parse($order->order_date)->format('d M Y') }}</span>
+                            <span class="cpo-date">{{ \Carbon\Carbon::parse($order->date)->format('d M Y') }}</span>
                         </td>
                         <td data-label="Amount">
-                            @if($order->grand_total)
-                                <span class="cpo-amount">&#8377;{{ number_format($order->grand_total, 0) }}</span>
+                            @if($order->amount)
+                                <span class="cpo-amount">&#8377;{{ number_format($order->amount, 0) }}</span>
                             @else
                                 <span style="color:#9ca3af;font-size:.78rem;">Pending</span>
                             @endif
@@ -122,6 +125,8 @@
                                 <span class="cpo-pill cpo-pill-yellow">Pending</span>
                             @elseif($order->status == 'confirmed')
                                 <span class="cpo-pill cpo-pill-blue">Confirmed</span>
+                            @elseif($order->status == 'shipped')
+                                <span class="cpo-pill cpo-pill-blue">Shipped</span>
                             @elseif($order->status == 'delivered')
                                 <span class="cpo-pill cpo-pill-green">Delivered</span>
                             @elseif($order->status == 'completed')
@@ -145,6 +150,12 @@
                         </td>
                         <td data-label="Action">
                             <div class="cpo-actions">
+                                @if($order->type === 'customer_order')
+                                <a href="{{ route('user.order.detail', $order->id) }}" class="cpo-btn cpo-btn-view">
+                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    View
+                                </a>
+                                @else
                                 <a href="{{ route('viewSingleOrderCp', $order->id) }}" class="cpo-btn cpo-btn-view">
                                     <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                     View
@@ -154,6 +165,7 @@
                                     <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
                                     Pay
                                 </a>
+                                @endif
                                 @endif
                             </div>
                         </td>
