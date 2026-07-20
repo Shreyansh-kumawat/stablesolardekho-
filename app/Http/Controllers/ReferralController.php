@@ -132,6 +132,14 @@ class ReferralController extends Controller
         $lead->status = $request->status;
         $lead->admin_remarks = $request->admin_remarks;
         $lead->save();
+
+        if ($request->status === 'cashback_approved') {
+            $cashback = CashbackTransaction::where('referral_lead_id', $id)->where('status', 'pending')->first();
+            if ($cashback) {
+                $cashback->update(['status' => 'approved', 'approved_at' => now()]);
+            }
+        }
+
         return response()->json(['success' => true]);
     }
 
