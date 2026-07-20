@@ -204,9 +204,9 @@
                     @forelse($products as $product)
                         @php
                             $productIndex++;
-                            $productDetails = \App\Models\Product::find($product['product_id']);
-                            $categoryDetails = \App\Models\ProductCategory::find($product['category_id']);
-                            $subcategoryDetails = \App\Models\ProductSubCategory::find($product['subcategory_id']);
+                            $productDetails = \App\Models\Product::find($product['product_id'] ?? null);
+                            $categoryDetails = \App\Models\ProductCategory::find($product['category_id'] ?? null);
+                            $subcategoryDetails = !empty($product['subcategory_id']) ? \App\Models\ProductSubCategory::find($product['subcategory_id']) : null;
                         @endphp
                         <tr>
                             <td><strong>{{ $productIndex }}</strong></td>
