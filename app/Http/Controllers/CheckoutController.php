@@ -148,6 +148,10 @@ class CheckoutController extends Controller
         $request->validate([
             'payment_screenshot' => 'required|image|max:5120',
             'payment_reference'  => 'nullable|string|max:100',
+            'bank_account_holder' => 'nullable|string|max:255',
+            'bank_name'          => 'nullable|string|max:255',
+            'bank_account_number' => 'nullable|string|max:50',
+            'bank_ifsc'          => 'nullable|string|max:20',
         ]);
 
         $order = CustomerOrder::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
@@ -163,6 +167,16 @@ class CheckoutController extends Controller
             'payment_reference'  => $request->payment_reference,
             'payment_status'     => 'verification_pending',
         ]);
+
+        $bankData = array_filter([
+            'bank_account_holder' => $request->bank_account_holder,
+            'bank_name'          => $request->bank_name,
+            'bank_account_number' => $request->bank_account_number,
+            'bank_ifsc'          => $request->bank_ifsc ? strtoupper($request->bank_ifsc) : null,
+        ]);
+        if (!empty($bankData)) {
+            Auth::user()->update($bankData);
+        }
 
         return redirect()->route('user.order.success', $order->id);
     }

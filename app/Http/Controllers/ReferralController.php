@@ -26,9 +26,29 @@ class ReferralController extends Controller
         ];
     }
 
+    private function getCpSlabConfig()
+    {
+        $path = storage_path('app/cp_referral_slabs.json');
+        if (file_exists($path)) {
+            $data = json_decode(file_get_contents($path), true);
+            if (is_array($data) && !empty($data)) return $data;
+        }
+        return [
+            ['min' => 1, 'max' => 3, 'percentage' => 7],
+            ['min' => 4, 'max' => 7, 'percentage' => 8],
+            ['min' => 8, 'max' => 12, 'percentage' => 9],
+            ['min' => 13, 'max' => 999, 'percentage' => 10],
+        ];
+    }
+
     private function saveSlabConfig(array $slabs)
     {
         file_put_contents(storage_path('app/referral_slabs.json'), json_encode($slabs));
+    }
+
+    private function saveCpSlabConfig(array $slabs)
+    {
+        file_put_contents(storage_path('app/cp_referral_slabs.json'), json_encode($slabs));
     }
 
     private function getSlabPercentage($referrerId)
@@ -36,17 +56,14 @@ class ReferralController extends Controller
         $successCount = CashbackTransaction::where('referrer_id', $referrerId)
             ->whereIn('status', ['pending', 'approved', 'paid'])->count();
         $nextCount = $successCount + 1;
-        $slabs = $this->getSlabConfig();
+        $referrer = User::find($referrerId);
+        $slabs = ($referrer && $referrer->role_id == 4) ? $this->getCpSlabConfig() : $this->getSlabConfig();
         $percentage = $slabs[count($slabs) - 1]['percentage'] ?? 5;
         foreach ($slabs as $slab) {
             if ($nextCount >= $slab['min'] && $nextCount <= $slab['max']) {
                 $percentage = $slab['percentage'];
                 break;
             }
-        }
-        $referrer = User::find($referrerId);
-        if ($referrer && $referrer->role_id == 4) {
-            $percentage += 2;
         }
         return $percentage;
     }
@@ -59,8 +76,9 @@ class ReferralController extends Controller
         $leads = ReferralLead::with(['referrer', 'cashback'])->latest()->get();
         $codes = ReferralCode::with('user')->latest()->get();
         $slabs = $this->getSlabConfig();
+        $cpSlabs = $this->getCpSlabConfig();
         try { \App\Models\AdminLastSeen::markSeen(auth()->id(), 'referrals'); } catch (\Exception $e) {}
-        return view('Admin.referrals.index', compact('leads', 'codes', 'slabs'));
+        return view('Admin.referrals.index', compact('leads', 'codes', 'slabs', 'cpSlabs'));
     }
 
     public function saveSlabs(Request $request)
@@ -77,6 +95,23 @@ class ReferralController extends Controller
         }
         if (empty($slabs)) return response()->json(['error' => 'At least one slab is required'], 422);
         $this->saveSlabConfig($slabs);
+        return response()->json(['success' => true]);
+    }
+
+    public function saveCpSlabs(Request $request)
+    {
+        abort_unless(auth()->user()->hasAdminPermission('referrals'), 403);
+        $slabs = [];
+        $mins = $request->input('min', []);
+        $maxs = $request->input('max', []);
+        $pcts = $request->input('percentage', []);
+        for ($i = 0; $i < count($mins); $i++) {
+            if (isset($mins[$i], $maxs[$i], $pcts[$i]) && $mins[$i] !== '' && $maxs[$i] !== '' && $pcts[$i] !== '') {
+                $slabs[] = ['min' => (int)$mins[$i], 'max' => (int)$maxs[$i], 'percentage' => (float)$pcts[$i]];
+            }
+        }
+        if (empty($slabs)) return response()->json(['error' => 'At least one slab is required'], 422);
+        $this->saveCpSlabConfig($slabs);
         return response()->json(['success' => true]);
     }
 

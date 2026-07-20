@@ -33,6 +33,7 @@
 .pay-row{flex-direction:column;align-items:flex-start;gap:4px;}
 .pay-val{font-size:0.8rem;word-break:break-all;}
 .pay-upload-area{padding:1.2rem;}
+.pay-wrap .pay-card div[style*="grid-template-columns"]{grid-template-columns:1fr !important;}
 }
 </style>
 @endsection
@@ -104,6 +105,39 @@
                 <input type="text" name="payment_reference" placeholder="e.g. UPI Ref No. or UTR Number"
                     style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:9px 12px;color:#e2e8f0;font-size:0.85rem;box-sizing:border-box;outline:none;">
             </div>
+
+            {{-- Bank Details for Referral Cashback --}}
+            @if(!auth()->user()->bank_account_number || !auth()->user()->bank_ifsc)
+            <div style="margin-top:1.2rem;background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.15);border-radius:12px;padding:16px;">
+                <p style="color:#f97316;font-size:0.82rem;font-weight:700;margin:0 0 4px;display:flex;align-items:center;gap:6px;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"/></svg>
+                    Your Bank Details (for referral cashback)
+                </p>
+                <p style="color:#94a3b8;font-size:0.75rem;margin:0 0 12px;">Fill these so we can send your referral cashback directly to your account.</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div>
+                        <label style="color:#94a3b8;font-size:0.72rem;display:block;margin-bottom:3px;">Account Holder Name</label>
+                        <input type="text" name="bank_account_holder" value="{{ auth()->user()->bank_account_holder }}" placeholder="Full name as on bank account"
+                            style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 10px;color:#e2e8f0;font-size:0.82rem;box-sizing:border-box;outline:none;">
+                    </div>
+                    <div>
+                        <label style="color:#94a3b8;font-size:0.72rem;display:block;margin-bottom:3px;">Bank Name</label>
+                        <input type="text" name="bank_name" value="{{ auth()->user()->bank_name }}" placeholder="e.g. State Bank of India"
+                            style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 10px;color:#e2e8f0;font-size:0.82rem;box-sizing:border-box;outline:none;">
+                    </div>
+                    <div>
+                        <label style="color:#94a3b8;font-size:0.72rem;display:block;margin-bottom:3px;">Account Number</label>
+                        <input type="text" name="bank_account_number" value="{{ auth()->user()->bank_account_number }}" placeholder="Your bank account number"
+                            style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 10px;color:#e2e8f0;font-size:0.82rem;box-sizing:border-box;outline:none;">
+                    </div>
+                    <div>
+                        <label style="color:#94a3b8;font-size:0.72rem;display:block;margin-bottom:3px;">IFSC Code</label>
+                        <input type="text" name="bank_ifsc" value="{{ auth()->user()->bank_ifsc }}" placeholder="e.g. SBIN0001234"
+                            style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 10px;color:#e2e8f0;font-size:0.82rem;box-sizing:border-box;outline:none;text-transform:uppercase;">
+                    </div>
+                </div>
+            </div>
+            @endif
 
             <button type="submit" class="pay-btn" id="submitBtn" disabled style="margin-top:1.2rem;">
                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>

@@ -200,12 +200,37 @@
 
     {{-- SLAB SETTINGS TAB --}}
     <div id="panel-slabs" class="ref-panel" style="display:none;">
-        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:24px;">
-            <h3 style="font-weight:700;color:#374151;margin:0 0 6px;font-size:.95rem;">Cashback Slab Configuration</h3>
-            <p style="color:#6b7280;font-size:.8rem;margin:0 0 12px;">Define cashback percentage based on number of successful referrals by a referrer. System auto-suggests slab % when creating cashback. Admin can still override.</p>
-            <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:10px 14px;margin-bottom:20px;font-size:.82rem;color:#1e40af;">
-                <strong>Note:</strong> Channel Partners (CPs) automatically get <strong>+2%</strong> on top of these slabs. E.g., if user slab is 5%, CP slab is 7%.
+        {{-- CP Slabs --}}
+        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:24px;margin-bottom:20px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:700;background:#ede9fe;color:#6d28d9;">CP</span>
+                <h3 style="font-weight:700;color:#374151;margin:0;font-size:.95rem;">Channel Partner Cashback Slabs</h3>
             </div>
+            <p style="color:#6b7280;font-size:.8rem;margin:0 0 16px;">Cashback slabs for Channel Partners. These are separate from user slabs and typically higher.</p>
+            <div id="cpSlabRows">
+                @foreach($cpSlabs as $i => $slab)
+                <div class="cp-slab-row" style="display:flex;gap:12px;align-items:center;margin-bottom:10px;">
+                    <div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">From (referrals)</label><input type="number" name="cp_min[]" value="{{ $slab['min'] }}" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>
+                    <div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">To (referrals)</label><input type="number" name="cp_max[]" value="{{ $slab['max'] }}" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>
+                    <div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">Cashback %</label><input type="number" step="0.5" name="cp_percentage[]" value="{{ $slab['percentage'] }}" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>
+                    <button onclick="this.closest('.cp-slab-row').remove()" style="margin-top:16px;background:#fee2e2;color:#b91c1c;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.8rem;"><i class="fas fa-trash"></i></button>
+                </div>
+                @endforeach
+            </div>
+            <div style="display:flex;gap:10px;margin-top:16px;">
+                <button onclick="addCpSlabRow()" style="padding:8px 16px;background:#f5f3ff;color:#6d28d9;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.82rem;"><i class="fas fa-plus" style="margin-right:4px;"></i> Add Slab</button>
+                <button onclick="saveCpSlabs()" style="padding:8px 16px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.82rem;"><i class="fas fa-save" style="margin-right:4px;"></i> Save CP Slabs</button>
+            </div>
+            <div id="cpSlabMsg" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;font-size:.82rem;font-weight:600;"></div>
+        </div>
+
+        {{-- User Slabs --}}
+        <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:24px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:700;background:#dbeafe;color:#1d4ed8;">User</span>
+                <h3 style="font-weight:700;color:#374151;margin:0;font-size:.95rem;">User Cashback Slabs</h3>
+            </div>
+            <p style="color:#6b7280;font-size:.8rem;margin:0 0 16px;">Cashback slabs for regular users. System auto-suggests slab % when creating cashback. Admin can still override.</p>
             <div id="slabRows">
                 @foreach($slabs as $i => $slab)
                 <div class="slab-row" style="display:flex;gap:12px;align-items:center;margin-bottom:10px;">
@@ -218,7 +243,7 @@
             </div>
             <div style="display:flex;gap:10px;margin-top:16px;">
                 <button onclick="addSlabRow()" style="padding:8px 16px;background:#eff6ff;color:#2563eb;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.82rem;"><i class="fas fa-plus" style="margin-right:4px;"></i> Add Slab</button>
-                <button onclick="saveSlabs()" style="padding:8px 16px;background:#059669;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.82rem;"><i class="fas fa-save" style="margin-right:4px;"></i> Save Slabs</button>
+                <button onclick="saveSlabs()" style="padding:8px 16px;background:#059669;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.82rem;"><i class="fas fa-save" style="margin-right:4px;"></i> Save User Slabs</button>
             </div>
             <div id="slabMsg" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;font-size:.82rem;font-weight:600;"></div>
         </div>
@@ -360,6 +385,27 @@ $('.copy-link-btn').click(function(){
     $(this).html('<i class="fas fa-check"></i>');var b=$(this);setTimeout(function(){b.html('<i class="fas fa-copy"></i>');},1500);
 });
 
+function addCpSlabRow(){
+    var html='<div class="cp-slab-row" style="display:flex;gap:12px;align-items:center;margin-bottom:10px;">';
+    html+='<div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">From</label><input type="number" name="cp_min[]" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>';
+    html+='<div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">To</label><input type="number" name="cp_max[]" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>';
+    html+='<div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">%</label><input type="number" step="0.5" name="cp_percentage[]" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>';
+    html+='<button onclick="this.closest(\'.cp-slab-row\').remove()" style="margin-top:16px;background:#fee2e2;color:#b91c1c;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.8rem;"><i class="fas fa-trash"></i></button>';
+    html+='</div>';
+    document.getElementById('cpSlabRows').insertAdjacentHTML('beforeend',html);
+}
+function saveCpSlabs(){
+    var mins=[],maxs=[],pcts=[];
+    document.querySelectorAll('#cpSlabRows input[name="cp_min[]"]').forEach(function(e){mins.push(e.value);});
+    document.querySelectorAll('#cpSlabRows input[name="cp_max[]"]').forEach(function(e){maxs.push(e.value);});
+    document.querySelectorAll('#cpSlabRows input[name="cp_percentage[]"]').forEach(function(e){pcts.push(e.value);});
+    $.post('/admin/referrals/cp-slabs',{_token:csrf,min:mins,max:maxs,percentage:pcts},function(){
+        var m=document.getElementById('cpSlabMsg');m.style.display='block';m.style.background='#f5f3ff';m.style.color='#6d28d9';m.textContent='CP slabs saved successfully!';
+        setTimeout(function(){m.style.display='none';},3000);
+    }).fail(function(xhr){
+        var m=document.getElementById('cpSlabMsg');m.style.display='block';m.style.background='#fee2e2';m.style.color='#b91c1c';m.textContent=xhr.responseJSON?.error||'Error saving CP slabs';
+    });
+}
 function addSlabRow(){
     var html='<div class="slab-row" style="display:flex;gap:12px;align-items:center;margin-bottom:10px;">';
     html+='<div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">From</label><input type="number" name="min[]" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>';
