@@ -100,6 +100,7 @@
             @endif
 
             <div class="ud-grid">
+                @if(auth()->user()->role_id != 4)
                 <div class="ud-card">
                     <div class="ud-card-hdr"><h3><i class="fas fa-shopping-bag" style="color:#f97316;margin-right:6px;"></i> Recent Orders</h3><a href="{{ route('user.orders') }}">View All →</a></div>
                     <div class="ud-card-body">
@@ -116,6 +117,7 @@
                         @else<div class="ud-empty">No orders yet</div>@endif
                     </div>
                 </div>
+                @endif
                 <div class="ud-card">
                     <div class="ud-card-hdr"><h3><i class="fas fa-users" style="color:#f97316;margin-right:6px;"></i> Recent Referrals</h3><a href="{{ route('user.referrals') }}">View All →</a></div>
                     <div class="ud-card-body">
