@@ -147,11 +147,45 @@
         .row { display: flex; flex-wrap: wrap; margin: 0 -4px; }
         .row > [class*="col-"] { padding: 0 4px; margin-bottom: 4px; }
         .col-lg-1 { flex: 0 0 8.33%; max-width: 8.33%; }
+        .col-lg-2 { flex: 0 0 16.66%; max-width: 16.66%; }
         .col-lg-3 { flex: 0 0 25%; max-width: 25%; }
         .col-lg-4 { flex: 0 0 33.33%; max-width: 33.33%; }
         .col-md-2 { flex: 0 0 16.66%; max-width: 16.66%; }
+        .col-md-3 { flex: 0 0 25%; max-width: 25%; }
         .col-md-4 { flex: 0 0 33.33%; max-width: 33.33%; }
         .col-md-6 { flex: 0 0 50%; max-width: 50%; }
+        .order-total-bar {
+            background: #f0f7ff;
+            border: 1px solid #b3d4fc;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+        .order-total-bar .total-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #374151;
+        }
+        .order-total-bar .total-amount {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1a56db;
+        }
+        .line-total {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #059669;
+            padding-top: 0.5rem;
+        }
+        .unit-price {
+            font-size: 0.78rem;
+            color: #6b7280;
+            padding-top: 0.25rem;
+        }
         .d-flex { display: flex; }
         .align-items-end { align-items: flex-end; }
         .d-none { display: none !important; }
@@ -187,7 +221,7 @@
             <div id="productRows">
                 <div class="product-row" data-row-index="0">
                     <div class="row g-2">
-                        <div class="col-lg-3 col-md-6">
+                        <div class="col-lg-2 col-md-6">
                             <label class="form-label">Category <span class="text-danger">*</span></label>
                             <select class="form-control category-select" name="products[0][category_id]" required>
                                 <option value="">Select Category</option>
@@ -196,22 +230,27 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-lg-3 col-md-6">
+                        <div class="col-lg-2 col-md-6">
                             <label class="form-label">Subcategory</label>
                             <select class="form-control subcategory-select" name="products[0][subcategory_id]" disabled>
                                 <option value="">All Subcategories</option>
                             </select>
                         </div>
-                        <div class="col-lg-4 col-md-6">
+                        <div class="col-lg-3 col-md-6">
                             <label class="form-label">Product <span class="text-danger">*</span></label>
                             <select class="form-control product-select" name="products[0][product_id]" required disabled>
                                 <option value="">Select Product</option>
                             </select>
+                            <div class="unit-price" data-unit-price></div>
                         </div>
-                        <div class="col-lg-1 col-md-4">
+                        <div class="col-lg-1 col-md-3">
                             <label class="form-label">Qty <span class="text-danger">*</span></label>
                             <input type="number" class="form-control quantity-input" name="products[0][quantity]" min="1" value="1" required disabled>
                             <small class="stock-info text-muted" style="font-size:0.72rem;"></small>
+                        </div>
+                        <div class="col-lg-2 col-md-3">
+                            <label class="form-label">Total</label>
+                            <div class="line-total" data-line-total>-</div>
                         </div>
                         <div class="col-lg-1 col-md-2 d-flex align-items-end">
                             <button type="button" class="btn btn-danger btn-sm remove-row w-100 d-none">
@@ -220,6 +259,11 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div class="order-total-bar" id="orderTotalBar" style="display:none;">
+                <span class="total-label">Order Total:</span>
+                <span class="total-amount" id="grandTotal">₹0</span>
             </div>
 
             <div class="btn-group-compact">
@@ -270,7 +314,7 @@ $(document).ready(function() {
         const newRow = `
             <div class="product-row" data-row-index="${rowIndex}">
                 <div class="row g-2">
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-lg-2 col-md-6">
                         <label class="form-label">Category <span class="text-danger">*</span></label>
                         <select class="form-control category-select" name="products[${rowIndex}][category_id]" required>
                             <option value="">Select Category</option>
@@ -279,22 +323,27 @@ $(document).ready(function() {
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-lg-2 col-md-6">
                         <label class="form-label">Subcategory</label>
                         <select class="form-control subcategory-select" name="products[${rowIndex}][subcategory_id]" disabled>
                             <option value="">All Subcategories</option>
                         </select>
                     </div>
-                    <div class="col-lg-4 col-md-6">
+                    <div class="col-lg-3 col-md-6">
                         <label class="form-label">Product <span class="text-danger">*</span></label>
                         <select class="form-control product-select" name="products[${rowIndex}][product_id]" required disabled>
                             <option value="">Select Product</option>
                         </select>
+                        <div class="unit-price" data-unit-price></div>
                     </div>
-                    <div class="col-lg-1 col-md-4">
+                    <div class="col-lg-1 col-md-3">
                         <label class="form-label">Qty <span class="text-danger">*</span></label>
                         <input type="number" class="form-control quantity-input" name="products[${rowIndex}][quantity]" min="1" value="1" required disabled>
                         <small class="stock-info text-muted" style="font-size:0.72rem;"></small>
+                    </div>
+                    <div class="col-lg-2 col-md-3">
+                        <label class="form-label">Total</label>
+                        <div class="line-total" data-line-total>-</div>
                     </div>
                     <div class="col-lg-1 col-md-2 d-flex align-items-end">
                         <button type="button" class="btn btn-danger btn-sm remove-row w-100">
@@ -316,6 +365,7 @@ $(document).ready(function() {
         e.preventDefault();
         $(this).closest('.product-row').remove();
         updateRemoveButtons();
+        updateGrandTotal();
     });
 
     $(document).on('change', '.subcategory-select', function() {
@@ -332,9 +382,10 @@ $(document).ready(function() {
     });
 
     $(document).on('input', '.quantity-input', function() {
+        var row = $(this).closest('.product-row');
         var max = parseInt($(this).attr('max')) || 0;
         var val = parseInt($(this).val()) || 0;
-        var stockInfo = $(this).closest('.product-row').find('.stock-info');
+        var stockInfo = row.find('.stock-info');
 
         if (max > 0) {
             var remaining = max - val;
@@ -348,6 +399,7 @@ $(document).ready(function() {
                 stockInfo.html('<span style="color:#059669;font-weight:600;">' + remaining + ' left</span>');
             }
         }
+        updateLineTotal(row);
     });
 
     $('#paymentScreenshot').on('change', function() {
@@ -495,6 +547,34 @@ function loadSubcategories(categoryId, selectElement) {
     });
 }
 
+function updateLineTotal(row) {
+    var price = parseFloat(row.find('.product-select option:selected').data('price')) || 0;
+    var qty = parseInt(row.find('.quantity-input').val()) || 0;
+    var total = price * qty;
+    var el = row.find('[data-line-total]');
+    if (price > 0 && qty > 0) {
+        el.html('₹' + total.toLocaleString('en-IN'));
+    } else {
+        el.html('-');
+    }
+    updateGrandTotal();
+}
+
+function updateGrandTotal() {
+    var grand = 0;
+    $('.product-row').each(function() {
+        var price = parseFloat($(this).find('.product-select option:selected').data('price')) || 0;
+        var qty = parseInt($(this).find('.quantity-input').val()) || 0;
+        grand += price * qty;
+    });
+    if (grand > 0) {
+        $('#grandTotal').text('₹' + grand.toLocaleString('en-IN'));
+        $('#orderTotalBar').show();
+    } else {
+        $('#orderTotalBar').hide();
+    }
+}
+
 function loadProducts(categoryId, subcategoryId, selectElement) {
     var params = { category_id: categoryId };
     if (subcategoryId) params.sub_category_id = subcategoryId;
@@ -512,8 +592,10 @@ function loadProducts(categoryId, subcategoryId, selectElement) {
             if (data && data.length > 0) {
                 data.forEach(function(product) {
                     var qty = product.quantity || 0;
+                    var price = parseFloat(product.current_sale_price) || 0;
                     var name = product.product_name || product.item_name || product.name;
-                    selectElement.append('<option value="' + product.id + '" data-stock="' + qty + '">' + name + ' (' + qty + ' available)</option>');
+                    var priceStr = price > 0 ? ' — ₹' + price.toLocaleString('en-IN') : '';
+                    selectElement.append('<option value="' + product.id + '" data-stock="' + qty + '" data-price="' + price + '">' + name + priceStr + ' (' + qty + ' avl)</option>');
                 });
             }
 
@@ -525,9 +607,13 @@ function loadProducts(categoryId, subcategoryId, selectElement) {
 
             selectElement.off('select2:select').on('select2:select', function() {
                 var row = $(this).closest('.product-row');
-                var stock = parseInt($(this).find('option:selected').data('stock')) || 0;
+                var opt = $(this).find('option:selected');
+                var stock = parseInt(opt.data('stock')) || 0;
+                var price = parseFloat(opt.data('price')) || 0;
                 var qtyInput = row.find('.quantity-input');
                 var stockInfo = row.find('.stock-info');
+
+                row.find('[data-unit-price]').html(price > 0 ? '₹' + price.toLocaleString('en-IN') + ' / unit' : '');
 
                 if (stock > 0) {
                     qtyInput.attr('max', stock).val(1).prop('disabled', false);
@@ -536,6 +622,7 @@ function loadProducts(categoryId, subcategoryId, selectElement) {
                     qtyInput.val(0).prop('disabled', true);
                     stockInfo.html('<span style="color:#dc2626;font-weight:600;">Out of stock</span>');
                 }
+                updateLineTotal(row);
             });
         },
         error: function(xhr) {
