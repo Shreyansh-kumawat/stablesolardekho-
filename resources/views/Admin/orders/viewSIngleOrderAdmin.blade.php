@@ -97,6 +97,8 @@
     .badge-pending { background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%); color: #856404; box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3); }
     .badge-completed { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); color: #155724; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3); }
     .badge-cancelled { background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); color: #721c24; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3); }
+    .badge-confirmed { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3); }
+    .badge-delivered { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46; box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3); }
 
     .remarks-card {
         background: white;
@@ -179,7 +181,7 @@
                 <div class="order-detail-item">
                     <div class="order-detail-label">Status</div>
                     <div class="badge-status badge-{{ strtolower($order->status) }}">
-                        {{ $order->status == 'completed' ? 'Approved' : ucfirst($order->status) }}
+                        {{ ucfirst($order->status) }}
                     </div>
                 </div>
             </div>
@@ -313,6 +315,17 @@
                 <input type="hidden" name="admin_remarks" class="admin-remarks-input">
                 <button type="submit" class="btn btn-cancel-req" onclick="return confirmAction(this, 'cancel')">
                     <i class="bi bi-x-circle"></i> Cancel Request
+                </button>
+            </form>
+        </div>
+        @endif
+
+        @if($order->status == 'confirmed')
+        <div class="action-buttons">
+            <form method="POST" action="{{ route('markCpOrderDelivered', $order->id) }}">
+                @csrf
+                <button type="submit" class="btn btn-approve" onclick="return confirm('Mark this order as delivered?')">
+                    <i class="bi bi-truck"></i> Mark as Delivered
                 </button>
             </form>
         </div>

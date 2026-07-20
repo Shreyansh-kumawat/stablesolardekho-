@@ -1,6 +1,6 @@
 @extends('layouts.adminLayout')
-@section('title', 'Pending Orders')
-@section('page_title', 'Pending Orders')
+@section('title', 'CP Orders')
+@section('page_title', 'CP Orders')
 @section('css')
 <style>
     .po-wrap { padding: 1.25rem; }
@@ -23,11 +23,15 @@
     .po-badge-approved { background: #d1fae5; color: #065f46; }
     .po-badge-completed { background: #dbeafe; color: #1e40af; }
     .po-badge-rejected { background: #fee2e2; color: #991b1b; }
+    .po-badge-confirmed { background: #dbeafe; color: #1e40af; }
+    .po-badge-delivered { background: #d1fae5; color: #065f46; }
     .po-badge-receipt { background: #e0e7ff; color: #3730a3; }
     .po-badge-no-receipt { background: #f1f5f9; color: #64748b; }
     .po-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: all 0.15s; }
     .po-btn-review { background: #2563eb; color: #fff; }
     .po-btn-review:hover { background: #1d4ed8; color: #fff; }
+    .po-btn-deliver { background: #059669; color: #fff; }
+    .po-btn-deliver:hover { background: #047857; color: #fff; }
     .po-empty { text-align: center; padding: 3rem 1rem; color: #94a3b8; }
     .po-empty svg { margin: 0 auto 12px; display: block; }
     .po-footer { padding: 10px 16px; border-top: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; color: #64748b; flex-wrap: wrap; gap: 8px; }
@@ -56,8 +60,8 @@
             <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
         <div>
-            <h1>Pending Orders</h1>
-            <p>Review and process inventory requests from channel partners</p>
+            <h1>CP Orders</h1>
+            <p>Review, confirm and deliver inventory requests from channel partners</p>
         </div>
     </div>
 
@@ -118,6 +122,8 @@
                         <td>
                             @php
                                 $statusClass = match($order->status) {
+                                    'confirmed' => 'po-badge-confirmed',
+                                    'delivered' => 'po-badge-delivered',
                                     'approved' => 'po-badge-approved',
                                     'completed' => 'po-badge-completed',
                                     'rejected' => 'po-badge-rejected',
@@ -126,11 +132,20 @@
                             @endphp
                             <span class="po-badge {{ $statusClass }}">{{ ucfirst($order->status) }}</span>
                         </td>
-                        <td>
+                        <td style="display:flex;gap:6px;align-items:center;">
                             <a href="{{ route('viewSingleOrder', ['id' => $order->id]) }}" class="po-btn po-btn-review">
                                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                 Review
                             </a>
+                            @if($order->status === 'confirmed')
+                            <form method="POST" action="{{ route('markCpOrderDelivered', $order->id) }}" style="display:inline;">
+                                @csrf
+                                <button type="submit" class="po-btn po-btn-deliver" onclick="return confirm('Mark this order as delivered?')">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                                    Deliver
+                                </button>
+                            </form>
+                            @endif
                         </td>
                     </tr>
                     @endforeach

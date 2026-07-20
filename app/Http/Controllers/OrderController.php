@@ -97,7 +97,7 @@ class OrderController extends Controller
 
     public function pendingOrders()
     {
-        $orders = CpOrder::with(relations: 'channelPartner')->where('status', 'pending')->orderBy('created_at', 'desc')->get();
+        $orders = CpOrder::with(relations: 'channelPartner')->whereIn('status', ['pending', 'confirmed'])->orderBy('created_at', 'desc')->get();
         CpOrder::where('viewed_by_admin', 0)->update(['viewed_by_admin' => 1]);
         try { \App\Models\AdminLastSeen::markSeen(auth()->id(), 'cp_orders'); } catch (\Exception $e) {}
         return view('Admin.orders.pendingOrders', compact('orders'));
@@ -176,9 +176,17 @@ class OrderController extends Controller
     {
         $order = CpOrder::findOrFail($id);
         $order->payment_status = 'paid';
-        $order->status = 'completed';
+        $order->status = 'confirmed';
         $order->save();
         return redirect()->back()->with('success', 'CP payment approved and order confirmed.');
+    }
+
+    public function markCpOrderDelivered($id)
+    {
+        $order = CpOrder::findOrFail($id);
+        $order->status = 'delivered';
+        $order->save();
+        return redirect()->back()->with('success', 'Order marked as delivered.');
     }
 
     public function rejectCpPayment($id)

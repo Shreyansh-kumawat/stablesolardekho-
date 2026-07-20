@@ -179,6 +179,7 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::post('/inventory-request/{id}/cancel', [OrderController::class, 'cancelInventoryRequest'])->name('cancelInventoryRequest');
     Route::post('/cp-order/{id}/approve-payment', [OrderController::class, 'approveCpPayment'])->name('approveCpPayment');
     Route::post('/cp-order/{id}/reject-payment', [OrderController::class, 'rejectCpPayment'])->name('rejectCpPayment');
+    Route::post('/cp-order/{id}/mark-delivered', [OrderController::class, 'markCpOrderDelivered'])->name('markCpOrderDelivered');
     Route::get('/approveRejectOrders', [OrderController::class, 'approveRejectOrders'])->name('approveRejectOrders');
     Route::get('/customer-orders', [OrderController::class, 'customerOrderList'])->name('customerOrders');
     Route::get('/customer-orders/{id}', [OrderController::class, 'viewCustomerOrder'])->name('viewCustomerOrder');

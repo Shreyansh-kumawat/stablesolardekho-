@@ -690,7 +690,7 @@
                                     <th style="width: 28%;">Product Name</th>
                                     <th style="width: 10%; text-align: center;">UOM</th>
                                     <th style="width: 12%; text-align: center;">Quantity</th>
-                                    @if ($order->status=='completed')
+                                    @if ($order->status=='completed' && $order->quote_amount > 0)
                                     <th style="width: 16%;">Unit Rate (₹)</th>
                                     <th style="width: 12%;">GST Rate (%)</th>
                                     <th style="width: 12%; text-align: right;">Tax Value(₹)</th>
@@ -734,8 +734,7 @@
                                         <td style="text-align: center;">
                                             <strong class="product-quantity">{{ $product['quantity'] ?? 0 }}</strong>
                                         </td>
-                                                                            @if ($order->status=='completed')
-
+                                        @if ($order->status=='completed' && $order->quote_amount > 0)
                                         <td>
                                             <strong class="product-unit_rate">{{ $product['unit_rate'] ?? 0 }}</strong>
                                         </td>
@@ -748,7 +747,6 @@
                                         <td style="line-total">
                                             <strong
                                                 class="product-total_amount">{{ $product['total_amount'] ?? 0 }}</strong>
-
                                         </td>
                                         @endif
                                     </tr>
