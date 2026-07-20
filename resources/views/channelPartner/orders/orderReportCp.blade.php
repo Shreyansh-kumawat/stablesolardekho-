@@ -120,8 +120,12 @@
                         <td data-label="Status">
                             @if($order->status == 'pending')
                                 <span class="cpo-pill cpo-pill-yellow">Pending</span>
+                            @elseif($order->status == 'confirmed')
+                                <span class="cpo-pill cpo-pill-blue">Confirmed</span>
+                            @elseif($order->status == 'delivered')
+                                <span class="cpo-pill cpo-pill-green">Delivered</span>
                             @elseif($order->status == 'completed')
-                                <span class="cpo-pill cpo-pill-green">Approved</span>
+                                <span class="cpo-pill cpo-pill-green">Completed</span>
                             @elseif($order->status == 'cancelled')
                                 <span class="cpo-pill cpo-pill-red">Cancelled</span>
                             @else

@@ -359,6 +359,18 @@
             box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
         }
 
+        .badge-confirmed {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+        }
+
+        .badge-delivered {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+        }
+
         .product-info {
             display: flex;
             flex-direction: column;
@@ -718,10 +730,10 @@
                                         <td>
                                             <div class="product-info">
                                                 <span
-                                                    class="product-name">{{ $productDetails->item_name ?? 'Unknown Product' }}</span>
+                                                    class="product-name">{{ $productDetails ? $productDetails->item_name : 'Unknown Product' }}</span>
                                                 <span class="product-meta">
                                                     <i class="bi bi-tag"></i>
-                                                    {{ $categoryDetails->category_name ?? 'N/A' }}
+                                                    {{ $categoryDetails ? $categoryDetails->category_name : 'N/A' }}
                                                     @if ($subcategoryDetails)
                                                         / {{ $subcategoryDetails->sub_category_name }}
                                                     @endif

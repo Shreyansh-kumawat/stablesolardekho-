@@ -71,8 +71,12 @@
                                 <td>
                                     @if($order->status == 'pending')
                                         <span class="badge bg-warning text-dark">Pending</span>
+                                    @elseif($order->status == 'confirmed')
+                                        <span class="badge bg-primary">Confirmed</span>
+                                    @elseif($order->status == 'delivered')
+                                        <span class="badge bg-success">Delivered</span>
                                     @elseif($order->status == 'completed')
-                                        <span class="badge bg-success">Approved</span>
+                                        <span class="badge bg-success">Completed</span>
                                     @elseif($order->status == 'cancelled')
                                         <span class="badge bg-danger">Cancelled</span>
                                     @else

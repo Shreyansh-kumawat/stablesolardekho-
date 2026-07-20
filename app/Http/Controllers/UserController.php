@@ -476,9 +476,21 @@ class UserController extends Controller
 
         try { $totalOrders = CpOrder::where('cp_id', $cp->id)->count(); } catch (\Exception $e) { $totalOrders = 0; }
         try { $pendingOrders = CpOrder::where('cp_id', $cp->id)->where('status', 'pending')->count(); } catch (\Exception $e) { $pendingOrders = 0; }
-        try { $completedOrders = CpOrder::where('cp_id', $cp->id)->where('status', 'completed')->count(); } catch (\Exception $e) { $completedOrders = 0; }
+        try { $completedOrders = CpOrder::where('cp_id', $cp->id)->whereIn('status', ['completed', 'confirmed', 'delivered'])->count(); } catch (\Exception $e) { $completedOrders = 0; }
         try { $recentOrders = CpOrder::where('cp_id', $cp->id)->orderBy('created_at', 'desc')->take(5)->get(); } catch (\Exception $e) { $recentOrders = collect(); }
-        try { $totalSpending = CpOrder::where('cp_id', $cp->id)->whereIn('status', ['completed', 'approved'])->sum('grand_total'); } catch (\Exception $e) { $totalSpending = 0; }
+        try { $totalSpending = CpOrder::where('cp_id', $cp->id)->whereIn('status', ['completed', 'approved', 'confirmed', 'delivered'])->sum('grand_total'); } catch (\Exception $e) { $totalSpending = 0; }
+
+        try {
+            $existingCode = \App\Models\ReferralCode::where('user_id', $user->id)->first();
+            if (!$existingCode) {
+                $namePart = strtoupper(\Illuminate\Support\Str::substr(preg_replace('/[^a-zA-Z]/', '', $user->name), 0, 4));
+                $code = $namePart . rand(1000, 9999);
+                while (\App\Models\ReferralCode::where('code', $code)->exists()) {
+                    $code = $namePart . rand(1000, 9999);
+                }
+                \App\Models\ReferralCode::create(['user_id' => $user->id, 'code' => $code]);
+            }
+        } catch (\Exception $e) {}
 
         return view('channelPartner.cpDashboard', compact(
             'cp', 'totalOrders', 'pendingOrders', 'completedOrders',

@@ -254,6 +254,9 @@ class ReferralController extends Controller
     {
         $user = auth()->user();
         $referralCode = ReferralCode::where('user_id', $user->id)->first();
+        if (!$referralCode && $user->role_id == 4) {
+            $referralCode = $this->autoGenerateReferralCode($user);
+        }
         $leads = ReferralLead::where('referrer_id', $user->id)->latest()->get();
         $cashbacks = CashbackTransaction::where('referrer_id', $user->id)->latest()->get();
         $totalEarned = CashbackTransaction::where('referrer_id', $user->id)->where('status', 'paid')->sum('cashback_amount');
@@ -267,11 +270,24 @@ class ReferralController extends Controller
     {
         $user = auth()->user();
         $referralCode = ReferralCode::where('user_id', $user->id)->first();
+        if (!$referralCode) {
+            $referralCode = $this->autoGenerateReferralCode($user);
+        }
         $leads = ReferralLead::where('referrer_id', $user->id)->latest()->get();
         $cashbacks = CashbackTransaction::where('referrer_id', $user->id)->latest()->get();
         $totalEarned = CashbackTransaction::where('referrer_id', $user->id)->where('status', 'paid')->sum('cashback_amount');
         $pendingAmount = CashbackTransaction::where('referrer_id', $user->id)->whereIn('status', ['pending', 'approved'])->sum('cashback_amount');
         $currentSlab = $this->getSlabPercentage($user->id);
         return view('channelPartner.cpReferrals', compact('referralCode', 'leads', 'cashbacks', 'totalEarned', 'pendingAmount', 'currentSlab'));
+    }
+
+    private function autoGenerateReferralCode($user)
+    {
+        $namePart = strtoupper(Str::substr(preg_replace('/[^a-zA-Z]/', '', $user->name), 0, 4));
+        $code = $namePart . rand(1000, 9999);
+        while (ReferralCode::where('code', $code)->exists()) {
+            $code = $namePart . rand(1000, 9999);
+        }
+        return ReferralCode::create(['user_id' => $user->id, 'code' => $code]);
     }
 }
