@@ -197,9 +197,9 @@
                             </select>
                         </div>
                         <div class="col-lg-3 col-md-6">
-                            <label class="form-label">Subcategory <span class="text-danger">*</span></label>
-                            <select class="form-control subcategory-select" name="products[0][subcategory_id]" required disabled>
-                                <option value="">Select Subcategory</option>
+                            <label class="form-label">Subcategory</label>
+                            <select class="form-control subcategory-select" name="products[0][subcategory_id]" disabled>
+                                <option value="">All Subcategories</option>
                             </select>
                         </div>
                         <div class="col-lg-4 col-md-6">
@@ -280,9 +280,9 @@ $(document).ready(function() {
                         </select>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <label class="form-label">Subcategory <span class="text-danger">*</span></label>
-                        <select class="form-control subcategory-select" name="products[${rowIndex}][subcategory_id]" required disabled>
-                            <option value="">Select Subcategory</option>
+                        <label class="form-label">Subcategory</label>
+                        <select class="form-control subcategory-select" name="products[${rowIndex}][subcategory_id]" disabled>
+                            <option value="">All Subcategories</option>
                         </select>
                     </div>
                     <div class="col-lg-4 col-md-6">
@@ -320,13 +320,14 @@ $(document).ready(function() {
 
     $(document).on('change', '.subcategory-select', function() {
         const row = $(this).closest('.product-row');
+        const categoryId = row.find('.category-select').val();
         const subcategoryId = $(this).val();
         const productSelect = row.find('.product-select');
 
         productSelect.html('<option value="">Select Product</option>').prop('disabled', true);
 
-        if (subcategoryId) {
-            loadProducts(subcategoryId, productSelect);
+        if (categoryId) {
+            loadProducts(categoryId, subcategoryId, productSelect);
         }
     });
 
@@ -375,17 +376,18 @@ $(document).ready(function() {
             const productId = $(this).find('.product-select').val();
             const quantity = $(this).find('.quantity-input').val();
 
-            if (!categoryId || !subcategoryId || !productId || !quantity) {
+            if (!categoryId || !productId || !quantity) {
                 isValid = false;
                 return false;
             }
 
-            products.push({
+            var item = {
                 category_id: categoryId,
-                subcategory_id: subcategoryId,
                 product_id: productId,
                 quantity: parseInt(quantity)
-            });
+            };
+            if (subcategoryId) item.subcategory_id = subcategoryId;
+            products.push(item);
         });
 
         if (!isValid) {
@@ -446,11 +448,12 @@ function attachCategoryChangeEvent() {
         const subcategorySelect = row.find('.subcategory-select');
         const productSelect = row.find('.product-select');
 
-        subcategorySelect.html('<option value="">Select Subcategory</option>').prop('disabled', true).trigger('change.select2');
+        subcategorySelect.html('<option value="">All Subcategories</option>').prop('disabled', true).trigger('change.select2');
         productSelect.html('<option value="">Select Product</option>').prop('disabled', true).trigger('change.select2');
 
         if (categoryId) {
             loadSubcategories(categoryId, subcategorySelect);
+            loadProducts(categoryId, null, productSelect);
         }
     });
 }
@@ -471,19 +474,19 @@ function loadSubcategories(categoryId, selectElement) {
                 selectElement.select2('destroy');
             }
             
-            selectElement.html('<option value="">Select Subcategory</option>');
-            
+            selectElement.html('<option value="">All Subcategories</option>');
+
             if (data && data.length > 0) {
                 data.forEach(function(subcategory) {
                     selectElement.append(`<option value="${subcategory.id}">${subcategory.subcategory_name || subcategory.sub_category_name || subcategory.name}</option>`);
                 });
             }
-            
+
             // Re-initialize select2
             selectElement.select2({
                 width: '100%',
                 minimumResultsForSearch: 5,
-                placeholder: 'Select Subcategory'
+                placeholder: 'All Subcategories'
             }).prop('disabled', false);
         },
         error: function(xhr) {
@@ -492,11 +495,13 @@ function loadSubcategories(categoryId, selectElement) {
     });
 }
 
-function loadProducts(subcategoryId, selectElement) {
+function loadProducts(categoryId, subcategoryId, selectElement) {
+    var params = { category_id: categoryId };
+    if (subcategoryId) params.sub_category_id = subcategoryId;
     $.ajax({
         url: "{{ route('cp.getProducts') }}",
         method: 'GET',
-        data: { sub_category_id: subcategoryId },
+        data: params,
         success: function(data) {
             if (selectElement.hasClass('select2-hidden-accessible')) {
                 selectElement.select2('destroy');

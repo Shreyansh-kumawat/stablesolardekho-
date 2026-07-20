@@ -305,6 +305,114 @@
             color: #a5b4fc;
         }
 
+        /* CP Sidebar Nav Links */
+        #sidebar .cp-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0.875rem;
+            border-radius: 6px;
+            color: #2d3436 !important;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+            border-left: 3px solid transparent;
+        }
+        #sidebar .cp-nav-link:hover {
+            background: #f1f5f9 !important;
+            color: #2563eb !important;
+        }
+        #sidebar .cp-nav-link:hover svg {
+            color: #2563eb !important;
+        }
+        #sidebar .cp-nav-link.cp-active {
+            background: #E8F4FD !important;
+            color: #2563eb !important;
+            font-weight: 600;
+            border-left-color: #2563eb;
+        }
+        #sidebar .cp-nav-link.cp-active svg {
+            color: #2563eb !important;
+        }
+        #sidebar .cp-nav-link svg {
+            color: #636e72;
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        /* CP Sidebar Nav Buttons (submenu toggles) */
+        #sidebar .cp-nav-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0.5rem 0.875rem;
+            border-radius: 6px;
+            color: #2d3436 !important;
+            font-size: 13px;
+            font-weight: 500;
+            background: none !important;
+            border: none;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+        #sidebar .cp-nav-btn:hover {
+            background: #f1f5f9 !important;
+            color: #2563eb !important;
+        }
+        #sidebar .cp-nav-btn:hover svg {
+            color: #2563eb !important;
+        }
+        #sidebar .cp-nav-btn.cp-active {
+            background: #E8F4FD !important;
+            color: #2563eb !important;
+            font-weight: 600;
+            border-left-color: #2563eb;
+        }
+        #sidebar .cp-nav-btn.cp-active svg {
+            color: #2563eb !important;
+        }
+        #sidebar .cp-nav-btn svg {
+            color: #636e72;
+            flex-shrink: 0;
+        }
+
+        /* CP Sidebar Submenu Links */
+        #sidebar .cp-sub-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 5px;
+            color: #475569 !important;
+            font-size: 12.5px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+        }
+        #sidebar .cp-sub-link:hover {
+            background: #f1f5f9 !important;
+            color: #2563eb !important;
+        }
+        #sidebar .cp-sub-link:hover svg {
+            color: #2563eb !important;
+        }
+        #sidebar .cp-sub-link.cp-active {
+            background: #E8F4FD !important;
+            color: #2563eb !important;
+            font-weight: 600;
+        }
+        #sidebar .cp-sub-link.cp-active svg {
+            color: #2563eb !important;
+        }
+        #sidebar .cp-sub-link svg {
+            color: #64748b;
+            flex-shrink: 0;
+        }
+
         /* Main content area */
         main {
             background: #f5f7fa;
@@ -449,14 +557,12 @@
                 <nav class="flex-1 space-y-0.5">
                     <!-- Dashboard -->
                     @if(Auth::user()->role_id == 4)
-                    <a href="{{ url('/') }}"
-                        class="flex items-center gap-2.5">
-                        <svg class="flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5"
-                            viewBox="0 0 24 24">
+                    <a href="{{ url('/') }}" class="cp-nav-link">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M2.25 12l8.954-8.955a1.125 1.125 0 011.592 0L21.75 12M4.5 9.75V21h4.5v-4.5h4.5V21h4.5V9.75" />
                         </svg>
-                        <span class="text-xs font-semibold">Home</span>
+                        <span>Home</span>
                     </a>
                     @else
                     <a href="{{ route('masterAdminDashboard') }}"

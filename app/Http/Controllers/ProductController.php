@@ -275,6 +275,14 @@ class ProductController extends Controller
 
     public function getProducts(Request $request)
     {
+        if ($request->input('category_id')) {
+            $query = Product::where('category_id', $request->input('category_id'));
+            if ($request->input('sub_category_id')) {
+                $query->where('sub_category_id', $request->input('sub_category_id'));
+            }
+            return response()->json($query->get());
+        }
+
         $id = $request->input('sub_category_id');
         $products = Product::where('sub_category_id', $id)->get();
         return response()->json($products);
