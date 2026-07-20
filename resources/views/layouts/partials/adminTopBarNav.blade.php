@@ -28,7 +28,7 @@
                             <a href="{{ route('user.dashboard') }}"
                                 style="display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:12px;font-weight:600;color:#374151;text-decoration:none;border-bottom:1px solid #f1f5f9;"
                                 onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'">
-                                <i class="fa fa-user" style="font-size:11px;"></i>
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
                                 My Account
                             </a>
                             <form id="logoutForm" method="POST" action="{{ route('logout') }}">
@@ -36,7 +36,7 @@
                                 <button type="submit"
                                     style="width:100%;text-align:left;display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:12px;font-weight:600;color:#dc2626;border:none;background:none;cursor:pointer;"
                                     onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='transparent'">
-                                    <i class="fa fa-sign-out-alt" style="font-size:11px;"></i>
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
                                     Logout
                                 </button>
                             </form>

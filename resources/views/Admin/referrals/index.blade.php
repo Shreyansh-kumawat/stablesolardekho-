@@ -52,9 +52,9 @@
                     <span style="font-size:.78rem;color:#9ca3af;">{{ $lead->created_at->format('d M Y') }}</span>
                 </div>
                 <div style="display:flex;gap:6px;">
-                    <button class="update-status-btn" data-id="{{ $lead->id }}" data-status="{{ $lead->status }}" data-remarks="{{ $lead->admin_remarks }}" style="padding:5px 12px;font-size:.75rem;background:#eff6ff;color:#2563eb;border:none;border-radius:6px;cursor:pointer;font-weight:600;"><i class="fas fa-edit" style="margin-right:3px;"></i> Update</button>
+                    <button class="update-status-btn" data-id="{{ $lead->id }}" data-status="{{ $lead->status }}" data-remarks="{{ $lead->admin_remarks }}" style="padding:5px 12px;font-size:.75rem;background:#eff6ff;color:#2563eb;border:none;border-radius:6px;cursor:pointer;font-weight:600;"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:3px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg> Update</button>
                     @if($lead->status == 'payment_done' && !$lead->cashback)
-                    <button class="create-cashback-btn" data-id="{{ $lead->id }}" data-name="{{ $lead->name }}" style="padding:5px 12px;font-size:.75rem;background:#ecfdf5;color:#059669;border:none;border-radius:6px;cursor:pointer;font-weight:600;"><i class="fas fa-coins" style="margin-right:3px;"></i> Cashback</button>
+                    <button class="create-cashback-btn" data-id="{{ $lead->id }}" data-name="{{ $lead->name }}" style="padding:5px 12px;font-size:.75rem;background:#ecfdf5;color:#059669;border:none;border-radius:6px;cursor:pointer;font-weight:600;"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:3px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Cashback</button>
                     @endif
                 </div>
             </div>
@@ -67,8 +67,8 @@
                     <p style="color:#6b7280;font-size:.8rem;margin:0 0 2px;">{{ $lead->email }}</p>
                     <p style="color:#6b7280;font-size:.8rem;margin:0 0 2px;">{{ $lead->phone }}</p>
                     <div style="display:flex;gap:16px;margin-top:8px;">
-                        @if($lead->city)<span style="font-size:.78rem;color:#4b5563;"><i class="fas fa-map-marker-alt" style="color:#9ca3af;margin-right:3px;"></i>{{ $lead->city }}@if($lead->state), {{ $lead->state }}@endif</span>@endif
-                        @if($lead->system_size)<span style="font-size:.78rem;color:#4b5563;"><i class="fas fa-solar-panel" style="color:#9ca3af;margin-right:3px;"></i>{{ $lead->system_size }}</span>@endif
+                        @if($lead->city)<span style="font-size:.78rem;color:#4b5563;"><svg width="10" height="10" fill="#9ca3af" viewBox="0 0 384 512" style="display:inline;vertical-align:middle;margin-right:3px;"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 110 128 64 64 0 010-128z"/></svg>{{ $lead->city }}@if($lead->state), {{ $lead->state }}@endif</span>@endif
+                        @if($lead->system_size)<span style="font-size:.78rem;color:#4b5563;"><svg width="10" height="10" fill="#9ca3af" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:3px;"><path d="M4 4h16v16H4V4zm2 2v5h5V6H6zm7 0v5h5V6h-5zM6 13v5h5v-5H6zm7 0v5h5v-5h-5z"/></svg>{{ $lead->system_size }}</span>@endif
                     </div>
                 </div>
                 {{-- Right: Referred By + Bank Details --}}
@@ -81,15 +81,15 @@
                     {{-- Bank Details --}}
                     @if($lead->referrer->bank_account_number && $lead->referrer->bank_ifsc)
                     <div style="margin-top:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 12px;">
-                        <p style="font-size:.68rem;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px;"><i class="fas fa-university" style="margin-right:4px;"></i>Bank Details</p>
-                        @if($lead->referrer->bank_account_holder)<p style="font-size:.8rem;color:#166534;margin:0 0 3px;display:flex;align-items:center;gap:6px;"><strong>Holder:</strong> <span>{{ $lead->referrer->bank_account_holder }}</span><button onclick="copyText(this,'{{ $lead->referrer->bank_account_holder }}')" style="background:none;border:none;cursor:pointer;color:#15803d;padding:0;line-height:1;" title="Copy"><i class="fas fa-copy" style="font-size:11px;"></i></button></p>@endif
-                        <p style="font-size:.8rem;color:#166534;margin:0 0 3px;display:flex;align-items:center;gap:6px;"><strong>A/C:</strong> <span>{{ $lead->referrer->bank_account_number }}</span><button onclick="copyText(this,'{{ $lead->referrer->bank_account_number }}')" style="background:none;border:none;cursor:pointer;color:#15803d;padding:0;line-height:1;" title="Copy"><i class="fas fa-copy" style="font-size:11px;"></i></button></p>
-                        <p style="font-size:.8rem;color:#166534;margin:0 0 3px;display:flex;align-items:center;gap:6px;"><strong>IFSC:</strong> <span>{{ $lead->referrer->bank_ifsc }}</span><button onclick="copyText(this,'{{ $lead->referrer->bank_ifsc }}')" style="background:none;border:none;cursor:pointer;color:#15803d;padding:0;line-height:1;" title="Copy"><i class="fas fa-copy" style="font-size:11px;"></i></button></p>
-                        @if($lead->referrer->bank_name)<p style="font-size:.8rem;color:#166534;margin:0;display:flex;align-items:center;gap:6px;"><strong>Bank:</strong> <span>{{ $lead->referrer->bank_name }}</span><button onclick="copyText(this,'{{ $lead->referrer->bank_name }}')" style="background:none;border:none;cursor:pointer;color:#15803d;padding:0;line-height:1;" title="Copy"><i class="fas fa-copy" style="font-size:11px;"></i></button></p>@endif
+                        <p style="font-size:.68rem;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px;"><svg width="11" height="11" fill="#15803d" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:4px;"><path d="M12 2L2 7v2h20V7L12 2zM4 11v6h3v-6H4zm5 0v6h3v-6H9zm5 0v6h3v-6h-3zm5 0v6h3v-6h-3zM2 19v2h20v-2H2z"/></svg>Bank Details</p>
+                        @if($lead->referrer->bank_account_holder)<p style="font-size:.8rem;color:#166534;margin:0 0 3px;display:flex;align-items:center;gap:6px;"><strong>Holder:</strong> <span>{{ $lead->referrer->bank_account_holder }}</span><button onclick="copyText(this,'{{ $lead->referrer->bank_account_holder }}')" style="background:none;border:none;cursor:pointer;color:#15803d;padding:0;line-height:1;" title="Copy"><svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button></p>@endif
+                        <p style="font-size:.8rem;color:#166534;margin:0 0 3px;display:flex;align-items:center;gap:6px;"><strong>A/C:</strong> <span>{{ $lead->referrer->bank_account_number }}</span><button onclick="copyText(this,'{{ $lead->referrer->bank_account_number }}')" style="background:none;border:none;cursor:pointer;color:#15803d;padding:0;line-height:1;" title="Copy"><svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button></p>
+                        <p style="font-size:.8rem;color:#166534;margin:0 0 3px;display:flex;align-items:center;gap:6px;"><strong>IFSC:</strong> <span>{{ $lead->referrer->bank_ifsc }}</span><button onclick="copyText(this,'{{ $lead->referrer->bank_ifsc }}')" style="background:none;border:none;cursor:pointer;color:#15803d;padding:0;line-height:1;" title="Copy"><svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button></p>
+                        @if($lead->referrer->bank_name)<p style="font-size:.8rem;color:#166534;margin:0;display:flex;align-items:center;gap:6px;"><strong>Bank:</strong> <span>{{ $lead->referrer->bank_name }}</span><button onclick="copyText(this,'{{ $lead->referrer->bank_name }}')" style="background:none;border:none;cursor:pointer;color:#15803d;padding:0;line-height:1;" title="Copy"><svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button></p>@endif
                     </div>
                     @else
                     <div style="margin-top:10px;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;">
-                        <p style="font-size:.78rem;color:#92400e;margin:0;"><i class="fas fa-exclamation-triangle" style="margin-right:4px;"></i>Bank details not provided</p>
+                        <p style="font-size:.78rem;color:#92400e;margin:0;"><svg width="12" height="12" fill="#92400e" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:4px;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>Bank details not provided</p>
                     </div>
                     @endif
                     @else
@@ -110,7 +110,7 @@
         <div style="background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;">
             <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #f1f5f9;">
                 <h3 style="font-weight:700;color:#374151;margin:0;font-size:.95rem;">Referral Codes</h3>
-                <button onclick="document.getElementById('genCodeModal').classList.add('active')" style="padding:6px 14px;background:#2563eb;color:#fff;font-size:.78rem;font-weight:600;border:none;border-radius:8px;cursor:pointer;"><i class="fas fa-plus" style="margin-right:4px;"></i>Generate Code</button>
+                <button onclick="document.getElementById('genCodeModal').classList.add('active')" style="padding:6px 14px;background:#2563eb;color:#fff;font-size:.78rem;font-weight:600;border:none;border-radius:8px;cursor:pointer;">+ Generate Code</button>
             </div>
             <div style="overflow-x:auto;">
                 <table style="width:100%;font-size:.85rem;border-collapse:collapse;">
@@ -132,7 +132,7 @@
                             <td style="padding:12px 16px;">
                                 <div style="display:flex;gap:6px;align-items:center;">
                                     <input type="text" readonly value="{{ url('/refer/'.$rc->code) }}" id="link-{{ $rc->id }}" style="font-size:.75rem;border:1px solid #e5e7eb;border-radius:4px;padding:4px 8px;width:220px;background:#f9fafb;">
-                                    <button class="copy-link-btn" data-target="link-{{ $rc->id }}" style="padding:4px 8px;font-size:.75rem;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:4px;cursor:pointer;"><i class="fas fa-copy"></i></button>
+                                    <button class="copy-link-btn" data-target="link-{{ $rc->id }}" style="padding:4px 8px;font-size:.75rem;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:4px;cursor:pointer;"><svg width="12" height="12" fill="#6b7280" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
                                 </div>
                             </td>
                             <td style="padding:12px 16px;">{{ \App\Models\ReferralLead::where('referrer_id', $rc->user_id)->count() }}</td>
@@ -182,9 +182,9 @@
                             </td>
                             <td style="padding:12px 16px;">
                                 @if($cb->status == 'pending')
-                                <button class="approve-cb-btn" data-id="{{ $cb->id }}" style="padding:4px 12px;font-size:.75rem;background:#059669;color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:600;"><i class="fas fa-check"></i> Approve</button>
+                                <button class="approve-cb-btn" data-id="{{ $cb->id }}" style="padding:4px 12px;font-size:.75rem;background:#059669;color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:600;">&#10003; Approve</button>
                                 @elseif($cb->status == 'approved')
-                                <button class="mark-paid-btn" data-id="{{ $cb->id }}" style="padding:4px 12px;font-size:.75rem;background:#2563eb;color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:600;"><i class="fas fa-money-bill"></i> Mark Paid</button>
+                                <button class="mark-paid-btn" data-id="{{ $cb->id }}" style="padding:4px 12px;font-size:.75rem;background:#2563eb;color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:600;">&#8377; Mark Paid</button>
                                 @endif
                             </td>
                         </tr>
@@ -213,13 +213,13 @@
                     <div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">From (referrals)</label><input type="number" name="cp_min[]" value="{{ $slab['min'] }}" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>
                     <div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">To (referrals)</label><input type="number" name="cp_max[]" value="{{ $slab['max'] }}" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>
                     <div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">Cashback %</label><input type="number" step="0.5" name="cp_percentage[]" value="{{ $slab['percentage'] }}" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>
-                    <button onclick="this.closest('.cp-slab-row').remove()" style="margin-top:16px;background:#fee2e2;color:#b91c1c;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.8rem;"><i class="fas fa-trash"></i></button>
+                    <button onclick="this.closest('.cp-slab-row').remove()" style="margin-top:16px;background:#fee2e2;color:#b91c1c;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.8rem;"><svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
                 </div>
                 @endforeach
             </div>
             <div style="display:flex;gap:10px;margin-top:16px;">
-                <button onclick="addCpSlabRow()" style="padding:8px 16px;background:#f5f3ff;color:#6d28d9;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.82rem;"><i class="fas fa-plus" style="margin-right:4px;"></i> Add Slab</button>
-                <button onclick="saveCpSlabs()" style="padding:8px 16px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.82rem;"><i class="fas fa-save" style="margin-right:4px;"></i> Save CP Slabs</button>
+                <button onclick="addCpSlabRow()" style="padding:8px 16px;background:#f5f3ff;color:#6d28d9;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.82rem;">+ Add Slab</button>
+                <button onclick="saveCpSlabs()" style="padding:8px 16px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.82rem;"><svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:4px;"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg> Save CP Slabs</button>
             </div>
             <div id="cpSlabMsg" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;font-size:.82rem;font-weight:600;"></div>
         </div>
@@ -237,13 +237,13 @@
                     <div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">From (referrals)</label><input type="number" name="min[]" value="{{ $slab['min'] }}" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>
                     <div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">To (referrals)</label><input type="number" name="max[]" value="{{ $slab['max'] }}" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>
                     <div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">Cashback %</label><input type="number" step="0.5" name="percentage[]" value="{{ $slab['percentage'] }}" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>
-                    <button onclick="this.closest('.slab-row').remove()" style="margin-top:16px;background:#fee2e2;color:#b91c1c;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.8rem;"><i class="fas fa-trash"></i></button>
+                    <button onclick="this.closest('.slab-row').remove()" style="margin-top:16px;background:#fee2e2;color:#b91c1c;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.8rem;"><svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
                 </div>
                 @endforeach
             </div>
             <div style="display:flex;gap:10px;margin-top:16px;">
-                <button onclick="addSlabRow()" style="padding:8px 16px;background:#eff6ff;color:#2563eb;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.82rem;"><i class="fas fa-plus" style="margin-right:4px;"></i> Add Slab</button>
-                <button onclick="saveSlabs()" style="padding:8px 16px;background:#059669;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.82rem;"><i class="fas fa-save" style="margin-right:4px;"></i> Save User Slabs</button>
+                <button onclick="addSlabRow()" style="padding:8px 16px;background:#eff6ff;color:#2563eb;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.82rem;">+ Add Slab</button>
+                <button onclick="saveSlabs()" style="padding:8px 16px;background:#059669;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.82rem;"><svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:4px;"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg> Save User Slabs</button>
             </div>
             <div id="slabMsg" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;font-size:.82rem;font-weight:600;"></div>
         </div>
@@ -283,7 +283,7 @@
         <input type="hidden" id="cbLeadId">
         <p style="margin-bottom:12px;">Lead: <strong id="cbLeadName"></strong></p>
         <div id="cbSlabInfo" style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:.82rem;color:#1e40af;display:none;">
-            <i class="fas fa-info-circle" style="margin-right:4px;"></i>
+            <svg width="12" height="12" fill="#1e40af" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:4px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
             Referrer has <strong id="cbRefCount">0</strong> successful referrals. Auto slab: <strong id="cbAutoSlab">5</strong>%
         </div>
         <label>Deal Amount (₹)</label>
@@ -331,8 +331,8 @@ var csrf='{{ csrf_token() }}';
 
 function copyText(btn,text){
     navigator.clipboard.writeText(text).then(function(){
-        var icon=btn.querySelector('i');icon.className='fas fa-check';btn.style.color='#047857';
-        setTimeout(function(){icon.className='fas fa-copy';btn.style.color='#15803d';},1500);
+        var orig=btn.innerHTML;btn.innerHTML='&#10003;';btn.style.color='#047857';
+        setTimeout(function(){btn.innerHTML=orig;btn.style.color='#15803d';},1500);
     });
 }
 
@@ -382,7 +382,7 @@ $('#genCodeBtn').click(function(){
 
 $('.copy-link-btn').click(function(){
     var i=document.getElementById($(this).data('target'));i.select();document.execCommand('copy');
-    $(this).html('<i class="fas fa-check"></i>');var b=$(this);setTimeout(function(){b.html('<i class="fas fa-copy"></i>');},1500);
+    var b=$(this),orig=b.html();b.html('&#10003;');setTimeout(function(){b.html(orig);},1500);
 });
 
 function addCpSlabRow(){
@@ -390,7 +390,7 @@ function addCpSlabRow(){
     html+='<div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">From</label><input type="number" name="cp_min[]" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>';
     html+='<div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">To</label><input type="number" name="cp_max[]" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>';
     html+='<div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">%</label><input type="number" step="0.5" name="cp_percentage[]" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>';
-    html+='<button onclick="this.closest(\'.cp-slab-row\').remove()" style="margin-top:16px;background:#fee2e2;color:#b91c1c;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.8rem;"><i class="fas fa-trash"></i></button>';
+    html+='<button onclick="this.closest(\'.cp-slab-row\').remove()" style="margin-top:16px;background:#fee2e2;color:#b91c1c;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.8rem;"><svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>';
     html+='</div>';
     document.getElementById('cpSlabRows').insertAdjacentHTML('beforeend',html);
 }
@@ -411,7 +411,7 @@ function addSlabRow(){
     html+='<div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">From</label><input type="number" name="min[]" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>';
     html+='<div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">To</label><input type="number" name="max[]" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>';
     html+='<div style="flex:1;"><label style="font-size:.72rem;font-weight:600;color:#6b7280;display:block;margin-bottom:2px;">%</label><input type="number" step="0.5" name="percentage[]" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.85rem;box-sizing:border-box;"></div>';
-    html+='<button onclick="this.closest(\'.slab-row\').remove()" style="margin-top:16px;background:#fee2e2;color:#b91c1c;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.8rem;"><i class="fas fa-trash"></i></button>';
+    html+='<button onclick="this.closest(\'.slab-row\').remove()" style="margin-top:16px;background:#fee2e2;color:#b91c1c;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.8rem;"><svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>';
     html+='</div>';
     document.getElementById('slabRows').insertAdjacentHTML('beforeend',html);
 }
