@@ -193,15 +193,15 @@ class OrderController extends Controller
             $orderId = $request->input('order_id');
             $action = $request->input('action', 'approve');
             $productsJson = $request->input('products_json');
-            $find_order = CpOrder::findOrFail($orderId);;
-            $find_order->products = $productsJson;
-            $find_order->status = $action == 'approve' ? 'completed' : 'rejected';
-            $find_order->inQuoteSent = '1';
-            $find_order->quote_amount = $request->input('grand_total');
-            $find_order->quote_validity_date = $request->input('quote_validity_date');
-            $find_order->quote_date = now()->format('Y-m-d');
-            $find_order->quote_generated_by  = Auth::user()->id;
-            $find_order->save();
+            \Illuminate\Support\Facades\DB::table('cp_orders')->where('id', $orderId)->update([
+                'products' => $productsJson,
+                'status' => $action == 'approve' ? 'completed' : 'rejected',
+                'inQuoteSent' => 1,
+                'quote_amount' => $request->input('grand_total'),
+                'quote_validity_date' => $request->input('quote_validity_date'),
+                'quote_date' => now()->format('Y-m-d'),
+                'quote_generated_by' => Auth::user()->id,
+            ]);
 
             return redirect()->route('pendingOrders')->with('success', 'Order pricing saved successfully');
         } catch (\Exception $e) {
@@ -212,9 +212,11 @@ class OrderController extends Controller
     public function approveInventoryRequest(Request $request, $id)
     {
         $order = CpOrder::findOrFail($id);
-        $order->status = 'confirmed';
-        $order->admin_remarks = $request->input('admin_remarks');
-        $order->save();
+
+        \Illuminate\Support\Facades\DB::table('cp_orders')->where('id', $id)->update([
+            'status' => 'confirmed',
+            'admin_remarks' => $request->input('admin_remarks'),
+        ]);
 
         $products = $order->products;
         if (is_string($products)) $products = json_decode($products, true);
@@ -236,10 +238,10 @@ class OrderController extends Controller
 
     public function cancelInventoryRequest(Request $request, $id)
     {
-        $order = CpOrder::findOrFail($id);
-        $order->status = 'cancelled';
-        $order->admin_remarks = $request->input('admin_remarks');
-        $order->save();
+        \Illuminate\Support\Facades\DB::table('cp_orders')->where('id', $id)->update([
+            'status' => 'cancelled',
+            'admin_remarks' => $request->input('admin_remarks'),
+        ]);
 
         return redirect()->route('pendingOrders')->with('success', 'Inventory request cancelled.');
     }
@@ -287,9 +289,11 @@ class OrderController extends Controller
     public function approveCpPayment($id)
     {
         $order = CpOrder::findOrFail($id);
-        $order->payment_status = 'paid';
-        $order->status = 'confirmed';
-        $order->save();
+
+        \Illuminate\Support\Facades\DB::table('cp_orders')->where('id', $id)->update([
+            'payment_status' => 'paid',
+            'status' => 'confirmed',
+        ]);
 
         $products = $order->products;
         if (is_string($products)) $products = json_decode($products, true);
@@ -312,8 +316,10 @@ class OrderController extends Controller
     public function markCpOrderDelivered($id)
     {
         $order = CpOrder::findOrFail($id);
-        $order->status = 'delivered';
-        $order->save();
+
+        \Illuminate\Support\Facades\DB::table('cp_orders')->where('id', $id)->update([
+            'status' => 'delivered',
+        ]);
 
         $products = $order->products;
         if (is_string($products)) $products = json_decode($products, true);
@@ -347,9 +353,9 @@ class OrderController extends Controller
 
     public function rejectCpPayment($id)
     {
-        $order = CpOrder::findOrFail($id);
-        $order->payment_status = 'failed';
-        $order->save();
+        \Illuminate\Support\Facades\DB::table('cp_orders')->where('id', $id)->update([
+            'payment_status' => 'failed',
+        ]);
         return redirect()->back()->with('success', 'CP payment rejected.');
     }
 
