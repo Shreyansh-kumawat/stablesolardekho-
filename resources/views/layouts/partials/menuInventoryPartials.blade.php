@@ -1,5 +1,5 @@
 <button type="button" data-toggle="submenu-manageinventory"
-    class="w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors hover:bg-slate-800 {{ request()->routeIs('addNewInventory','manageInventory','transferInventory','adminCpInventoryList','adminCpInventoryDetail') ? 'bg-slate-700 text-white' : '' }}"
+    class="w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors hover:bg-slate-800 {{ request()->routeIs('addNewInventory','manageInventory','transferInventory') ? 'bg-slate-700 text-white' : '' }}"
     data-submenu="manageinventory">
     <span class="flex items-center gap-3">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -56,16 +56,6 @@
                     d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
             </svg>
             <span>Transfer List</span>
-        </a>
-    </li>
-    <li>
-        <a href="{{ route('adminCpInventoryList') }}"
-            class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('adminCpInventoryList','adminCpInventoryDetail') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-            </svg>
-            <span>CP Inventory</span>
         </a>
     </li>
 </ul>

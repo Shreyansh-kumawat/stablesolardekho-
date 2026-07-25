@@ -107,6 +107,10 @@
                             <span class="po-order-id">{{ $order->order_id }}</span>
                             @if($order->type === 'customer_order')
                                 <span class="po-badge po-badge-confirmed" style="font-size:.6rem;margin-left:4px;">Shop</span>
+                            @elseif(str_starts_with($order->order_id, 'REORD'))
+                                <span class="po-badge" style="font-size:.6rem;margin-left:4px;background:#fef3c7;color:#92400e;">Re-Order</span>
+                            @else
+                                <span class="po-badge" style="font-size:.6rem;margin-left:4px;background:#dbeafe;color:#1e40af;">New Order</span>
                             @endif
                         </td>
                         <td><span class="po-cp-name">{{ $order->cp_name }}</span></td>

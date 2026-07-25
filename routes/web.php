@@ -156,6 +156,7 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::get('/cp-inventory/{cpId}', [CpInventoryController::class, 'adminCpInventoryDetail'])->name('adminCpInventoryDetail');
     Route::post('/cp-inventory/{id}/admin-update-stock', [CpInventoryController::class, 'adminCpUpdateStock'])->name('adminCpUpdateStock');
     Route::post('/cp-inventory/{cpId}/admin-add-stock', [CpInventoryController::class, 'adminCpAddStock'])->name('adminCpAddStock');
+    Route::get('/cp-entries', [CpInventoryController::class, 'adminCpEntries'])->name('adminCpEntries');
 
 
     Route::get('/manage-team', [AdminSettingController::class, 'manageTeam'])->name('manageTeam');
@@ -239,8 +240,8 @@ Route::prefix('channel-partner')->middleware(['auth', ChannelPartnerMiddleware::
 
     Route::middleware(ChannelPartnerMiddleware::class.':view_inventory')->group(function () {
         Route::get('/cp-inventory', [CpInventoryController::class, 'cpInventory'])->name(name: 'cpInventory');
-        Route::post('/cp-inventory/add-stock', [CpInventoryController::class, 'cpAddStock'])->name('cpAddStock');
-        Route::post('/cp-inventory/{id}/update-stock', [CpInventoryController::class, 'cpUpdateStock'])->name('cpUpdateStock');
+        Route::post('/cp-inventory/{id}/reduce-stock', [CpInventoryController::class, 'cpReduceStock'])->name('cpReduceStock');
+        Route::post('/cp-inventory/reorder', [CpInventoryController::class, 'cpReorder'])->name('cpReorder');
         Route::delete('/cp-inventory/{id}/delete', [CpInventoryController::class, 'cpDeleteInventory'])->name('cpDeleteInventory');
     });
 
