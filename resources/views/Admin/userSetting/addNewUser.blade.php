@@ -1,6 +1,6 @@
 @extends('layouts.adminLayout')
 
-@section('title', 'Create User')
+@section('title', 'Create Team Member')
 
 @section('css')
     <!-- Select2 CSS (only for this page) -->
@@ -100,8 +100,8 @@
 @section('content')
 <div class="page-header">
     <div class="container-fluid">
-        <h1><i class="fas fa-user-plus me-2"></i>Add New User</h1>
-        <p>Create a new user account with role assignment</p>
+        <h1><i class="fas fa-user-plus me-2"></i>Add New Team Member</h1>
+        <p>Create a new team member account with role assignment</p>
     </div>
 </div>
 
@@ -178,7 +178,7 @@
         </div>
 
         <div class="mt-4 d-flex gap-2">
-            <button type="submit" class="btn-primary-theme"><i class="fa fa-user-plus me-2"></i>Create User</button>
+            <button type="submit" class="btn-primary-theme"><i class="fa fa-user-plus me-2"></i>Create Team Member</button>
             <a href="#" class="btn-secondary-theme"><i class="fa fa-times me-2"></i>Cancel</a>
         </div>
     </form>

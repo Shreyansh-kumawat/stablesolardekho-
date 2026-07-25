@@ -18,7 +18,7 @@
                             class="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md header-btn">
                             <img src="{{ asset('stable/images/avatar.png') }}" alt="Avatar"
                                 class="w-7 h-7 rounded-full object-cover">
-                            <span class="hidden sm:inline text-xs font-semibold">{{ Auth::user()->name ?? 'User' }}</span>
+                            <span class="hidden sm:inline text-xs font-semibold">{{ Auth::user()->name ?? 'Team Member' }}</span>
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
                             </svg>

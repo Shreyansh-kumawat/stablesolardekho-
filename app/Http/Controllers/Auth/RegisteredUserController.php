@@ -99,6 +99,13 @@ class RegisteredUserController extends Controller
         $otpRecord->delete();
         session()->forget('reg_data');
 
+        $namePart = strtoupper(\Illuminate\Support\Str::substr(preg_replace('/[^a-zA-Z]/', '', $user->name), 0, 4));
+        $code = $namePart . rand(1000, 9999);
+        while (\App\Models\ReferralCode::where('code', $code)->exists()) {
+            $code = $namePart . rand(1000, 9999);
+        }
+        \App\Models\ReferralCode::create(['user_id' => $user->id, 'code' => $code]);
+
         event(new Registered($user));
         Auth::login($user);
 

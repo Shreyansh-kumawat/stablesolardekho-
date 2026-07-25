@@ -1,6 +1,6 @@
 @extends('layouts.adminLayout')
 
-@section('title', 'Create User')
+@section('title', 'Edit Team Member')
 
 @section('css')
     <!-- Select2 CSS (only for this page) -->
@@ -134,8 +134,8 @@
 @section('content')
     <div class="page-header">
         <div class="container-fluid">
-            <h1><i class="fas fa-user-edit me-2"></i>Edit User</h1>
-            <p>Update user account information and role assignment</p>
+            <h1><i class="fas fa-user-edit me-2"></i>Edit Team Member</h1>
+            <p>Update team member account information and role assignment</p>
         </div>
     </div>
 
@@ -218,7 +218,7 @@
             </div>
 
             <div class="mt-4 d-flex gap-2">
-                <button type="submit" class="btn-primary-theme"><i class="fa fa-save me-2"></i>Update User</button>
+                <button type="submit" class="btn-primary-theme"><i class="fa fa-save me-2"></i>Update Team Member</button>
                 <a href="{{ route('userList') }}" class="btn-secondary-theme"><i class="fa fa-times me-2"></i>Cancel</a>
             </div>
         </form>

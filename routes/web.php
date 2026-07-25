@@ -152,6 +152,11 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::get('/get-available-serial', [InventoryController::class, 'getAvailableSerial'])->name('getAvailableSerial');
     Route::get('/admin-inv-txnx', [InventoryController::class, 'invTxnsAdmin'])->name('invTxnsAdmin');
 
+    Route::get('/cp-inventory-list', [CpInventoryController::class, 'adminCpInventoryList'])->name('adminCpInventoryList');
+    Route::get('/cp-inventory/{cpId}', [CpInventoryController::class, 'adminCpInventoryDetail'])->name('adminCpInventoryDetail');
+    Route::post('/cp-inventory/{id}/admin-update-stock', [CpInventoryController::class, 'adminCpUpdateStock'])->name('adminCpUpdateStock');
+    Route::post('/cp-inventory/{cpId}/admin-add-stock', [CpInventoryController::class, 'adminCpAddStock'])->name('adminCpAddStock');
+
 
     Route::get('/manage-team', [AdminSettingController::class, 'manageTeam'])->name('manageTeam');
     Route::post('/store-team', [AdminSettingController::class, 'storeTeam'])->name('storeTeam');
@@ -234,6 +239,8 @@ Route::prefix('channel-partner')->middleware(['auth', ChannelPartnerMiddleware::
 
     Route::middleware(ChannelPartnerMiddleware::class.':view_inventory')->group(function () {
         Route::get('/cp-inventory', [CpInventoryController::class, 'cpInventory'])->name(name: 'cpInventory');
+        Route::post('/cp-inventory/add-stock', [CpInventoryController::class, 'cpAddStock'])->name('cpAddStock');
+        Route::post('/cp-inventory/{id}/update-stock', [CpInventoryController::class, 'cpUpdateStock'])->name('cpUpdateStock');
     });
 
     Route::middleware(ChannelPartnerMiddleware::class.':transfer_inventory')->group(function () {

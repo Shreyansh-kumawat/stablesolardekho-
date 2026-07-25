@@ -19,15 +19,15 @@
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-2xl font-bold text-slate-900">User Management</h1>
-                        <p class="text-sm text-slate-600">Manage system users and their roles</p>
+                        <h1 class="text-2xl font-bold text-slate-900">Team Member Management</h1>
+                        <p class="text-sm text-slate-600">Manage team members and their roles</p>
                     </div>
                 </div>
                 <a href="{{ route('addNewUser') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-all">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                     </svg>
-                    <span>Add New User</span>
+                    <span>Add New Team Member</span>
                 </a>
             </div>
         </div>
@@ -49,7 +49,7 @@
                     </div>
                     <div id="buttons_export" style="flex: 1;"></div>
                     <div style="flex: 1;">
-                        <input type="text" id="userTable_filter_input" placeholder="Search users..." class="w-full rounded border-slate-300">
+                        <input type="text" id="userTable_filter_input" placeholder="Search team members..." class="w-full rounded border-slate-300">
                     </div>
                 </div>
 
@@ -58,10 +58,10 @@
                     <table id="userTable" class="table table-striped table-hover dataTable" style="width:100%">
                         <thead>
                             <tr>
-                                <th>User Name</th>
+                                <th>Name</th>
                                 <th>Email ID</th>
                                 <th>Mobile Number</th>
-                                <th>User Role</th>
+                                <th>Role</th>
                                 <th>Associate With</th>
                                 <th>Status</th>
                                 <th>Created Date</th>
@@ -108,9 +108,9 @@
                 <div>
                     <h4 class="text-sm font-semibold text-blue-900">Tips</h4>
                     <ul class="text-sm text-blue-800 space-y-1 list-disc list-inside mt-1">
-                        <li>Use search box to quickly find users by name, email, or mobile</li>
-                        <li>Export user data in Excel or CSV format</li>
-                        <li>You can reset user password from the action menu</li>
+                        <li>Use search box to quickly find team members by name, email, or mobile</li>
+                        <li>Export data in Excel or CSV format</li>
+                        <li>You can reset password from the action menu</li>
                     </ul>
                 </div>
             </div>
