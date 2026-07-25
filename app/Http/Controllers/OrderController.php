@@ -212,11 +212,26 @@ class OrderController extends Controller
     public function approveInventoryRequest(Request $request, $id)
     {
         $order = CpOrder::findOrFail($id);
-        $order->status = 'completed';
+        $order->status = 'confirmed';
         $order->admin_remarks = $request->input('admin_remarks');
         $order->save();
 
-        return redirect()->route('pendingOrders')->with('success', 'Inventory request approved successfully.');
+        $products = $order->products;
+        if (is_string($products)) $products = json_decode($products, true);
+        if (is_array($products)) {
+            foreach ($products as $product) {
+                $productId = $product['product_id'] ?? null;
+                $qty = (int) ($product['quantity'] ?? 0);
+                if (!$productId || $qty <= 0) continue;
+                $prod = Product::find($productId);
+                if ($prod) {
+                    $prod->quantity = max(0, $prod->quantity - $qty);
+                    $prod->save();
+                }
+            }
+        }
+
+        return redirect()->route('pendingOrders')->with('success', 'Order approved and stock deducted.');
     }
 
     public function cancelInventoryRequest(Request $request, $id)
@@ -227,6 +242,32 @@ class OrderController extends Controller
         $order->save();
 
         return redirect()->route('pendingOrders')->with('success', 'Inventory request cancelled.');
+    }
+
+    public function checkCpOrderStock($id)
+    {
+        $order = CpOrder::findOrFail($id);
+        $products = $order->products;
+        if (is_string($products)) $products = json_decode($products, true);
+
+        $warnings = [];
+        if (is_array($products)) {
+            foreach ($products as $product) {
+                $productId = $product['product_id'] ?? null;
+                $qty = (int) ($product['quantity'] ?? 0);
+                if (!$productId || $qty <= 0) continue;
+                $prod = Product::find($productId);
+                if ($prod && $prod->quantity < $qty) {
+                    $warnings[] = [
+                        'name' => $prod->item_name,
+                        'available' => $prod->quantity,
+                        'requested' => $qty,
+                    ];
+                }
+            }
+        }
+
+        return response()->json(['warnings' => $warnings]);
     }
 
     public function productPricing()
@@ -249,6 +290,22 @@ class OrderController extends Controller
         $order->payment_status = 'paid';
         $order->status = 'confirmed';
         $order->save();
+
+        $products = $order->products;
+        if (is_string($products)) $products = json_decode($products, true);
+        if (is_array($products)) {
+            foreach ($products as $product) {
+                $productId = $product['product_id'] ?? null;
+                $qty = (int) ($product['quantity'] ?? 0);
+                if (!$productId || $qty <= 0) continue;
+                $prod = Product::find($productId);
+                if ($prod) {
+                    $prod->quantity = max(0, $prod->quantity - $qty);
+                    $prod->save();
+                }
+            }
+        }
+
         return redirect()->back()->with('success', 'CP payment approved and order confirmed.');
     }
 

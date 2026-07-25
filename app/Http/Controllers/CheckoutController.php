@@ -77,6 +77,13 @@ class CheckoutController extends Controller
             return back()->with('error', 'No products to order.');
         }
 
+        foreach ($items as $item) {
+            $stock = $item['product']->quantity ?? 0;
+            if ($stock < $item['quantity']) {
+                return back()->with('error', $item['product']->item_name . ' has only ' . $stock . ' in stock. Please reduce quantity or remove it.');
+            }
+        }
+
         $total = 0;
         foreach ($items as $item) {
             $total += ($item['product']->current_sale_price ?? 0) * $item['quantity'];

@@ -29,6 +29,7 @@ class CpOrder extends Model
         'payment_reference',
         'payment_status',
         'viewed_by_admin',
+        'admin_remarks',
     ];
 
     protected $casts = [

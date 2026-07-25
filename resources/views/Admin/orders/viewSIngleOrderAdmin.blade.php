@@ -279,7 +279,7 @@
                     <div style="display:flex;gap:.5rem;margin-top:1rem;">
                         <form method="POST" action="{{ route('approveCpPayment', $order->id) }}">
                             @csrf
-                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Approve this payment?')">
+                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirmPaymentApproval(event, this)">
                                 <i class="bi bi-check-circle"></i> Approve Payment
                             </button>
                         </form>
@@ -306,14 +306,14 @@
             <form method="POST" action="{{ route('approveInventoryRequest', $order->id) }}" id="approveForm">
                 @csrf
                 <input type="hidden" name="admin_remarks" class="admin-remarks-input">
-                <button type="submit" class="btn btn-approve" onclick="return confirmAction(this, 'approve')">
+                <button type="submit" class="btn btn-approve" onclick="return confirmAction(event, this, 'approve')">
                     <i class="bi bi-check-circle"></i> Approve Request
                 </button>
             </form>
             <form method="POST" action="{{ route('cancelInventoryRequest', $order->id) }}" id="cancelForm">
                 @csrf
                 <input type="hidden" name="admin_remarks" class="admin-remarks-input">
-                <button type="submit" class="btn btn-cancel-req" onclick="return confirmAction(this, 'cancel')">
+                <button type="submit" class="btn btn-cancel-req" onclick="return confirmAction(event, this, 'cancel')">
                     <i class="bi bi-x-circle"></i> Cancel Request
                 </button>
             </form>
@@ -349,17 +349,79 @@
 
 @section('js')
 <script>
-function confirmAction(btn, action) {
+function confirmAction(e, btn, action) {
     var remarks = document.getElementById('adminRemarks') ? document.getElementById('adminRemarks').value : '';
     document.querySelectorAll('.admin-remarks-input').forEach(function(input) {
         input.value = remarks;
     });
 
-    var msg = action === 'approve'
-        ? 'Are you sure you want to APPROVE this inventory request?'
-        : 'Are you sure you want to CANCEL this inventory request?';
+    if (action === 'cancel') {
+        return confirm('Are you sure you want to CANCEL this inventory request?');
+    }
 
-    return confirm(msg);
+    var form = btn.closest('form');
+    e.preventDefault();
+
+    fetch('{{ route("checkCpOrderStock", $order->id ?? 0) }}', {
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.warnings && data.warnings.length > 0) {
+            var msg = 'Stock Warning!\n\n';
+            data.warnings.forEach(function(w) {
+                msg += w.name + ' has only ' + w.available + ' in stock, but ' + w.requested + ' requested.\n';
+            });
+            msg += '\nAvailable stock will become 0. Are you sure you want to approve?';
+            if (confirm(msg)) {
+                form.submit();
+            }
+        } else {
+            if (confirm('Are you sure you want to APPROVE this order?')) {
+                form.submit();
+            }
+        }
+    })
+    .catch(function() {
+        if (confirm('Could not check stock. Approve anyway?')) {
+            form.submit();
+        }
+    });
+
+    return false;
+}
+
+function confirmPaymentApproval(e, btn) {
+    var form = btn.closest('form');
+    e.preventDefault();
+
+    fetch('{{ route("checkCpOrderStock", $order->id ?? 0) }}', {
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.warnings && data.warnings.length > 0) {
+            var msg = 'Stock Warning!\n\n';
+            data.warnings.forEach(function(w) {
+                msg += w.name + ' has only ' + w.available + ' in stock, but ' + w.requested + ' requested.\n';
+            });
+            msg += '\nAvailable stock will become 0. Are you sure you want to approve payment?';
+            if (confirm(msg)) {
+                form.submit();
+            }
+        } else {
+            if (confirm('Approve this payment? Stock will be deducted.')) {
+                form.submit();
+            }
+        }
+    })
+    .catch(function() {
+        if (confirm('Could not check stock. Approve payment anyway?')) {
+            form.submit();
+        }
+    });
+
+    return false;
 }
 </script>
 @endsection

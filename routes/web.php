@@ -183,6 +183,7 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::post('/saveOrderPricing', [OrderController::class, 'saveOrderPricing'])->name('save_order_pricing');
     Route::post('/inventory-request/{id}/approve', [OrderController::class, 'approveInventoryRequest'])->name('approveInventoryRequest');
     Route::post('/inventory-request/{id}/cancel', [OrderController::class, 'cancelInventoryRequest'])->name('cancelInventoryRequest');
+    Route::get('/cp-order/{id}/check-stock', [OrderController::class, 'checkCpOrderStock'])->name('checkCpOrderStock');
     Route::post('/cp-order/{id}/approve-payment', [OrderController::class, 'approveCpPayment'])->name('approveCpPayment');
     Route::post('/cp-order/{id}/reject-payment', [OrderController::class, 'rejectCpPayment'])->name('rejectCpPayment');
     Route::post('/cp-order/{id}/mark-delivered', [OrderController::class, 'markCpOrderDelivered'])->name('markCpOrderDelivered');
