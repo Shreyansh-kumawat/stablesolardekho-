@@ -150,7 +150,7 @@
                     <label>Quantity to use</label>
                     <input type="number" name="quantity" min="1" max="{{ $item->current_stock }}" required placeholder="e.g. 20">
                     <label>Entry / Note</label>
-                    <textarea name="remarks" placeholder="e.g. Sharma ji ke 20 solar lagaye" rows="2"></textarea>
+                    <textarea name="remarks" placeholder="Solar Entry or Note" rows="2"></textarea>
                     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
                         <button type="button" class="inv-btn inv-btn-cancel" onclick="toggleForm('minus-form-{{ $item->inv_id }}')">Cancel</button>
                         <button type="submit" class="inv-btn inv-btn-minus">
