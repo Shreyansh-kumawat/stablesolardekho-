@@ -211,39 +211,53 @@ class OrderController extends Controller
 
     public function approveInventoryRequest(Request $request, $id)
     {
-        $order = CpOrder::findOrFail($id);
+        try {
+            $order = CpOrder::findOrFail($id);
 
-        \Illuminate\Support\Facades\DB::table('cp_orders')->where('id', $id)->update([
-            'status' => 'confirmed',
-            'admin_remarks' => $request->input('admin_remarks'),
-        ]);
+            try {
+                \Illuminate\Support\Facades\DB::table('cp_orders')->where('id', $id)->update([
+                    'status' => 'confirmed',
+                    'admin_remarks' => $request->input('admin_remarks'),
+                ]);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\DB::table('cp_orders')->where('id', $id)->update([
+                    'status' => 'completed',
+                    'admin_remarks' => $request->input('admin_remarks'),
+                ]);
+            }
 
-        $products = $order->products;
-        if (is_string($products)) $products = json_decode($products, true);
-        if (is_array($products)) {
-            foreach ($products as $product) {
-                $productId = $product['product_id'] ?? null;
-                $qty = (int) ($product['quantity'] ?? 0);
-                if (!$productId || $qty <= 0) continue;
-                $prod = Product::find($productId);
-                if ($prod) {
-                    $prod->quantity = max(0, $prod->quantity - $qty);
-                    $prod->save();
+            $products = $order->products;
+            if (is_string($products)) $products = json_decode($products, true);
+            if (is_array($products)) {
+                foreach ($products as $product) {
+                    $productId = $product['product_id'] ?? null;
+                    $qty = (int) ($product['quantity'] ?? 0);
+                    if (!$productId || $qty <= 0) continue;
+                    $prod = Product::find($productId);
+                    if ($prod) {
+                        $prod->quantity = max(0, ($prod->quantity ?? 0) - $qty);
+                        $prod->save();
+                    }
                 }
             }
-        }
 
-        return redirect()->route('pendingOrders')->with('success', 'Order approved and stock deducted.');
+            return redirect()->route('pendingOrders')->with('success', 'Order approved and stock deducted.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+        }
     }
 
     public function cancelInventoryRequest(Request $request, $id)
     {
-        \Illuminate\Support\Facades\DB::table('cp_orders')->where('id', $id)->update([
-            'status' => 'cancelled',
-            'admin_remarks' => $request->input('admin_remarks'),
-        ]);
-
-        return redirect()->route('pendingOrders')->with('success', 'Inventory request cancelled.');
+        try {
+            \Illuminate\Support\Facades\DB::table('cp_orders')->where('id', $id)->update([
+                'status' => 'cancelled',
+                'admin_remarks' => $request->input('admin_remarks'),
+            ]);
+            return redirect()->route('pendingOrders')->with('success', 'Inventory request cancelled.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+        }
     }
 
     public function checkCpOrderStock($id)

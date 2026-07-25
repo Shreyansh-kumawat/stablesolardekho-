@@ -320,7 +320,7 @@
         </div>
         @endif
 
-        @if($order->status == 'confirmed')
+        @if($order->status == 'confirmed' || $order->status == 'completed')
         <div class="action-buttons">
             <form method="POST" action="{{ route('markCpOrderDelivered', $order->id) }}">
                 @csrf

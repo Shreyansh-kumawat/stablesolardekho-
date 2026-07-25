@@ -35,9 +35,6 @@ class CpOrder extends Model
     protected $casts = [
         'products' => 'json',
         'pricing_data' => 'json',
-        'order_date' => 'date',
-        'quote_date' => 'date',
-        'quote_validity_date' => 'date',
     ];
 
     public function channelPartner()
