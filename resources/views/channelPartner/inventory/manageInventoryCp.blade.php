@@ -136,14 +136,20 @@
             </div>
             @endif
 
-            @if($item->current_stock > 0)
             <div class="inv-actions">
+                @if($item->current_stock > 0)
                 <button type="button" class="inv-btn inv-btn-minus" onclick="toggleForm('minus-form-{{ $item->inv_id }}')">
                     <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15"/></svg>
                     Use Stock
                 </button>
+                @endif
+                <button type="button" class="inv-btn inv-btn-plus" onclick="toggleForm('reorder-form-{{ $item->inv_id }}')">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                    Request More
+                </button>
             </div>
 
+            @if($item->current_stock > 0)
             <div class="inv-form-inline" id="minus-form-{{ $item->inv_id }}">
                 <form method="POST" action="{{ route('cpReduceStock', $item->inv_id) }}">
                     @csrf
@@ -161,6 +167,22 @@
                 </form>
             </div>
             @endif
+
+            <div class="inv-form-inline" id="reorder-form-{{ $item->inv_id }}">
+                <form method="POST" action="{{ route('cpReorder') }}">
+                    @csrf
+                    <input type="hidden" name="product_id" value="{{ $item->product_id }}">
+                    <label>Quantity to request</label>
+                    <input type="number" name="quantity" min="1" required placeholder="Enter quantity">
+                    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
+                        <button type="button" class="inv-btn inv-btn-cancel" onclick="toggleForm('reorder-form-{{ $item->inv_id }}')">Cancel</button>
+                        <button type="submit" class="inv-btn inv-btn-plus">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                            Place Re-Order
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
         @endforeach
     </div>

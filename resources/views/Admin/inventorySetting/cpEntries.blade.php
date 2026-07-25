@@ -10,9 +10,11 @@
     .ce-header h1 { font-size: 1.15rem; font-weight: 700; color: #1e293b; margin: 0; }
     .ce-header p { font-size: 0.78rem; color: #64748b; margin: 2px 0 0; }
 
-    .ce-search { margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-    .ce-search input { border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 0.82rem; width: 100%; max-width: 320px; }
-    .ce-search input:focus { outline: none; border-color: #7c3aed; box-shadow: 0 0 0 2px rgba(124,58,237,0.1); }
+    .ce-filters { margin-bottom: 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .ce-filters input { border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 0.82rem; width: 100%; max-width: 280px; }
+    .ce-filters input:focus { outline: none; border-color: #7c3aed; box-shadow: 0 0 0 2px rgba(124,58,237,0.1); }
+    .ce-filters select { border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 0.82rem; min-width: 180px; background: #fff; }
+    .ce-filters select:focus { outline: none; border-color: #7c3aed; box-shadow: 0 0 0 2px rgba(124,58,237,0.1); }
 
     .ce-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
 
@@ -47,15 +49,23 @@
         </div>
     </div>
 
-    <div class="ce-search">
+    <div class="ce-filters">
         <svg width="14" height="14" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
-        <input type="text" id="ceSearch" placeholder="Search by CP name, product, or entry...">
+        <input type="text" id="ceSearch" placeholder="Search by product or entry...">
+        <select id="ceCpFilter">
+            <option value="">All Channel Partners</option>
+            @foreach($entries->pluck('channelPartner')->unique('id')->sortBy('cp_name') as $cp)
+                @if($cp)
+                <option value="{{ strtolower($cp->cp_name) }}">{{ $cp->cp_name }}</option>
+                @endif
+            @endforeach
+        </select>
     </div>
 
     @if($entries->count() > 0)
     <div class="ce-grid" id="ceGrid">
         @foreach($entries as $entry)
-        <div class="ce-card" data-search="{{ strtolower(($entry->channelPartner->cp_name ?? '') . ' ' . ($entry->product->item_name ?? '') . ' ' . $entry->remarks) }}">
+        <div class="ce-card" data-cp="{{ strtolower($entry->channelPartner->cp_name ?? '') }}" data-search="{{ strtolower(($entry->channelPartner->cp_name ?? '') . ' ' . ($entry->product->item_name ?? '') . ' ' . $entry->remarks) }}">
             <div class="ce-card-top">
                 <span class="ce-cp-name">{{ $entry->channelPartner->cp_name ?? 'N/A' }}</span>
                 <span class="ce-date">{{ $entry->created_at->format('d M Y, h:i A') }}</span>
@@ -80,11 +90,16 @@
 
 @section('js')
 <script>
-document.getElementById('ceSearch').addEventListener('input', function() {
-    var q = this.value.toLowerCase();
+function filterEntries() {
+    var q = document.getElementById('ceSearch').value.toLowerCase();
+    var cp = document.getElementById('ceCpFilter').value;
     document.querySelectorAll('#ceGrid .ce-card').forEach(function(card) {
-        card.style.display = card.getAttribute('data-search').indexOf(q) !== -1 ? '' : 'none';
+        var matchSearch = !q || card.getAttribute('data-search').indexOf(q) !== -1;
+        var matchCp = !cp || card.getAttribute('data-cp') === cp;
+        card.style.display = (matchSearch && matchCp) ? '' : 'none';
     });
-});
+}
+document.getElementById('ceSearch').addEventListener('input', filterEntries);
+document.getElementById('ceCpFilter').addEventListener('change', filterEntries);
 </script>
 @endsection
