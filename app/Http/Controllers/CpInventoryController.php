@@ -161,7 +161,24 @@ class CpInventoryController extends Controller
             ]);
         }
 
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'qty' => $newQty]);
+        }
         return redirect()->route('cpInventory')->with('success', 'Stock updated successfully.');
+    }
+
+    public function cpDeleteInventory($id)
+    {
+        $inv = CpProductInventory::where('id', $id)
+            ->where('cp_id', Auth::user()->cp_id)
+            ->firstOrFail();
+
+        if ($inv->available_qty > 0) {
+            return redirect()->route('cpInventory')->with('error', 'Cannot delete item with stock remaining.');
+        }
+
+        $inv->delete();
+        return redirect()->route('cpInventory')->with('success', 'Item removed from inventory.');
     }
 
     public function adminCpInventoryList()

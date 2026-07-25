@@ -241,6 +241,7 @@ Route::prefix('channel-partner')->middleware(['auth', ChannelPartnerMiddleware::
         Route::get('/cp-inventory', [CpInventoryController::class, 'cpInventory'])->name(name: 'cpInventory');
         Route::post('/cp-inventory/add-stock', [CpInventoryController::class, 'cpAddStock'])->name('cpAddStock');
         Route::post('/cp-inventory/{id}/update-stock', [CpInventoryController::class, 'cpUpdateStock'])->name('cpUpdateStock');
+        Route::delete('/cp-inventory/{id}/delete', [CpInventoryController::class, 'cpDeleteInventory'])->name('cpDeleteInventory');
     });
 
     Route::middleware(ChannelPartnerMiddleware::class.':transfer_inventory')->group(function () {

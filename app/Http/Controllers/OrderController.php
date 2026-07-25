@@ -257,7 +257,35 @@ class OrderController extends Controller
         $order = CpOrder::findOrFail($id);
         $order->status = 'delivered';
         $order->save();
-        return redirect()->back()->with('success', 'Order marked as delivered.');
+
+        $products = $order->products;
+        if (is_string($products)) $products = json_decode($products, true);
+        if (is_array($products)) {
+            foreach ($products as $product) {
+                $productId = $product['product_id'] ?? null;
+                $qty = (int) ($product['quantity'] ?? 0);
+                if (!$productId || $qty <= 0) continue;
+
+                $inv = \App\Models\CpProductInventory::firstOrCreate(
+                    ['cp_id' => $order->cp_id, 'product_id' => $productId],
+                    ['available_qty' => 0]
+                );
+                $inv->available_qty += $qty;
+                $inv->save();
+
+                \App\Models\CpProductInventoryTransaction::create([
+                    'cp_id' => $order->cp_id,
+                    'product_id' => $productId,
+                    'transaction_type' => 'IN',
+                    'quantity' => $qty,
+                    'performed_by' => auth()->id(),
+                    'txn_id' => 'DEL' . date('Ymd') . strtoupper(substr(uniqid(), -4)),
+                    'remarks' => 'Auto-added from delivered order ' . $order->order_id,
+                ]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Order marked as delivered and inventory updated.');
     }
 
     public function rejectCpPayment($id)
