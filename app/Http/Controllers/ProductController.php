@@ -219,6 +219,14 @@ class ProductController extends Controller
         }
     }
 
+    public function categoryDetail($id)
+    {
+        abort_unless(auth()->user()->hasAdminPermission('categories'), 403);
+        $category = ProductCategory::withCount('products')->findOrFail($id);
+        $subCategories = ProductSubCategory::where('category_id', $id)->withCount('products')->get();
+        return view('Admin.productSetting.categoryDetail', compact('category', 'subCategories'));
+    }
+
     public function manageSubCategory()
     {
         try {
@@ -472,6 +480,17 @@ class ProductController extends Controller
         }
         $category->delete();
         return redirect()->back()->with('success', 'Category deleted successfully.');
+    }
+
+    public function deleteSubCategory($id)
+    {
+        abort_unless(auth()->user()->hasAdminPermission('categories.delete'), 403);
+        $sub = ProductSubCategory::withCount('products')->findOrFail($id);
+        if ($sub->products_count > 0) {
+            return redirect()->back()->with('error', 'Cannot delete subcategory with ' . $sub->products_count . ' product(s). Remove or reassign products first.');
+        }
+        $sub->delete();
+        return redirect()->back()->with('success', 'Subcategory deleted successfully.');
     }
 
     public function deleteProduct($id)

@@ -96,6 +96,7 @@
         transition: box-shadow 0.15s;
         box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
+    .cat-card { cursor: pointer; }
     .cat-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
 
     .cat-card-img {
@@ -472,6 +473,12 @@ $(document).ready(function () {
 
     document.getElementById('catSearch').addEventListener('input', filterAndSort);
     document.getElementById('catSort').addEventListener('change', filterAndSort);
+
+    $(document).on('click', '.cat-card', function(e) {
+        if ($(e.target).closest('.btn-edit, .btn-del, .delete-cat-form, .edit-cat-btn, .delete-cat-btn').length) return;
+        var id = $(this).data('id');
+        window.location.href = '/admin/category/' + id;
+    });
 
     function setLoading(btn, label) {
         btn.disabled = true;

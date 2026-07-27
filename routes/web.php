@@ -120,6 +120,7 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::delete('/ecommerce-customers/{id}', [UserController::class, 'deleteEcommerceCustomer'])->name('admin.customer.delete');
 
     Route::get('/manageCategory', [ProductController::class, 'manageCategory'])->name('manageCategory');
+    Route::get('/category/{id}', [ProductController::class, 'categoryDetail'])->name('categoryDetail');
     Route::get('/manageSubCategory', [ProductController::class, 'manageSubCategory'])->name('manageSubCategory');
     Route::get('/manageProducts', [ProductController::class, 'manageProducts'])->name('manageProducts');
     Route::post('saveNewCategory', [ProductController::class, 'saveNewCategory'])->name('saveNewCategory');
@@ -136,6 +137,7 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::delete('/products/{id}/main-image', [ProductController::class, 'deleteMainImage'])->name('product.mainImage.delete');
     Route::delete('/categories/{id}/image', [ProductController::class, 'deleteCategoryImage'])->name('category.image.delete');
     Route::delete('/categories/{id}', [ProductController::class, 'deleteCategory'])->name('category.delete');
+    Route::delete('/sub-categories/{id}', [ProductController::class, 'deleteSubCategory'])->name('deleteSubCategory');
     Route::delete('/products/{id}', [ProductController::class, 'deleteProduct'])->name('product.delete');
     Route::get('/get-sub-categories', [ProductController::class, 'getSubCategories'])->name('getSubCategory');
     Route::get('/get-products', [ProductController::class, 'getProducts'])->name('getProducts');

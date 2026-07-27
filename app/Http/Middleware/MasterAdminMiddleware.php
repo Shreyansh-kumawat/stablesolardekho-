@@ -30,12 +30,14 @@ class MasterAdminMiddleware
 
         // Categories
         'manageCategory' => ['categories', 'Categories'],
+        'categoryDetail' => ['categories', 'Categories'],
         'saveNewCategory' => ['categories.add', 'add Categories'],
         'updateCategory' => ['categories.edit', 'edit Categories'],
         'category.delete' => ['categories.delete', 'delete Categories'],
         'manageSubCategory' => ['categories', 'Categories'],
         'saveNewSubCategory' => ['categories.add', 'add Sub-Categories'],
         'updateSubCategory' => ['categories.edit', 'edit Sub-Categories'],
+        'deleteSubCategory' => ['categories.delete', 'delete Sub-Categories'],
 
         // Users
         'ecommerceCustomers' => ['users', 'Users'],
