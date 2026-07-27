@@ -175,7 +175,7 @@ class ProductController extends Controller
     {
         abort_unless(auth()->user()->hasAdminPermission('categories'), 403);
         try {
-            $category_list = ProductCategory::withCount('products')->orderBy('id', 'desc')->get();
+            $category_list = ProductCategory::withCount(['products', 'subCategories'])->orderBy('id', 'desc')->get();
 
             return view('Admin.productSetting.manageCategory')
                 ->with('category_list', $category_list);

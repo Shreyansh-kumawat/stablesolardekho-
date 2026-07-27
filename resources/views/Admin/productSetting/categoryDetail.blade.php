@@ -195,6 +195,23 @@
                         {{ $subCategories->count() }} subcategor{{ $subCategories->count() != 1 ? 'ies' : 'y' }}
                     </span>
                 </div>
+                <div style="display:flex; gap:8px; margin-top:14px;">
+                    <button class="btn-edit" id="editCatBtn"
+                        data-id="{{ $category->id }}"
+                        data-name="{{ $category->category_name }}"
+                        data-description="{{ $category->category_description }}"
+                        data-status="{{ $category->active_status }}"
+                        data-image="{{ $category->image ? Storage::url($category->image) : '' }}">
+                        <i class="fas fa-pen"></i> Edit Category
+                    </button>
+                    <form action="{{ route('category.delete', $category->id) }}" method="POST" id="deleteCatForm" style="margin:0;">
+                        @csrf
+                        @method('DELETE')
+                        <button type="button" class="btn-del" id="deleteCatBtn" data-name="{{ $category->category_name }}" data-count="{{ $category->products_count }}">
+                            <i class="fas fa-trash"></i> Delete Category
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -324,6 +341,61 @@
         </div>
     </div>
 </div>
+
+{{-- Edit Category Modal --}}
+<div class="modal fade" id="editCatModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-pen me-2" style="color: var(--blue);"></i>Edit Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editCatForm" method="POST" action="{{ route('updateCategory') }}" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="category_id" value="{{ $category->id }}">
+                <div class="modal-body" style="display:flex; flex-direction:column; gap:1rem; padding:1.25rem;">
+                    <div>
+                        <label class="form-label">Category Name <span style="color:#e74c3c;">*</span></label>
+                        <input type="text" class="form-control" name="categoryName" id="editCatName"
+                            value="{{ $category->category_name }}" maxlength="100" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="categoryDiscription" id="editCatDesc"
+                            rows="3" maxlength="500">{{ $category->category_description }}</textarea>
+                    </div>
+                    <div>
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="activeStatus" id="editCatStatus" style="border:1px solid var(--border); border-radius:8px; padding:0.5rem 0.8rem; font-size:0.85rem;">
+                            <option value="1" {{ $category->active_status == 1 ? 'selected' : '' }}>Active</option>
+                            <option value="0" {{ $category->active_status != 1 ? 'selected' : '' }}>Inactive</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Category Image <span style="color:#94a3b8; font-weight:400;">(leave empty to keep existing)</span></label>
+                        <input type="file" class="form-control" name="image" accept="image/*" id="editCatImageInput">
+                        @if($category->image)
+                        <div id="editCatPreviewBox" style="margin-top:8px; position:relative; display:inline-block;">
+                            <img src="{{ Storage::url($category->image) }}" alt="Current Image" style="max-width:80px; border-radius:6px; border:1px solid #dee2e6;">
+                            <button type="button" id="delCatImgBtn" style="position:absolute;top:-5px;right:-5px;width:20px;height:20px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0;" title="Delete image">
+                                <svg width="10" height="10" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                            <p style="margin:6px 0 0; font-size:0.75rem; color:#636e72;">Current image</p>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+                <div class="modal-footer" style="gap:8px;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="font-size:0.85rem;">Cancel</button>
+                    <button type="submit" id="editCatSubmitBtn"
+                        style="background: var(--blue); color:#fff; border:none; border-radius:8px; padding:0.5rem 1.25rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                        <i class="fas fa-save me-1"></i>Update Category
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('js')
@@ -387,6 +459,71 @@ $(document).ready(function () {
             }
         });
     });
+
+    $('#editCatBtn').on('click', function () {
+        var submitBtn = document.getElementById('editCatSubmitBtn');
+        submitBtn.disabled = false; submitBtn.classList.remove('btn-loading');
+        submitBtn.innerHTML = '<i class="fas fa-save me-1"></i>Update Category';
+        new bootstrap.Modal(document.getElementById('editCatModal')).show();
+    });
+
+    document.getElementById('editCatForm').addEventListener('submit', function () {
+        setLoading(document.getElementById('editCatSubmitBtn'), 'Updating...');
+    });
+
+    $('#deleteCatBtn').on('click', function () {
+        var name = $(this).data('name');
+        var count = $(this).data('count');
+        if (count > 0) {
+            Swal.fire({ icon: 'warning', title: 'Cannot Delete', text: 'Category "' + name + '" has ' + count + ' product(s). Remove or reassign them first.', confirmButtonColor: '#4A90E2' });
+            return;
+        }
+        Swal.fire({
+            title: 'Delete Category?',
+            text: 'Are you sure you want to delete "' + name + '"? This cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e03131',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Delete',
+            cancelButtonText: 'Cancel'
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                document.getElementById('deleteCatForm').submit();
+            }
+        });
+    });
+
+    @if($category->image)
+    document.getElementById('delCatImgBtn').addEventListener('click', function () {
+        Swal.fire({
+            title: 'Delete Image?',
+            text: 'This will permanently remove the category image.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e03131',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Delete',
+            cancelButtonText: 'Cancel'
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/admin/categories/{{ $category->id }}/image',
+                    type: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    success: function () {
+                        var box = document.getElementById('editCatPreviewBox');
+                        if (box) box.style.display = 'none';
+                        Swal.fire({ icon: 'success', title: 'Deleted', text: 'Category image removed.', timer: 1500, showConfirmButton: false });
+                    },
+                    error: function () {
+                        Swal.fire({ icon: 'error', title: 'Error', text: 'Could not delete the image.' });
+                    }
+                });
+            }
+        });
+    });
+    @endif
 });
 </script>
 @endsection
