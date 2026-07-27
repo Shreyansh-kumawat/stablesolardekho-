@@ -665,8 +665,19 @@
                             <div class="mdd-list" id="addCatList">
                                 <input class="mdd-search" type="text" placeholder="Search..." oninput="mddFilter('addCatList', this.value)">
                                 @foreach($categories as $category)
-                                <div class="mdd-opt" onclick="mddPick('addCatHidden','addCatLabel','addCatList','addCatTrigger','{{ $category->id }}','{{ $category->category_name }}')">{{ $category->category_name }}</div>
+                                <div class="mdd-opt" onclick="mddPickCat('add','{{ $category->id }}','{{ $category->category_name }}')">{{ $category->category_name }}</div>
                                 @endforeach
+                            </div>
+                        </div>
+                        <div class="mb-3" id="addSubCatWrap" style="display:none;">
+                            <label class="form-label">Subcategory</label>
+                            <input type="hidden" name="sub_category_id" id="addSubCatHidden">
+                            <div class="mdd-trigger" id="addSubCatTrigger" onclick="mddToggle('addSubCatList', this)">
+                                <span id="addSubCatLabel" style="flex:1;">Select subcategory</span>
+                                <svg class="mdd-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                            <div class="mdd-list" id="addSubCatList">
+                                <input class="mdd-search" type="text" placeholder="Search..." oninput="mddFilter('addSubCatList', this.value)">
                             </div>
                         </div>
 
@@ -823,8 +834,19 @@
                             <div class="mdd-list" id="editCatList">
                                 <input class="mdd-search" type="text" placeholder="Search..." oninput="mddFilter('editCatList', this.value)">
                                 @foreach($categories as $category)
-                                <div class="mdd-opt" data-val="{{ $category->id }}" data-label="{{ $category->category_name }}" onclick="mddPick('editCatHidden','editCatLabel','editCatList','editCatTrigger','{{ $category->id }}','{{ $category->category_name }}')">{{ $category->category_name }}</div>
+                                <div class="mdd-opt" data-val="{{ $category->id }}" data-label="{{ $category->category_name }}" onclick="mddPickCat('edit','{{ $category->id }}','{{ $category->category_name }}')">{{ $category->category_name }}</div>
                                 @endforeach
+                            </div>
+                        </div>
+                        <div class="mb-3" id="editSubCatWrap" style="display:none;">
+                            <label class="form-label">Subcategory</label>
+                            <input type="hidden" name="sub_category_id" id="editSubCatHidden">
+                            <div class="mdd-trigger" id="editSubCatTrigger" onclick="mddToggle('editSubCatList', this)">
+                                <span id="editSubCatLabel" style="flex:1;">Select subcategory</span>
+                                <svg class="mdd-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                            <div class="mdd-list" id="editSubCatList">
+                                <input class="mdd-search" type="text" placeholder="Search..." oninput="mddFilter('editSubCatList', this.value)">
                             </div>
                         </div>
 
@@ -1126,6 +1148,80 @@
                     o.classList.toggle('mdd-active', o.textContent.trim() === label);
                 });
             };
+            window.mddPickCat = function(prefix, catId, catName) {
+                mddPick(prefix+'CatHidden', prefix+'CatLabel', prefix+'CatList', prefix+'CatTrigger', catId, catName);
+                var wrap = document.getElementById(prefix+'SubCatWrap');
+                var list = document.getElementById(prefix+'SubCatList');
+                var hidden = document.getElementById(prefix+'SubCatHidden');
+                var label = document.getElementById(prefix+'SubCatLabel');
+                var trigger = document.getElementById(prefix+'SubCatTrigger');
+                hidden.value = '';
+                label.textContent = 'Loading...';
+                trigger.classList.remove('has-val');
+                list.querySelectorAll('.mdd-opt').forEach(function(o) { o.remove(); });
+                wrap.style.display = 'block';
+                $.get('{{ route("getSubCategory") }}', { category_id: catId }, function(data) {
+                    list.querySelectorAll('.mdd-opt').forEach(function(o) { o.remove(); });
+                    if (data.length === 0) {
+                        wrap.style.display = 'none';
+                        hidden.value = '';
+                        return;
+                    }
+                    label.textContent = 'Select subcategory';
+                    data.forEach(function(sub) {
+                        var opt = document.createElement('div');
+                        opt.className = 'mdd-opt';
+                        opt.setAttribute('data-val', sub.id);
+                        opt.textContent = sub.sub_category_name;
+                        opt.onclick = function() {
+                            mddPick(prefix+'SubCatHidden', prefix+'SubCatLabel', prefix+'SubCatList', prefix+'SubCatTrigger', sub.id, sub.sub_category_name);
+                        };
+                        list.appendChild(opt);
+                    });
+                });
+            };
+            window.loadSubCatsAndSelect = function(prefix, catId, subCatId) {
+                var wrap = document.getElementById(prefix+'SubCatWrap');
+                var list = document.getElementById(prefix+'SubCatList');
+                var hidden = document.getElementById(prefix+'SubCatHidden');
+                var labelEl = document.getElementById(prefix+'SubCatLabel');
+                var trigger = document.getElementById(prefix+'SubCatTrigger');
+                list.querySelectorAll('.mdd-opt').forEach(function(o) { o.remove(); });
+                if (!catId) { wrap.style.display = 'none'; return; }
+                wrap.style.display = 'block';
+                labelEl.textContent = 'Loading...';
+                $.get('{{ route("getSubCategory") }}', { category_id: catId }, function(data) {
+                    list.querySelectorAll('.mdd-opt').forEach(function(o) { o.remove(); });
+                    if (data.length === 0) {
+                        wrap.style.display = 'none';
+                        hidden.value = '';
+                        return;
+                    }
+                    var matched = false;
+                    data.forEach(function(sub) {
+                        var opt = document.createElement('div');
+                        opt.className = 'mdd-opt';
+                        opt.setAttribute('data-val', sub.id);
+                        opt.textContent = sub.sub_category_name;
+                        opt.onclick = function() {
+                            mddPick(prefix+'SubCatHidden', prefix+'SubCatLabel', prefix+'SubCatList', prefix+'SubCatTrigger', sub.id, sub.sub_category_name);
+                        };
+                        if (String(sub.id) === String(subCatId)) {
+                            opt.classList.add('mdd-active');
+                            hidden.value = sub.id;
+                            labelEl.textContent = sub.sub_category_name;
+                            trigger.classList.add('has-val');
+                            matched = true;
+                        }
+                        list.appendChild(opt);
+                    });
+                    if (!matched) {
+                        hidden.value = '';
+                        labelEl.textContent = 'Select subcategory';
+                        trigger.classList.remove('has-val');
+                    }
+                });
+            };
             window.uomPick = function(prefix, val, label) {
                 mddPick(prefix+'UomHidden', prefix+'UomLabel', prefix+'UomList', prefix+'UomTrigger', val, label);
                 var customWrap = document.getElementById(prefix+'CustomUomWrap');
@@ -1207,6 +1303,11 @@
                 $('#addUomHidden').val('');
                 $('#addUomLabel').text('Select').closest('.mdd-trigger').removeClass('has-val');
                 $('#addUomList .mdd-opt').removeClass('mdd-active');
+                $('#addSubCatHidden').val('');
+                $('#addSubCatLabel').text('Select subcategory');
+                $('#addSubCatTrigger').removeClass('has-val');
+                $('#addSubCatWrap').hide();
+                $('#addSubCatList .mdd-opt').remove();
                 $('#addCustomUomWrap').hide();
                 $('#addCustomUomInput').val('');
                 new bootstrap.Modal(document.getElementById('addProductModal')).show();
@@ -1331,6 +1432,10 @@
                 $('#editCatTrigger').toggleClass('has-val', !!catLabel);
                 $('#editCatList .mdd-opt').removeClass('mdd-active');
                 catOpt.addClass('mdd-active');
+
+                // Populate subcategory
+                const subCatId = btn.data('sub-category-id');
+                loadSubCatsAndSelect('edit', categoryId, subCatId);
 
                 // Populate UOM custom dropdown
                 const knownUoms = ['Piece','Kilogram','Liter','Meter','Box','Pack','Watt','KW','Set'];
