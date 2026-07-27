@@ -149,6 +149,7 @@
                 </button>
             </div>
 
+            
             @if($item->current_stock > 0)
             <div class="inv-form-inline" id="minus-form-{{ $item->inv_id }}">
                 <form method="POST" action="{{ route('cpReduceStock', $item->inv_id) }}">
