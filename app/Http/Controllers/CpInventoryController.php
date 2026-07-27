@@ -185,7 +185,16 @@ class CpInventoryController extends Controller
     public function adminCpInventoryList()
     {
         $cps = ChannelPartner::with('role')->where('is_active', 1)->orderBy('cp_name')->get();
-        return view('Admin.inventorySetting.cpInventoryList', compact('cps'));
+
+        $invStats = CpProductInventory::select('cp_id',
+                DB::raw('COUNT(*) as items_count'),
+                DB::raw('COALESCE(SUM(available_qty), 0) as total_stock')
+            )
+            ->groupBy('cp_id')
+            ->get()
+            ->keyBy('cp_id');
+
+        return view('Admin.inventorySetting.cpInventoryList', compact('cps', 'invStats'));
     }
 
     public function adminCpInventoryDetail($cpId)

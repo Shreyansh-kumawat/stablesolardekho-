@@ -50,6 +50,8 @@
                         <th>Contact Person</th>
                         <th>Phone</th>
                         <th>Role</th>
+                        <th>Items</th>
+                        <th>Total Stock</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -61,6 +63,9 @@
                         <td>{{ $cp->contact_person ?? '-' }}</td>
                         <td>{{ $cp->phone_number ?? '-' }}</td>
                         <td><span class="cpi-role">{{ $cp->role->name ?? 'N/A' }}</span></td>
+                        @php $stat = $invStats[$cp->id] ?? null; @endphp
+                        <td><span class="cpi-items">{{ $stat ? $stat->items_count : 0 }}</span></td>
+                        <td><span class="cpi-items">{{ $stat ? $stat->total_stock : 0 }}</span></td>
                         <td>
                             <a href="{{ route('adminCpInventoryDetail', $cp->id) }}" class="cpi-btn">
                                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
