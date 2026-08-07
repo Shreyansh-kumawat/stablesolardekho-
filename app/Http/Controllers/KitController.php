@@ -7,12 +7,26 @@ use App\Models\KitItem;
 use App\Models\KitSlabPrice;
 use App\Models\ProductCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class KitController extends Controller
 {
+    private function tablesReady(): bool
+    {
+        return Schema::hasColumn('products', 'is_kit')
+            && Schema::hasTable('kit_items')
+            && Schema::hasTable('kit_slab_prices');
+    }
+
     public function index()
     {
+        if (!$this->tablesReady()) {
+            $kits = collect();
+            $categories = ProductCategory::orderBy('category_name')->get();
+            return view('Admin.productSetting.manageKits', compact('kits', 'categories'));
+        }
+
         $kits = Product::where('is_kit', true)
             ->with(['kitItems', 'kitSlabPrices', 'category'])
             ->orderByDesc('id')
@@ -25,6 +39,8 @@ class KitController extends Controller
 
     public function store(Request $request)
     {
+        abort_unless($this->tablesReady(), 500, 'Please run migrations first.');
+
         $request->validate([
             'kit_name' => 'required|string|max:255',
             'category_id' => 'required|exists:product_categories,id',
@@ -60,6 +76,7 @@ class KitController extends Controller
 
     public function update(Request $request, $id)
     {
+        abort_unless($this->tablesReady(), 500, 'Please run migrations first.');
         $product = Product::where('is_kit', true)->findOrFail($id);
 
         $request->validate([
@@ -112,6 +129,7 @@ class KitController extends Controller
 
     public function show($slug)
     {
+        abort_unless($this->tablesReady(), 404);
         $kit = Product::where('is_kit', true)
             ->where('slug', $slug)
             ->where('is_active', true)
@@ -129,6 +147,7 @@ class KitController extends Controller
 
     public function getKitData($id)
     {
+        abort_unless($this->tablesReady(), 500, 'Please run migrations first.');
         $kit = Product::where('is_kit', true)
             ->with(['kitItems', 'kitSlabPrices'])
             ->findOrFail($id);
