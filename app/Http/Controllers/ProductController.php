@@ -9,6 +9,7 @@ use App\Models\ProductCategory;
 use App\Models\ProductSubCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
@@ -22,7 +23,8 @@ class ProductController extends Controller
     public function shopPage(Request $request, $slug = null)
     {
         $categories = ProductCategory::withCount(['products' => fn($q) => $q->where('is_active', true)])->orderBy('id', 'desc')->get();
-        $query = Product::with('category')->where('is_active', true)->where('is_kit', false);
+        $query = Product::with('category')->where('is_active', true);
+        if (Schema::hasColumn('products', 'is_kit')) $query->where('is_kit', false);
         $activeCategory = null;
 
         if ($slug) {
@@ -55,14 +57,17 @@ class ProductController extends Controller
 
         $products = $query->paginate(12)->appends($request->query());
 
-        $kits = Product::where('is_kit', true)->where('is_active', true)->with('kitSlabPrices')->latest()->get();
+        $kits = Schema::hasColumn('products', 'is_kit')
+            ? Product::where('is_kit', true)->where('is_active', true)->with('kitSlabPrices')->latest()->get()
+            : collect();
 
         return view('shop.index', compact('products', 'categories', 'activeCategory', 'kits'));
     }
 
     public function shopSearch(Request $request)
     {
-        $query = Product::with('category')->where('is_active', true)->where('is_kit', false);
+        $query = Product::with('category')->where('is_active', true);
+        if (Schema::hasColumn('products', 'is_kit')) $query->where('is_kit', false);
 
         if ($request->filled('category_slug')) {
             $cat = ProductCategory::where('slug', $request->category_slug)->first();
@@ -156,7 +161,8 @@ class ProductController extends Controller
     public function featuredPage(Request $request)
     {
         $categories = ProductCategory::all();
-        $query = Product::with('category')->where('is_active', true)->where('is_featured', true)->where('is_kit', false);
+        $query = Product::with('category')->where('is_active', true)->where('is_featured', true);
+        if (Schema::hasColumn('products', 'is_kit')) $query->where('is_kit', false);
 
         if ($request->filled('category')) {
             $query->where('category_id', $request->category);
@@ -256,7 +262,9 @@ class ProductController extends Controller
     public function manageProducts()
     {
         abort_unless(auth()->user()->hasAdminPermission('products'), 403);
-        $product_list = Product::with(['category', 'subCategory'])->where('is_kit', false)->latest()->get();
+        $product_list = Product::with(['category', 'subCategory']);
+        if (Schema::hasColumn('products', 'is_kit')) $product_list->where('is_kit', false);
+        $product_list = $product_list->latest()->get();
         $categories = ProductCategory::all();
         return view('Admin.productSetting.manageProducts')
             ->with('product_list', $product_list)

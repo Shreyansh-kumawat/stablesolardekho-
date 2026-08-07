@@ -45,12 +45,20 @@ class Product extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', true)->where('is_kit', false);
+        $query = $query->where('is_active', true);
+        if (\Illuminate\Support\Facades\Schema::hasColumn('products', 'is_kit')) {
+            $query->where('is_kit', false);
+        }
+        return $query;
     }
 
     public function scopeFeatured($query)
     {
-        return $query->where('is_featured', true)->where('is_active', true)->where('is_kit', false);
+        $query = $query->where('is_featured', true)->where('is_active', true);
+        if (\Illuminate\Support\Facades\Schema::hasColumn('products', 'is_kit')) {
+            $query->where('is_kit', false);
+        }
+        return $query;
     }
 
     public function kitItems()
