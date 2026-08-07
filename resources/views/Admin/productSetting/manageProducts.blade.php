@@ -550,7 +550,7 @@
                         <p class="pcard-code">{{ $product->item_code ?? '—' }}</p>
                         <div class="pcard-meta">
                             @if($product->current_sale_price)
-                                <span class="pcard-price">&#8377;{{ number_format($product->current_sale_price, 0) }}</span>
+                                <span class="pcard-price">&#8377;{{ $product->current_sale_price }}</span>
                             @else
                                 <span class="pcard-price-na">Price on request</span>
                             @endif
@@ -696,7 +696,7 @@
                         <div class="row mb-3">
                             <div class="col-4">
                                 <label class="form-label">Sale Price (&#8377;)</label>
-                                <input type="number" step="0.01" min="0" class="form-control" name="current_sale_price" placeholder="0.00">
+                                <input type="text" class="form-control" name="current_sale_price" placeholder="e.g. 20-25 or 50">
                             </div>
                             <div class="col-4">
                                 <label class="form-label">Quantity <span style="color:#e74c3c;">*</span></label>
@@ -865,7 +865,7 @@
                         <div class="row mb-3">
                             <div class="col-4">
                                 <label class="form-label">Sale Price (&#8377;)</label>
-                                <input type="number" step="0.01" min="0" class="form-control" id="editProductPrice" name="current_sale_price" placeholder="0.00">
+                                <input type="text" class="form-control" id="editProductPrice" name="current_sale_price" placeholder="e.g. 20-25 or 50">
                             </div>
                             <div class="col-4">
                                 <label class="form-label">Quantity <span style="color:#e74c3c;">*</span></label>

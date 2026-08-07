@@ -502,7 +502,7 @@ $catGradients = [
                 <div class="feat-foot">
                     <div class="feat-price">
                         @if($product->current_sale_price)
-                            ₹{{ number_format($product->current_sale_price, 0) }}
+                            ₹{{ $product->current_sale_price }}
                         @else
                             <span style="color:var(--muted);font-size:0.8rem;font-weight:500;">On request</span>
                         @endif
@@ -566,7 +566,7 @@ $catGradients = [
                 @endif
                 <div class="all-price">
                     @if($product->current_sale_price)
-                        ₹{{ number_format($product->current_sale_price, 0) }}
+                        ₹{{ $product->current_sale_price }}
                     @else
                         <span style="color:var(--muted);font-size:0.75rem;font-weight:500;">On request</span>
                     @endif

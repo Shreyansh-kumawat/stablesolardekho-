@@ -6,6 +6,12 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\CpInventoryController;
+use App\Http\Controllers\CpDocumentController;
+use App\Http\Controllers\CpMaterialLedgerController;
+use App\Http\Controllers\CpPaymentController;
+use App\Http\Controllers\ExportController;
+use App\Http\Controllers\FinancialController;
+use App\Http\Controllers\KitController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ManualInstallationController;
 use App\Http\Controllers\LeadController;
@@ -31,6 +37,7 @@ Route::get('/shop/category/{slug}', [ProductController::class, 'shopPage'])->nam
 Route::get('/shop/ajax-search', [ProductController::class, 'shopSearch'])->name('shop.ajax.search');
 Route::get('/featured', [ProductController::class, 'featuredPage'])->name('featured');
 Route::get('/product/{slug}', [ProductController::class, 'showProduct'])->name('product.show');
+Route::get('/kit/{slug}', [KitController::class, 'show'])->name('kit.show');
 Route::get('/print', [UserController::class, 'printQuotation'])->name('printQuotation');
 Route::get('CpInterest', [UserController::class, 'CpInterest'])->name('CpInterest');
 Route::post('QueryCpInterest', [UserController::class, 'QueryCpInterest'])->middleware('auth')->name('QueryCpInterest');
@@ -139,6 +146,12 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::delete('/categories/{id}', [ProductController::class, 'deleteCategory'])->name('category.delete');
     Route::delete('/sub-categories/{id}', [ProductController::class, 'deleteSubCategory'])->name('deleteSubCategory');
     Route::delete('/products/{id}', [ProductController::class, 'deleteProduct'])->name('product.delete');
+    Route::get('/kits', [KitController::class, 'index'])->name('adminKits');
+    Route::post('/kits', [KitController::class, 'store'])->name('adminKitStore');
+    Route::put('/kits/{id}', [KitController::class, 'update'])->name('adminKitUpdate');
+    Route::delete('/kits/{id}', [KitController::class, 'destroy'])->name('adminKitDelete');
+    Route::post('/kits/{id}/toggle-active', [KitController::class, 'toggleActive'])->name('adminKitToggleActive');
+    Route::get('/kits/{id}/data', [KitController::class, 'getKitData'])->name('adminKitData');
     Route::get('/get-sub-categories', [ProductController::class, 'getSubCategories'])->name('getSubCategory');
     Route::get('/get-products', [ProductController::class, 'getProducts'])->name('getProducts');
     Route::get('/get-channelPartnerByRole', [ProductController::class, 'getChannelPartnerByRole'])->name('getChannelPartnerByRole');
@@ -160,6 +173,31 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::post('/cp-inventory/{cpId}/admin-add-stock', [CpInventoryController::class, 'adminCpAddStock'])->name('adminCpAddStock');
     Route::get('/cp-entries', [CpInventoryController::class, 'adminCpEntries'])->name('adminCpEntries');
 
+    Route::get('/material-ledger', [CpMaterialLedgerController::class, 'adminIndex'])->name('adminMaterialLedger');
+    Route::post('/material-ledger', [CpMaterialLedgerController::class, 'adminStore'])->name('adminMaterialLedgerStore');
+    Route::post('/material-ledger/{id}/update', [CpMaterialLedgerController::class, 'adminUpdate'])->name('adminMaterialLedgerUpdate');
+    Route::delete('/material-ledger/{id}', [CpMaterialLedgerController::class, 'adminDelete'])->name('adminMaterialLedgerDelete');
+
+    Route::get('/cp-documents', [CpDocumentController::class, 'adminIndex'])->name('adminDocuments');
+    Route::post('/cp-documents', [CpDocumentController::class, 'adminStore'])->name('adminDocumentStore');
+    Route::delete('/cp-documents/{id}', [CpDocumentController::class, 'adminDelete'])->name('adminDocumentDelete');
+
+    Route::get('/cp-payments', [CpPaymentController::class, 'adminIndex'])->name('adminPayments');
+    Route::post('/cp-payments', [CpPaymentController::class, 'adminStore'])->name('adminPaymentStore');
+    Route::post('/cp-payments/{id}/verify', [CpPaymentController::class, 'adminVerify'])->name('adminPaymentVerify');
+    Route::delete('/cp-payments/{id}', [CpPaymentController::class, 'adminDelete'])->name('adminPaymentDelete');
+    Route::get('/cp-payment-orders/{cpId}', [CpPaymentController::class, 'getOrdersByCp'])->name('adminPaymentOrders');
+
+    Route::get('/export-data', [ExportController::class, 'index'])->name('adminExport');
+    Route::get('/export/cp-orders', [ExportController::class, 'exportCpOrders'])->name('exportCpOrders');
+    Route::get('/export/customer-orders', [ExportController::class, 'exportCustomerOrders'])->name('exportCustomerOrders');
+    Route::get('/export/inventory', [ExportController::class, 'exportInventory'])->name('exportInventory');
+    Route::get('/export/material-ledger', [ExportController::class, 'exportMaterialLedger'])->name('exportMaterialLedger');
+    Route::get('/export/payments', [ExportController::class, 'exportPayments'])->name('exportPayments');
+    Route::get('/export/channel-partners', [ExportController::class, 'exportChannelPartners'])->name('exportChannelPartners');
+
+    Route::get('/financial-dashboard', [FinancialController::class, 'dashboard'])->name('adminFinancialDashboard');
+    Route::get('/profit-loss', [FinancialController::class, 'profitLoss'])->name('adminProfitLoss');
 
     Route::get('/manage-team', [AdminSettingController::class, 'manageTeam'])->name('manageTeam');
     Route::post('/store-team', [AdminSettingController::class, 'storeTeam'])->name('storeTeam');
@@ -254,6 +292,11 @@ Route::prefix('channel-partner')->middleware(['auth', ChannelPartnerMiddleware::
     });
 
     Route::get('/cp-inv-txnx', [CpInventoryController::class, 'invTxnsCp'])->name('invTxnsCp')->middleware(ChannelPartnerMiddleware::class.':inventory_transactions');
+    Route::get('/cp-material-ledger', [CpMaterialLedgerController::class, 'cpIndex'])->name('cpMaterialLedger');
+    Route::get('/cp-documents', [CpDocumentController::class, 'cpIndex'])->name('cpDocuments');
+    Route::post('/cp-documents', [CpDocumentController::class, 'cpStore'])->name('cpDocumentStore');
+    Route::delete('/cp-documents/{id}', [CpDocumentController::class, 'cpDelete'])->name('cpDocumentDelete');
+    Route::get('/cp-payments', [CpPaymentController::class, 'cpIndex'])->name('cpPayments');
 
     Route::get('/profile', [UserController::class, 'cpProfilePage'])->name('cpProfile');
     Route::post('/profile', [UserController::class, 'cpProfileUpdate'])->name('cpProfileUpdate');

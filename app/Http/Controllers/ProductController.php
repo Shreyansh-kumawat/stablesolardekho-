@@ -22,7 +22,7 @@ class ProductController extends Controller
     public function shopPage(Request $request, $slug = null)
     {
         $categories = ProductCategory::withCount(['products' => fn($q) => $q->where('is_active', true)])->orderBy('id', 'desc')->get();
-        $query = Product::with('category')->where('is_active', true);
+        $query = Product::with('category')->where('is_active', true)->where('is_kit', false);
         $activeCategory = null;
 
         if ($slug) {
@@ -55,12 +55,14 @@ class ProductController extends Controller
 
         $products = $query->paginate(12)->appends($request->query());
 
-        return view('shop.index', compact('products', 'categories', 'activeCategory'));
+        $kits = Product::where('is_kit', true)->where('is_active', true)->with('kitSlabPrices')->latest()->get();
+
+        return view('shop.index', compact('products', 'categories', 'activeCategory', 'kits'));
     }
 
     public function shopSearch(Request $request)
     {
-        $query = Product::with('category')->where('is_active', true);
+        $query = Product::with('category')->where('is_active', true)->where('is_kit', false);
 
         if ($request->filled('category_slug')) {
             $cat = ProductCategory::where('slug', $request->category_slug)->first();
@@ -101,7 +103,7 @@ class ProductController extends Controller
             $featBadge = $product->is_featured ? '<span class="prod-featured-badge">FEATURED</span>' : '';
             $catName = $product->category->category_name ?? '';
             $priceHtml = $product->current_sale_price
-                ? '₹' . number_format($product->current_sale_price, 0)
+                ? '₹' . $product->current_sale_price
                 : '<span style="color:var(--muted);font-size:0.8rem;font-weight:500;">Price on request</span>';
 
             $specsHtml = '';
@@ -154,7 +156,7 @@ class ProductController extends Controller
     public function featuredPage(Request $request)
     {
         $categories = ProductCategory::all();
-        $query = Product::with('category')->where('is_active', true)->where('is_featured', true);
+        $query = Product::with('category')->where('is_active', true)->where('is_featured', true)->where('is_kit', false);
 
         if ($request->filled('category')) {
             $query->where('category_id', $request->category);
@@ -254,7 +256,7 @@ class ProductController extends Controller
     public function manageProducts()
     {
         abort_unless(auth()->user()->hasAdminPermission('products'), 403);
-        $product_list = Product::with(['category', 'subCategory'])->latest()->get();
+        $product_list = Product::with(['category', 'subCategory'])->where('is_kit', false)->latest()->get();
         $categories = ProductCategory::all();
         return view('Admin.productSetting.manageProducts')
             ->with('product_list', $product_list)

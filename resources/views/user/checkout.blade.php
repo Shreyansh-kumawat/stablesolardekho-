@@ -332,9 +332,9 @@ textarea.co-input{resize:vertical;min-height:56px;padding-top:11px;}
                         </div>
                         <div class="co-sum-item-info">
                             <p class="co-sum-item-name">{{ $item['product']->item_name }}</p>
-                            <p class="co-sum-item-meta">Qty: {{ $item['quantity'] }}{{ $item['product']->current_sale_price ? ' x ₹'.number_format($item['product']->current_sale_price, 0) : '' }}</p>
+                            <p class="co-sum-item-meta">Qty: {{ $item['quantity'] }}{{ $item['product']->current_sale_price ? ' x ₹'.$item['product']->current_sale_price : '' }}</p>
                         </div>
-                        @if($item['product']->current_sale_price)
+                        @if($item['product']->current_sale_price && is_numeric($item['product']->current_sale_price))
                         <span class="co-sum-item-price">₹{{ number_format($item['product']->current_sale_price * $item['quantity'], 0) }}</span>
                         @endif
                     </div>

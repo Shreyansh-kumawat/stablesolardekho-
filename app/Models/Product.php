@@ -9,7 +9,7 @@ class Product extends Model
     protected $fillable = [
         'item_name', 'item_code', 'slug', 'description', 'image',
         'current_sale_price', 'quantity', 'uom', 'category_id', 'sub_category_id',
-        'is_featured', 'is_active',
+        'is_featured', 'is_active', 'is_kit',
         'type', 'brand', 'model', 'operating_voltage', 'solar_panel_type',
         'mnre_approved', 'certifications', 'manufacturer_warranty',
         'number_of_cells', 'encapsulate', 'country_of_origin',
@@ -45,11 +45,21 @@ class Product extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('is_active', true)->where('is_kit', false);
     }
 
     public function scopeFeatured($query)
     {
-        return $query->where('is_featured', true)->where('is_active', true);
+        return $query->where('is_featured', true)->where('is_active', true)->where('is_kit', false);
+    }
+
+    public function kitItems()
+    {
+        return $this->hasMany(KitItem::class)->orderBy('sort_order');
+    }
+
+    public function kitSlabPrices()
+    {
+        return $this->hasMany(KitSlabPrice::class)->orderBy('min_qty');
     }
 }

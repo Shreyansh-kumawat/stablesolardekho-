@@ -216,7 +216,7 @@
 
       <div class="pd-price-row">
           @if($product->current_sale_price)
-              <div class="pd-price">&#8377;{{ number_format($product->current_sale_price, 0) }}</div>
+              <div class="pd-price">&#8377;{{ $product->current_sale_price }}</div>
               <div class="pd-price-note">Incl. taxes &amp; charges</div>
           @else
               <div class="pd-price-na">Price on request</div>
@@ -324,7 +324,7 @@
                 <div class="rel-name">{{ $rp->item_name }}</div>
                 <div class="rel-footer">
                     <div class="rel-price">
-                        @if($rp->current_sale_price) &#8377;{{ number_format($rp->current_sale_price, 0) }}
+                        @if($rp->current_sale_price) &#8377;{{ $rp->current_sale_price }}
                         @else <span style="color:var(--muted);font-size:0.77rem;font-weight:500;">On request</span>@endif
                     </div>
                     <div class="rel-arrow">&#8594;</div>

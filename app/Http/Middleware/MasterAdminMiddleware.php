@@ -80,6 +80,45 @@ class MasterAdminMiddleware
         'approveRejectOrders' => ['cp_orders.manage', 'manage CP Orders'],
         'list_all_orders' => ['cp_orders', 'CP Orders'],
 
+        // Material Ledger
+        'adminMaterialLedger' => ['cp_orders', 'CP Orders'],
+        'adminMaterialLedgerStore' => ['cp_orders.manage', 'manage CP Orders'],
+        'adminMaterialLedgerUpdate' => ['cp_orders.manage', 'manage CP Orders'],
+        'adminMaterialLedgerDelete' => ['cp_orders.manage', 'manage CP Orders'],
+
+        // Solar Kits
+        'adminKits' => ['products', 'Products'],
+        'adminKitStore' => ['products.add', 'add Products'],
+        'adminKitUpdate' => ['products.edit', 'edit Products'],
+        'adminKitDelete' => ['products.delete', 'delete Products'],
+        'adminKitToggleActive' => ['products.edit', 'edit Products'],
+        'adminKitData' => ['products', 'Products'],
+
+        // CP Documents
+        'adminDocuments' => ['cp_orders', 'CP Orders'],
+        'adminDocumentStore' => ['cp_orders.manage', 'manage CP Orders'],
+        'adminDocumentDelete' => ['cp_orders.manage', 'manage CP Orders'],
+
+        // CP Payments
+        'adminPayments' => ['cp_orders', 'CP Orders'],
+        'adminPaymentStore' => ['cp_orders.manage', 'manage CP Orders'],
+        'adminPaymentVerify' => ['cp_orders.manage', 'manage CP Orders'],
+        'adminPaymentDelete' => ['cp_orders.manage', 'manage CP Orders'],
+        'adminPaymentOrders' => ['cp_orders', 'CP Orders'],
+
+        // Export
+        'adminExport' => ['__master_only__', 'Export Data'],
+        'exportCpOrders' => ['__master_only__', 'Export Data'],
+        'exportCustomerOrders' => ['__master_only__', 'Export Data'],
+        'exportInventory' => ['__master_only__', 'Export Data'],
+        'exportMaterialLedger' => ['__master_only__', 'Export Data'],
+        'exportPayments' => ['__master_only__', 'Export Data'],
+        'exportChannelPartners' => ['__master_only__', 'Export Data'],
+
+        // Financial Dashboard
+        'adminFinancialDashboard' => ['__master_only__', 'Financial Dashboard'],
+        'adminProfitLoss' => ['__master_only__', 'Profit & Loss'],
+
         // Secondary Admin management (master only)
         'manageSecondaryAdmins' => ['__master_only__', 'Secondary Admins'],
         'addSecondaryAdmin' => ['__master_only__', 'Secondary Admins'],

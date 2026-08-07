@@ -230,7 +230,7 @@
                     <p class="cart-item-cat">{{ $item['product']->category->category_name ?? '' }}</p>
                     <p class="cart-item-price">
                         @if($item['product']->current_sale_price)
-                            &#8377;{{ number_format($item['product']->current_sale_price, 0) }}
+                            &#8377;{{ $item['product']->current_sale_price }}
                         @else
                             <span style="color:var(--muted);font-size:0.8rem;font-weight:500;">Price on request</span>
                         @endif

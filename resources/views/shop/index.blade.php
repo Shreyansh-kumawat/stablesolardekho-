@@ -332,7 +332,7 @@
                     <div class="prod-footer">
                         <div class="prod-price">
                             @if($product->current_sale_price)
-                                ₹{{ number_format($product->current_sale_price, 0) }}
+                                ₹{{ $product->current_sale_price }}
                             @else
                                 <span style="color:var(--muted);font-size:0.8rem;font-weight:500;">Price on request</span>
                             @endif
@@ -377,6 +377,51 @@
             <p style="color:var(--muted);font-size:0.88rem;margin:0 0 24px;">Try a different search term or category.</p>
             <a href="{{ route('shop') }}" style="background:var(--orange);color:#fff;padding:10px 26px;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.9rem;">View All Products</a>
         </div>
+
+        @if(isset($kits) && $kits->count())
+        <div style="margin-top:2.5rem; padding-top:2rem; border-top:1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:1.25rem;">
+                <svg width="22" height="22" fill="none" stroke="var(--orange)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>
+                <h2 style="font-size:1.15rem; font-weight:800; color:var(--text); margin:0;">Complete Solar Kits</h2>
+                <span style="font-size:0.75rem; color:var(--muted); font-weight:500;">Everything you need in one package</span>
+            </div>
+            <div class="shop-grid">
+                @foreach($kits as $kit)
+                <a href="{{ route('kit.show', $kit->slug) }}" class="prod-card">
+                    <div class="prod-img">
+                        @if($kit->image)
+                            <img src="{{ Storage::url($kit->image) }}" alt="{{ $kit->item_name }}">
+                        @else
+                            <div class="prod-img-empty">
+                                <span style="color:rgba(249,115,22,0.2);font-size:2rem;font-weight:900;">KIT</span>
+                            </div>
+                        @endif
+                        <div class="prod-img-overlay">
+                            <div class="prod-overlay-btn">View Kit</div>
+                        </div>
+                        <span style="position:absolute;top:10px;left:10px;background:var(--orange);color:#fff;font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:5px;letter-spacing:0.03em;">COMPLETE KIT</span>
+                    </div>
+                    <div class="prod-body">
+                        <div class="prod-cat">{{ $kit->category->category_name ?? 'Solar Kit' }}</div>
+                        <div class="prod-name">{{ $kit->item_name }}</div>
+                        <div style="font-size:0.72rem; color:var(--muted); margin-top:2px;">
+                            <div>Stock: <span style="color:var(--text);">{{ $kit->quantity }} kits</span></div>
+                            @if($kit->kitSlabPrices->count() > 1)
+                            <div>Bulk pricing available</div>
+                            @endif
+                        </div>
+                        <div class="prod-footer">
+                            <div class="prod-price">
+                                &#8377;{{ $kit->current_sale_price }}
+                            </div>
+                            <div class="prod-arrow">&#8594;</div>
+                        </div>
+                    </div>
+                </a>
+                @endforeach
+            </div>
+        </div>
+        @endif
     </div>
 </div>
 

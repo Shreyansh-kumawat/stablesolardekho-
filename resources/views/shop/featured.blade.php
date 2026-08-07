@@ -242,7 +242,7 @@
                 <div class="feat-foot">
                     <div class="feat-price">
                         @if($product->current_sale_price)
-                            ₹{{ number_format($product->current_sale_price, 0) }}
+                            ₹{{ $product->current_sale_price }}
                         @else
                             <span style="color:var(--muted);font-size:0.82rem;font-weight:500;">Price on request</span>
                         @endif
