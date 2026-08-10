@@ -84,6 +84,7 @@
                 <p>Stock is added when orders are delivered. Use minus to log usage.</p>
             </div>
         </div>
+        
         <button class="inv-btn inv-btn-primary" onclick="document.getElementById('reorderModal').classList.add('active')">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             Request More Stock
