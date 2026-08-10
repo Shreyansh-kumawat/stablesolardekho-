@@ -268,7 +268,7 @@
 </div>
 @endsection
 
-@section('scripts')
+@section('js')
 <script>
 document.querySelectorAll('.delete-doc-form').forEach(f => {
     f.addEventListener('submit', function(e) {

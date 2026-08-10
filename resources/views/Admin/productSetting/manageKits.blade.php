@@ -367,7 +367,7 @@
 </div>
 @endsection
 
-@section('scripts')
+@section('js')
 <script>
 let addItemIdx = 1, editItemIdx = 0, addSlabIdx = 1, editSlabIdx = 0;
 
