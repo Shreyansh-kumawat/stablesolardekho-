@@ -17,7 +17,7 @@ use App\Http\Controllers\ManualInstallationController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ProfileController;
+
 use App\Http\Controllers\SolarRequirementsController;
 use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\UserController;
@@ -82,9 +82,6 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [UserController::class, 'dashBoardFunction'])->name('dashboard');
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 Route::get('/secondary-admin', function () { return redirect()->route('masterAdminDashboard'); })->middleware(['auth', MasterAdminMiddleware::class]);
 Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->group(function () {
