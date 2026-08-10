@@ -152,6 +152,36 @@
         border-color: var(--blue); box-shadow: 0 0 0 3px rgba(74,144,226,0.12); outline: none;
     }
 
+    .prod-section { margin-top: 2rem; }
+    .prod-list-box {
+        background: var(--white); border: 1px solid var(--border); border-radius: 12px;
+        max-height: 420px; overflow-y: auto; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .prod-list-box::-webkit-scrollbar { width: 6px; }
+    .prod-list-box::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .prod-item {
+        display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+        border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.12s;
+        text-decoration: none; color: inherit;
+    }
+    .prod-item:hover { background: #f0f4ff; }
+    .prod-item:last-child { border-bottom: none; }
+    .prod-item-img {
+        width: 44px; height: 44px; border-radius: 8px; object-fit: cover;
+        border: 1px solid var(--border); flex-shrink: 0;
+    }
+    .prod-item-placeholder {
+        width: 44px; height: 44px; border-radius: 8px; background: #f1f3f5;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        font-size: 0.65rem; color: #adb5bd; font-weight: 700;
+    }
+    .prod-item-info { flex: 1; min-width: 0; }
+    .prod-item-name { font-size: 0.84rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .prod-item-code { font-size: 0.72rem; color: var(--muted); }
+    .prod-item-price { font-size: 0.82rem; font-weight: 700; color: var(--blue); white-space: nowrap; }
+    .prod-item-stock { font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+    .prod-empty { text-align: center; padding: 2rem 1rem; color: var(--muted); font-size: 0.85rem; }
+
     @media (max-width: 640px) {
         .detail-header { flex-direction: column; }
         .detail-img, .detail-img-placeholder { width: 100%; height: 150px; }
@@ -260,6 +290,42 @@
             <p>No subcategories yet. Click "Add Subcategory" to create one.</p>
         </div>
         @endforelse
+    </div>
+
+    {{-- Products in this Category --}}
+    <div class="prod-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-box" style="color: var(--blue);"></i>
+                Products in this Category
+                <span class="pill-count" style="font-size:0.72rem;">{{ $products->count() }}</span>
+            </h2>
+        </div>
+
+        <div class="prod-list-box">
+            @forelse($products as $product)
+            <a href="{{ route('manageProducts') }}?highlight={{ $product->id }}" class="prod-item">
+                @if($product->image)
+                    <img src="{{ Storage::url($product->image) }}" class="prod-item-img" alt="{{ $product->item_name }}">
+                @else
+                    <div class="prod-item-placeholder">N/A</div>
+                @endif
+                <div class="prod-item-info">
+                    <div class="prod-item-name">{{ $product->item_name }}</div>
+                    <div class="prod-item-code">{{ $product->item_code }} &bull; {{ $product->uom }}</div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="prod-item-price">₹{{ $product->current_sale_price }}</div>
+                    <div class="prod-item-stock">Stock: {{ $product->quantity }}</div>
+                </div>
+            </a>
+            @empty
+            <div class="prod-empty">
+                <i class="fas fa-box-open" style="font-size:1.5rem; margin-bottom:6px; display:block;"></i>
+                No active products in this category.
+            </div>
+            @endforelse
+        </div>
     </div>
 </div>
 

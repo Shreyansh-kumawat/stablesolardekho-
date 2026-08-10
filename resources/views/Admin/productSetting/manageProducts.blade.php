@@ -1616,5 +1616,20 @@
                 }
             });
         });
+
+        // Auto-open edit modal when ?highlight=ID is in URL (from category detail page)
+        const urlParams = new URLSearchParams(window.location.search);
+        const highlightId = urlParams.get('highlight');
+        if (highlightId) {
+            $(document).ready(function() {
+                setTimeout(function() {
+                    const btn = $(`.edit-product-btn[data-id="${highlightId}"]`);
+                    if (btn.length) {
+                        btn[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        btn.click();
+                    }
+                }, 500);
+            });
+        }
     </script>
 @endsection

@@ -237,7 +237,10 @@ class ProductController extends Controller
         abort_unless(auth()->user()->hasAdminPermission('categories'), 403);
         $category = ProductCategory::withCount('products')->findOrFail($id);
         $subCategories = ProductSubCategory::where('category_id', $id)->withCount('products')->get();
-        return view('Admin.productSetting.categoryDetail', compact('category', 'subCategories'));
+        $prodQuery = Product::where('category_id', $id)->where('is_active', true);
+        if (Schema::hasColumn('products', 'is_kit')) $prodQuery->where('is_kit', false);
+        $products = $prodQuery->latest()->get();
+        return view('Admin.productSetting.categoryDetail', compact('category', 'subCategories', 'products'));
     }
 
     public function manageSubCategory()
