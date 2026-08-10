@@ -664,7 +664,9 @@ class UserController extends Controller
                 $cpRole = ChannelPartnerRole::create(['role_name' => 'Dealer']);
             }
 
-            $existingCp = ChannelPartner::where('email', $interest->email)->first();
+            $existingCp = ChannelPartner::where('email', $interest->email)
+                ->orWhere('phone_number', $interest->mobile)
+                ->first();
             if ($existingCp) {
                 $cp = $existingCp;
             } else {

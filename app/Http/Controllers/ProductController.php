@@ -489,7 +489,7 @@ class ProductController extends Controller
             Storage::disk('public')->delete($category->image);
         }
         $category->delete();
-        return redirect()->back()->with('success', 'Category deleted successfully.');
+        return redirect()->route('manageCategory')->with('success', 'Category deleted successfully.');
     }
 
     public function deleteSubCategory($id)
