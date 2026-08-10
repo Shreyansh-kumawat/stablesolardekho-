@@ -56,7 +56,7 @@
                         <option value="">-- No Link --</option>
                         <option value="/shop">🛒 Shop (All Products)</option>
                         @foreach($categories as $cat)
-                            <option value="/shop?category={{ $cat->id }}">📂 {{ $cat->category_name }}</option>
+                            <option value="/shop/category/{{ $cat->slug }}">📂 {{ $cat->category_name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -162,7 +162,7 @@
                             <option value="">-- No Link --</option>
                             <option value="/shop">🛒 Shop (All Products)</option>
                             @foreach($categories as $cat)
-                                <option value="/shop?category={{ $cat->id }}">📂 {{ $cat->category_name }}</option>
+                                <option value="/shop/category/{{ $cat->slug }}">📂 {{ $cat->category_name }}</option>
                             @endforeach
                         </select>
                     </div>

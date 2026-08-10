@@ -30,6 +30,11 @@ class ProductController extends Controller
         if ($slug) {
             $activeCategory = ProductCategory::where('slug', $slug)->firstOrFail();
             $query->where('category_id', $activeCategory->id);
+        } elseif ($request->filled('category')) {
+            $activeCategory = ProductCategory::find($request->category);
+            if ($activeCategory) {
+                $query->where('category_id', $activeCategory->id);
+            }
         }
 
         if ($request->filled('search')) {

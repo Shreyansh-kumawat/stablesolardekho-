@@ -255,7 +255,7 @@
                             @endphp
                             <span class="co-pill {{ $pillCls }}">{{ ucfirst($order->status) }}</span>
                         </td>
-                        <td data-label="Date">
+                        <td data-label="Date" data-order="{{ $order->created_at->timestamp }}">
                             <span class="co-date">{{ $order->created_at->format('d M Y') }}</span>
                         </td>
                         <td data-label="Action">
