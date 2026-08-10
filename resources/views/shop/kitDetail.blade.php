@@ -90,7 +90,7 @@
 <div class="kd-hero">
     <div class="kd-hero-inner">
         <div class="kd-crumb">
-            <a href="{{ route('home') }}">Home</a>
+            <a href="{{ route('dashBoardFunction') }}">Home</a>
             <span>/</span>
             <a href="{{ route('shop') }}">Shop</a>
             <span>/</span>
