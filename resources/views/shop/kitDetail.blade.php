@@ -32,19 +32,19 @@
     .kd-img-box img { width: 100%; height: 100%; object-fit: cover; max-height: 400px; }
     .kd-img-empty { color: rgba(249,115,22,0.2); font-size: 4rem; font-weight: 900; }
 
-    .kd-info { display: flex; flex-direction: column; gap: 8px; }
+    .kd-info { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
     .kd-cat { font-size: 0.72rem; color: var(--orange); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; }
-    .kd-name { font-size: 1.5rem; font-weight: 800; color: var(--text); line-height: 1.3; }
-    .kd-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin-top: 4px; }
+    .kd-name { font-size: 1.5rem; font-weight: 800; color: var(--text); line-height: 1.3; align-self: stretch; }
+    .kd-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin-top: 4px; align-self: stretch; }
     .kd-price { font-size: 1.6rem; font-weight: 800; color: var(--orange); margin-top: 8px; }
     .kd-price-note { font-size: 0.75rem; color: var(--muted); }
-    .kd-stock { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; margin-top: 6px; }
+    .kd-stock { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; margin-top: 6px; width: fit-content; }
     .kd-stock.in { background: rgba(22,163,74,0.12); color: #22c55e; }
     .kd-stock.out { background: rgba(220,38,38,0.12); color: #ef4444; }
-    .kd-kit-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(249,115,22,0.1); color: var(--orange); font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 6px; border: 1px solid rgba(249,115,22,0.2); margin-top: 6px; }
+    .kd-kit-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(249,115,22,0.1); color: var(--orange); font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 6px; border: 1px solid rgba(249,115,22,0.2); margin-top: 6px; width: fit-content; }
 
     .kd-cta { margin-top: 16px; }
-    .kd-cta-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; background: var(--orange); color: #fff; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; text-decoration: none; transition: background 0.15s; }
+    .kd-cta-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; background: var(--orange); color: #fff; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; text-decoration: none; transition: background 0.15s; width: fit-content; }
     .kd-cta-btn:hover { background: #ea580c; color: #fff; }
 
     .kd-section { margin-bottom: 2rem; }
@@ -103,7 +103,7 @@
     <div class="kd-top">
         <div class="kd-img-box">
             @if($kit->image)
-                <img src="{{ Storage::url($kit->image) }}" alt="{{ $kit->item_name }}">
+                <img src="{{ url('serve/' . $kit->image) }}" alt="{{ $kit->item_name }}">
             @else
                 <span class="kd-img-empty">KIT</span>
             @endif
@@ -217,7 +217,7 @@
             @foreach($relatedKits as $rk)
             <a href="{{ route('kit.show', $rk->slug) }}" class="kd-rel-card">
                 @if($rk->image)
-                    <img src="{{ Storage::url($rk->image) }}" class="kd-rel-img" alt="{{ $rk->item_name }}">
+                    <img src="{{ url('serve/' . $rk->image) }}" class="kd-rel-img" alt="{{ $rk->item_name }}">
                 @else
                     <div class="kd-rel-img-empty">{{ strtoupper(substr($rk->item_name,0,2)) }}</div>
                 @endif

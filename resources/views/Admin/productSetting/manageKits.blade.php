@@ -56,8 +56,11 @@
 
     .dyn-section { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
     .dyn-section-title { font-size: 0.78rem; font-weight: 700; color: var(--text); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
-    .dyn-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
-    .dyn-row input { flex: 1; }
+    .dyn-row-wrap { margin-bottom: 8px; }
+    .dyn-row { display: flex; gap: 6px; align-items: center; }
+    .dyn-row input, .dyn-row select { flex: 1; }
+    .cat-toggle { font-size: 0.68rem; color: var(--muted); cursor: pointer; display: flex; align-items: center; gap: 4px; margin: 2px 0 0 2px; user-select: none; }
+    .cat-toggle input { width: 13px; height: 13px; margin: 0; cursor: pointer; }
     .dyn-remove { width: 28px; height: 28px; border: none; background: #fee2e2; color: #dc2626; border-radius: 6px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .dyn-add { font-size: 0.75rem; font-weight: 600; color: var(--orange); border: 1px dashed var(--orange); background: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
 
@@ -227,16 +230,21 @@
                             <span style="width:28px;"></span>
                         </div>
                         <div id="addItemsContainer">
-                            <div class="dyn-row">
-                                <select name="items[0][category_label]" class="form-select" style="flex:1;">
-                                    <option value="">Select Category</option>
-                                    @foreach($categories as $cat)
-                                        <option value="{{ $cat->category_name }}">{{ $cat->category_name }}</option>
-                                    @endforeach
-                                </select>
-                                <input type="text" name="items[0][item_name]" class="form-control" placeholder="e.g. Bifacial DCR 545wp" style="flex:1;">
-                                <input type="text" name="items[0][quantity_label]" class="form-control" placeholder="e.g. 6" style="flex:0.5;">
-                                <button type="button" class="dyn-remove" onclick="this.parentElement.remove()">&times;</button>
+                            <div class="dyn-row-wrap">
+                                <div class="dyn-row">
+                                    <div style="flex:1;" class="cat-field">
+                                        <select name="items[0][category_label]" class="form-select">
+                                            <option value="">Select Category</option>
+                                            @foreach($categories as $cat)
+                                                <option value="{{ $cat->category_name }}">{{ $cat->category_name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <input type="text" name="items[0][item_name]" class="form-control" placeholder="e.g. Bifacial DCR 545wp" style="flex:1;">
+                                    <input type="text" name="items[0][quantity_label]" class="form-control" placeholder="e.g. 6" style="flex:0.5;">
+                                    <button type="button" class="dyn-remove" onclick="this.closest('.dyn-row-wrap').remove()">&times;</button>
+                                </div>
+                                <label class="cat-toggle"><input type="checkbox" onchange="toggleCatField(this)"> Custom category</label>
                             </div>
                         </div>
                     </div>
@@ -360,17 +368,37 @@ let addItemIdx = 1, editItemIdx = 0, addSlabIdx = 1, editSlabIdx = 0;
 
 const categoryOptions = `<option value="">Select Category</option>@foreach($categories as $cat)<option value="{{ $cat->category_name }}">{{ $cat->category_name }}</option>@endforeach`;
 
+function toggleCatField(cb) {
+    const wrap = cb.closest('.dyn-row-wrap');
+    const catDiv = wrap.querySelector('.cat-field');
+    const old = catDiv.querySelector('select, input');
+    const name = old.name;
+    const val = old.value;
+    if (cb.checked) {
+        catDiv.innerHTML = `<input type="text" name="${name}" class="form-control" placeholder="Custom category" value="${val}">`;
+    } else {
+        let sel = `<select name="${name}" class="form-select">${categoryOptions}</select>`;
+        catDiv.innerHTML = sel;
+        catDiv.querySelector('select').value = val;
+    }
+}
+
 function addItemRow(prefix) {
     const idx = prefix === 'add' ? addItemIdx++ : editItemIdx++;
     const container = document.getElementById(prefix + 'ItemsContainer');
-    const row = document.createElement('div');
-    row.className = 'dyn-row';
-    row.innerHTML = `
-        <select name="items[${idx}][category_label]" class="form-select" style="flex:1;">${categoryOptions}</select>
-        <input type="text" name="items[${idx}][item_name]" class="form-control" placeholder="e.g. 4 Sq.mm AC Cable" style="flex:1;">
-        <input type="text" name="items[${idx}][quantity_label]" class="form-control" placeholder="e.g. 100" style="flex:0.5;">
-        <button type="button" class="dyn-remove" onclick="this.parentElement.remove()">&times;</button>`;
-    container.appendChild(row);
+    const wrap = document.createElement('div');
+    wrap.className = 'dyn-row-wrap';
+    wrap.innerHTML = `
+        <div class="dyn-row">
+            <div style="flex:1;" class="cat-field">
+                <select name="items[${idx}][category_label]" class="form-select">${categoryOptions}</select>
+            </div>
+            <input type="text" name="items[${idx}][item_name]" class="form-control" placeholder="e.g. 4 Sq.mm AC Cable" style="flex:1;">
+            <input type="text" name="items[${idx}][quantity_label]" class="form-control" placeholder="e.g. 100" style="flex:0.5;">
+            <button type="button" class="dyn-remove" onclick="this.closest('.dyn-row-wrap').remove()">&times;</button>
+        </div>
+        <label class="cat-toggle"><input type="checkbox" onchange="toggleCatField(this)"> Custom category</label>`;
+    container.appendChild(wrap);
 }
 
 function addSlabRow(prefix) {
@@ -402,15 +430,31 @@ function openEditKit(id) {
             editItemIdx = 0;
             (kit.kit_items || []).forEach((item, i) => {
                 editItemIdx = i + 1;
-                const row = document.createElement('div');
-                row.className = 'dyn-row';
-                let opts = categoryOptions.replace(`value="${item.category_label || ''}"`, `value="${item.category_label || ''}" selected`);
-                row.innerHTML = `
-                    <select name="items[${i}][category_label]" class="form-select" style="flex:1;">${opts}</select>
-                    <input type="text" name="items[${i}][item_name]" class="form-control" value="${item.item_name || ''}" style="flex:1;">
-                    <input type="text" name="items[${i}][quantity_label]" class="form-control" value="${item.quantity_label || ''}" style="flex:0.5;">
-                    <button type="button" class="dyn-remove" onclick="this.parentElement.remove()">&times;</button>`;
-                itemsC.appendChild(row);
+                const catVal = item.category_label || '';
+                const wrap = document.createElement('div');
+                wrap.className = 'dyn-row-wrap';
+                let isCustom = true;
+                let tempDiv = document.createElement('div');
+                tempDiv.innerHTML = `<select>${categoryOptions}</select>`;
+                let sel = tempDiv.querySelector('select');
+                for (let o of sel.options) { if (o.value === catVal) { isCustom = false; break; } }
+                if (catVal === '') isCustom = false;
+                let catHTML;
+                if (isCustom) {
+                    catHTML = `<input type="text" name="items[${i}][category_label]" class="form-control" value="${catVal}">`;
+                } else {
+                    let opts = categoryOptions.replace(`value="${catVal}"`, `value="${catVal}" selected`);
+                    catHTML = `<select name="items[${i}][category_label]" class="form-select">${opts}</select>`;
+                }
+                wrap.innerHTML = `
+                    <div class="dyn-row">
+                        <div style="flex:1;" class="cat-field">${catHTML}</div>
+                        <input type="text" name="items[${i}][item_name]" class="form-control" value="${item.item_name || ''}" style="flex:1;">
+                        <input type="text" name="items[${i}][quantity_label]" class="form-control" value="${item.quantity_label || ''}" style="flex:0.5;">
+                        <button type="button" class="dyn-remove" onclick="this.closest('.dyn-row-wrap').remove()">&times;</button>
+                    </div>
+                    <label class="cat-toggle"><input type="checkbox" onchange="toggleCatField(this)" ${isCustom ? 'checked' : ''}> Custom category</label>`;
+                itemsC.appendChild(wrap);
             });
 
             const slabsC = document.getElementById('editSlabsContainer');
