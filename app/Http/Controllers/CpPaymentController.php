@@ -124,9 +124,9 @@ class CpPaymentController extends Controller
         $payments = $query->orderByDesc('payment_date')->orderByDesc('id')->get();
 
         $stats = [
-            'total' => $payments->sum('amount'),
             'verified' => $payments->where('status', 'verified')->sum('amount'),
             'pending' => $payments->where('status', 'pending')->sum('amount'),
+            'rejected' => $payments->where('status', 'rejected')->sum('amount'),
         ];
 
         return view('channelPartner.payments.index', compact('payments', 'stats'));

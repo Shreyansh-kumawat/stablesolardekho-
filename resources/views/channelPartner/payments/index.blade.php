@@ -76,16 +76,16 @@
 
     <div class="pt-stats">
         <div class="pt-stat">
-            <div class="pt-stat-label">Total Paid</div>
-            <div class="pt-stat-value" style="color:#059669;">{{ number_format($stats['total'], 2) }}</div>
-        </div>
-        <div class="pt-stat">
-            <div class="pt-stat-label">Verified</div>
-            <div class="pt-stat-value">{{ number_format($stats['verified'], 2) }}</div>
+            <div class="pt-stat-label">Verified (Paid)</div>
+            <div class="pt-stat-value" style="color:#059669;">{{ number_format($stats['verified'], 2) }}</div>
         </div>
         <div class="pt-stat">
             <div class="pt-stat-label">Pending</div>
             <div class="pt-stat-value" style="color:#f59e0b;">{{ number_format($stats['pending'], 2) }}</div>
+        </div>
+        <div class="pt-stat">
+            <div class="pt-stat-label">Rejected</div>
+            <div class="pt-stat-value" style="color:#dc2626;">{{ number_format($stats['rejected'], 2) }}</div>
         </div>
     </div>
 
