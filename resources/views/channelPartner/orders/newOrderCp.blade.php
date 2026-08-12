@@ -592,6 +592,7 @@ function loadProducts(categoryId, subcategoryId, selectElement) {
             if (data && data.length > 0) {
                 data.forEach(function(product) {
                     var qty = product.quantity || 0;
+                    if (qty <= 0) return;
                     var price = parseFloat(product.current_sale_price) || 0;
                     var name = product.product_name || product.item_name || product.name;
                     var priceStr = price > 0 ? ' — ₹' + price.toLocaleString('en-IN') : '';
