@@ -104,7 +104,7 @@
                         <td><span class="ml-amount">{{ number_format($entry->total_amount, 2) }}</span></td>
                         <td>
                             @if($entry->invoice_file)
-                                <a href="{{ Storage::url($entry->invoice_file) }}" target="_blank" class="ml-invoice-link">
+                                <a href="{{ url('serve/' . $entry->invoice_file) }}" target="_blank" class="ml-invoice-link">
                                     {{ $entry->invoice_number ?: 'View' }}
                                 </a>
                             @elseif($entry->invoice_number)
