@@ -185,18 +185,9 @@
                 </div>
                 <div class="modal-body" style="padding:1.25rem; max-height:70vh; overflow-y:auto;">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-8">
+                        <div class="col-md-12">
                             <label class="form-label">Kit Name *</label>
                             <input type="text" name="kit_name" class="form-control" required placeholder="e.g. Adani 3KW Bi Facial Kit">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Category *</label>
-                            <select name="category_id" class="form-select" required>
-                                <option value="">Select</option>
-                                @foreach($categories as $cat)
-                                    <option value="{{ $cat->id }}">{{ $cat->category_name }}</option>
-                                @endforeach
-                            </select>
                         </div>
                     </div>
                     <div class="row g-3 mb-3">
@@ -237,7 +228,12 @@
                         </div>
                         <div id="addItemsContainer">
                             <div class="dyn-row">
-                                <input type="text" name="items[0][category_label]" class="form-control" placeholder="e.g. Solar Panel" style="flex:1;">
+                                <select name="items[0][category_label]" class="form-select" style="flex:1;">
+                                    <option value="">Select Category</option>
+                                    @foreach($categories as $cat)
+                                        <option value="{{ $cat->category_name }}">{{ $cat->category_name }}</option>
+                                    @endforeach
+                                </select>
                                 <input type="text" name="items[0][item_name]" class="form-control" placeholder="e.g. Bifacial DCR 545wp" style="flex:1;">
                                 <input type="text" name="items[0][quantity_label]" class="form-control" placeholder="e.g. 6" style="flex:0.5;">
                                 <button type="button" class="dyn-remove" onclick="this.parentElement.remove()">&times;</button>
@@ -289,18 +285,9 @@
                 </div>
                 <div class="modal-body" style="padding:1.25rem; max-height:70vh; overflow-y:auto;">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-8">
+                        <div class="col-md-12">
                             <label class="form-label">Kit Name *</label>
                             <input type="text" name="kit_name" id="editKitName" class="form-control" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Category</label>
-                            <select name="category_id" id="editKitCategory" class="form-select">
-                                <option value="">Select</option>
-                                @foreach($categories as $cat)
-                                    <option value="{{ $cat->id }}">{{ $cat->category_name }}</option>
-                                @endforeach
-                            </select>
                         </div>
                     </div>
                     <div class="row g-3 mb-3">
@@ -371,13 +358,15 @@
 <script>
 let addItemIdx = 1, editItemIdx = 0, addSlabIdx = 1, editSlabIdx = 0;
 
+const categoryOptions = `<option value="">Select Category</option>@foreach($categories as $cat)<option value="{{ $cat->category_name }}">{{ $cat->category_name }}</option>@endforeach`;
+
 function addItemRow(prefix) {
     const idx = prefix === 'add' ? addItemIdx++ : editItemIdx++;
     const container = document.getElementById(prefix + 'ItemsContainer');
     const row = document.createElement('div');
     row.className = 'dyn-row';
     row.innerHTML = `
-        <input type="text" name="items[${idx}][category_label]" class="form-control" placeholder="e.g. Cable - Havells" style="flex:1;">
+        <select name="items[${idx}][category_label]" class="form-select" style="flex:1;">${categoryOptions}</select>
         <input type="text" name="items[${idx}][item_name]" class="form-control" placeholder="e.g. 4 Sq.mm AC Cable" style="flex:1;">
         <input type="text" name="items[${idx}][quantity_label]" class="form-control" placeholder="e.g. 100" style="flex:0.5;">
         <button type="button" class="dyn-remove" onclick="this.parentElement.remove()">&times;</button>`;
@@ -403,7 +392,6 @@ function openEditKit(id) {
         .then(kit => {
             document.getElementById('editKitForm').action = `/admin/kits/${id}`;
             document.getElementById('editKitName').value = kit.item_name;
-            document.getElementById('editKitCategory').value = kit.category_id || '';
             document.getElementById('editKitPrice').value = kit.current_sale_price || '';
             document.getElementById('editKitQty').value = kit.quantity || 0;
             document.getElementById('editKitDesc').value = kit.description || '';
@@ -416,8 +404,9 @@ function openEditKit(id) {
                 editItemIdx = i + 1;
                 const row = document.createElement('div');
                 row.className = 'dyn-row';
+                let opts = categoryOptions.replace(`value="${item.category_label || ''}"`, `value="${item.category_label || ''}" selected`);
                 row.innerHTML = `
-                    <input type="text" name="items[${i}][category_label]" class="form-control" value="${item.category_label || ''}" style="flex:1;">
+                    <select name="items[${i}][category_label]" class="form-select" style="flex:1;">${opts}</select>
                     <input type="text" name="items[${i}][item_name]" class="form-control" value="${item.item_name || ''}" style="flex:1;">
                     <input type="text" name="items[${i}][quantity_label]" class="form-control" value="${item.quantity_label || ''}" style="flex:0.5;">
                     <button type="button" class="dyn-remove" onclick="this.parentElement.remove()">&times;</button>`;

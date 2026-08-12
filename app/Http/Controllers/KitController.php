@@ -43,7 +43,6 @@ class KitController extends Controller
 
         $request->validate([
             'kit_name' => 'required|string|max:255',
-            'category_id' => 'required|exists:product_categories,id',
             'description' => 'nullable|string',
             'quantity' => 'required|integer|min:0',
             'base_price' => 'required|string|max:50',
@@ -54,7 +53,7 @@ class KitController extends Controller
         $product->item_name = $request->kit_name;
         $product->item_code = 'KIT-' . strtoupper(\Illuminate\Support\Str::random(6));
         $product->uom = 'Kit';
-        $product->category_id = $request->category_id;
+        $product->category_id = $request->category_id ?? null;
         $product->current_sale_price = $request->base_price;
         $product->quantity = $request->quantity;
         $product->description = $request->description;
@@ -81,7 +80,6 @@ class KitController extends Controller
 
         $request->validate([
             'kit_name' => 'required|string|max:255',
-            'category_id' => 'required|exists:product_categories,id',
             'description' => 'nullable|string',
             'quantity' => 'required|integer|min:0',
             'base_price' => 'required|string|max:50',
@@ -89,7 +87,7 @@ class KitController extends Controller
         ]);
 
         $product->item_name = $request->kit_name;
-        $product->category_id = $request->category_id;
+        $product->category_id = $request->category_id ?? $product->category_id;
         $product->current_sale_price = $request->base_price;
         $product->quantity = $request->quantity;
         $product->description = $request->description;
