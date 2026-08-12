@@ -27,6 +27,16 @@ use App\Http\Middleware\ChannelPartnerMiddleware;
 use App\Http\Middleware\MasterAdminMiddleware;
 use App\Http\Middleware\WarehouseMiddleware;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
+
+Route::get('/storage/{path}', function ($path) {
+    $disk = Storage::disk('public');
+    if (!$disk->exists($path)) {
+        abort(404);
+    }
+    $mime = mime_content_type($disk->path($path));
+    return response($disk->get($path), 200)->header('Content-Type', $mime)->header('Cache-Control', 'public, max-age=86400');
+})->where('path', '.*')->name('storage.serve');
 
 Route::get('/', [UserController::class, 'dashBoardFunction'])->name('dashBoardFunction');
 Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google');
