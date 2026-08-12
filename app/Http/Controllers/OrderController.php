@@ -125,9 +125,7 @@ class OrderController extends Controller
 
     public function pendingOrders()
     {
-        $cpUserIds = \App\Models\User::where('role_id', 4)->pluck('id')->toArray();
-
-        $cpOrders = CpOrder::with('channelPartner')->whereIn('status', ['pending', 'confirmed'])->orderBy('created_at', 'desc')->get()->map(function($o) {
+        $mapCpOrder = function($o) {
             return (object)[
                 'id' => $o->id,
                 'type' => 'cp_order',
@@ -141,29 +139,17 @@ class OrderController extends Controller
                 'payment_screenshot' => $o->payment_screenshot,
                 'created_at' => $o->created_at,
             ];
-        });
+        };
 
-        $customerOrders = CustomerOrder::with('user', 'items')->whereIn('user_id', $cpUserIds)->orderBy('created_at', 'desc')->get()->map(function($o) {
-            return (object)[
-                'id' => $o->id,
-                'type' => 'customer_order',
-                'order_id' => $o->order_number,
-                'cp_name' => $o->user->name ?? 'N/A',
-                'date' => $o->created_at,
-                'items' => $o->items->count(),
-                'amount' => $o->total_amount,
-                'status' => $o->status,
-                'payment_status' => $o->payment_status,
-                'payment_screenshot' => $o->payment_screenshot,
-                'created_at' => $o->created_at,
-            ];
-        });
+        $pendingCp = CpOrder::with('channelPartner')->whereIn('status', ['pending', 'confirmed'])->orderByDesc('created_at')->get()->map($mapCpOrder);
+        $pastCp = CpOrder::with('channelPartner')->whereIn('status', ['delivered', 'rejected', 'completed', 'cancelled'])->orderByDesc('created_at')->limit(50)->get()->map($mapCpOrder);
 
-        $orders = $cpOrders->concat($customerOrders)->sortByDesc('created_at')->values();
+        $pendingOrders = $pendingCp->sortByDesc('created_at')->values();
+        $pastOrders = $pastCp->sortByDesc('created_at')->values();
 
         CpOrder::where('viewed_by_admin', 0)->update(['viewed_by_admin' => 1]);
         try { \App\Models\AdminLastSeen::markSeen(auth()->id(), 'cp_orders'); } catch (\Exception $e) {}
-        return view('Admin.orders.pendingOrders', compact('orders'));
+        return view('Admin.orders.pendingOrders', compact('pendingOrders', 'pastOrders'));
     }
 
     private function getItemCount($cpOrder)

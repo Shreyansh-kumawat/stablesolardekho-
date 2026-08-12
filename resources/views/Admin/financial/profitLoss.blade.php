@@ -71,12 +71,16 @@
                 Revenue (Income)
             </div>
             <div class="pl-row">
-                <span class="pl-row-label">CP Orders (Completed)</span>
+                <span class="pl-row-label">CP Orders (Delivered/Completed)</span>
                 <span class="pl-row-value" style="color:#059669;">{{ number_format($revenue['cp_orders'], 2) }}</span>
             </div>
             <div class="pl-row">
                 <span class="pl-row-label">Customer Orders (Paid)</span>
                 <span class="pl-row-value" style="color:#059669;">{{ number_format($revenue['customer_orders'], 2) }}</span>
+            </div>
+            <div class="pl-row">
+                <span class="pl-row-label">CP Payments Received (Verified)</span>
+                <span class="pl-row-value" style="color:#059669;">{{ number_format($revenue['cp_payments'], 2) }}</span>
             </div>
             <div class="pl-row pl-row-total">
                 <span class="pl-row-label">Total Revenue</span>
@@ -92,7 +96,7 @@
                 Expenses
             </div>
             <div class="pl-row">
-                <span class="pl-row-label">Material Costs</span>
+                <span class="pl-row-label">Material Costs (Given to CPs)</span>
                 <span class="pl-row-value" style="color:#dc2626;">{{ number_format($expenses['material_cost'], 2) }}</span>
             </div>
             <div class="pl-row">
@@ -106,34 +110,13 @@
         </div>
     </div>
 
-    <div class="pl-section">
-        <div class="pl-section-card">
-            <div class="pl-section-header" style="color:var(--blue);">
-                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Collections
-            </div>
-            <div class="pl-row">
-                <span class="pl-row-label">Payments Received (Verified)</span>
-                <span class="pl-row-value" style="color:#059669;">{{ number_format($collections['payments_received'], 2) }}</span>
-            </div>
-            <div class="pl-row">
-                <span class="pl-row-label">Wallet Deductions</span>
-                <span class="pl-row-value">{{ number_format($collections['wallet_deductions'], 2) }}</span>
-            </div>
-            <div class="pl-row pl-row-total">
-                <span class="pl-row-label">Total Collections</span>
-                <span class="pl-row-value" style="font-size:1rem;">{{ number_format($collections['total'], 2) }}</span>
-            </div>
-        </div>
-    </div>
-
     <div class="pl-outstanding">
         <div class="pl-out-card">
             <div class="pl-out-label">CP Orders Pending</div>
             <div class="pl-out-value">{{ number_format($outstanding['cp_pending'], 2) }}</div>
         </div>
         <div class="pl-out-card">
-            <div class="pl-out-label">Customer Orders Pending</div>
+            <div class="pl-out-label">Customer Orders Unpaid</div>
             <div class="pl-out-value">{{ number_format($outstanding['customer_pending'], 2) }}</div>
         </div>
         <div class="pl-out-card">

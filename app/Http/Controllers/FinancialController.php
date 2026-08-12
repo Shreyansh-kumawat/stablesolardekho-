@@ -111,20 +111,15 @@ class FinancialController extends Controller
         $revenue = [
             'cp_orders' => (clone $cpRevenue)->whereIn('status', ['completed', 'confirmed', 'delivered'])->sum($amtCol),
             'customer_orders' => (clone $custRevenue)->where('payment_status', 'paid')->sum('total_amount'),
+            'cp_payments' => $paymentsReceived->sum('amount'),
         ];
-        $revenue['total'] = $revenue['cp_orders'] + $revenue['customer_orders'];
+        $revenue['total'] = $revenue['cp_orders'] + $revenue['customer_orders'] + $revenue['cp_payments'];
 
         $expenses = [
             'material_cost' => $materialExpenses->sum('total_amount'),
             'wallet_transfers' => $walletCredits->sum('amount'),
         ];
         $expenses['total'] = $expenses['material_cost'] + $expenses['wallet_transfers'];
-
-        $collections = [
-            'payments_received' => $paymentsReceived->sum('amount'),
-            'wallet_deductions' => $walletDebits->sum('amount'),
-        ];
-        $collections['total'] = $collections['payments_received'] + $collections['wallet_deductions'];
 
         $profitLoss = $revenue['total'] - $expenses['total'];
 
@@ -135,7 +130,7 @@ class FinancialController extends Controller
         $outstanding['total'] = $outstanding['cp_pending'] + $outstanding['customer_pending'];
 
         return view('Admin.financial.profitLoss', compact(
-            'revenue', 'expenses', 'collections', 'profitLoss', 'outstanding', 'period'
+            'revenue', 'expenses', 'profitLoss', 'outstanding', 'period'
         ));
     }
 
