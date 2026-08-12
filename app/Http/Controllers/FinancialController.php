@@ -40,7 +40,7 @@ class FinancialController extends Controller
             'total' => (clone $cpOrders)->sum($amtCol),
             'count' => (clone $cpOrders)->count(),
             'pending' => (clone $cpOrders)->where('status', 'pending')->sum($amtCol),
-            'completed' => (clone $cpOrders)->whereIn('status', ['completed', 'confirmed'])->sum($amtCol),
+            'completed' => (clone $cpOrders)->whereIn('status', ['completed', 'confirmed', 'delivered'])->sum($amtCol),
         ];
 
         $custOrderStats = [
@@ -109,7 +109,7 @@ class FinancialController extends Controller
         }
 
         $revenue = [
-            'cp_orders' => (clone $cpRevenue)->whereIn('status', ['completed', 'confirmed'])->sum($amtCol),
+            'cp_orders' => (clone $cpRevenue)->whereIn('status', ['completed', 'confirmed', 'delivered'])->sum($amtCol),
             'customer_orders' => (clone $custRevenue)->where('payment_status', 'paid')->sum('total_amount'),
         ];
         $revenue['total'] = $revenue['cp_orders'] + $revenue['customer_orders'];
