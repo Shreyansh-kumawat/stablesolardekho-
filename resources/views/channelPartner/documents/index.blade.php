@@ -210,7 +210,7 @@
                         @foreach($batchDocs as $doc)
                         <tr>
                             <td><span class="doc-type-badge">{{ $docTypes[$doc->document_type] ?? $doc->document_type }}</span></td>
-                            <td><a href="{{ Storage::url($doc->file_path) }}" target="_blank" class="doc-file-link">{{ Str::limit($doc->file_name, 30) }}</a></td>
+                            <td><a href="{{ url('serve/' . $doc->file_path) }}" target="_blank" class="doc-file-link">{{ Str::limit($doc->file_name, 30) }}</a></td>
                             <td><span class="doc-size">{{ number_format($doc->file_size / 1024, 0) }} KB</span></td>
                             <td>
                                 <form method="POST" action="{{ route('cpDocumentDelete', $doc->id) }}" class="d-inline delete-doc-form">
@@ -253,7 +253,7 @@
                         <tr>
                             <td><span class="doc-type-badge">{{ $docTypes[$doc->document_type] ?? $doc->document_type }}</span></td>
                             <td>{{ $doc->title }}</td>
-                            <td><a href="{{ Storage::url($doc->file_path) }}" target="_blank" class="doc-file-link">{{ Str::limit($doc->file_name, 25) }}</a></td>
+                            <td><a href="{{ url('serve/' . $doc->file_path) }}" target="_blank" class="doc-file-link">{{ Str::limit($doc->file_name, 25) }}</a></td>
                             <td><span class="doc-size">{{ number_format($doc->file_size / 1024, 0) }} KB</span></td>
                             <td>
                                 <form method="POST" action="{{ route('cpDocumentDelete', $doc->id) }}" class="d-inline delete-doc-form">

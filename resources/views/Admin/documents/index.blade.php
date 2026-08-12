@@ -165,7 +165,7 @@
                             <span class="doc-type-badge">{{ $docTypes[$doc->document_type] ?? $doc->document_type }}</span>
                             @if(in_array($doc->document_type, $compulsoryTypes))<span class="doc-type-req">Required</span>@endif
                         </td>
-                        <td><a href="{{ Storage::url($doc->file_path) }}" target="_blank" class="doc-file-link">{{ Str::limit($doc->file_name, 30) }}</a></td>
+                        <td><a href="{{ url('serve/' . $doc->file_path) }}" target="_blank" class="doc-file-link">{{ Str::limit($doc->file_name, 30) }}</a></td>
                         <td><span class="doc-size">{{ number_format($doc->file_size / 1024, 0) }} KB</span></td>
                         <td style="font-size:0.75rem; color:var(--muted);">{{ $doc->uploadedByUser->name ?? '-' }}</td>
                         <td>
@@ -207,7 +207,7 @@
                         <td style="font-size:0.78rem; font-weight:700;">{{ $doc->channelPartner->cp_name ?? '-' }}</td>
                         <td><span class="doc-type-badge">{{ $docTypes[$doc->document_type] ?? $doc->document_type }}</span></td>
                         <td>{{ $doc->title }}</td>
-                        <td><a href="{{ Storage::url($doc->file_path) }}" target="_blank" class="doc-file-link">{{ Str::limit($doc->file_name, 25) }}</a></td>
+                        <td><a href="{{ url('serve/' . $doc->file_path) }}" target="_blank" class="doc-file-link">{{ Str::limit($doc->file_name, 25) }}</a></td>
                         <td><span class="doc-size">{{ number_format($doc->file_size / 1024, 0) }} KB</span></td>
                         <td>
                             <form method="POST" action="{{ route('adminDocumentDelete', $doc->id) }}" class="d-inline delete-doc-form">
