@@ -201,6 +201,7 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::get('/export/material-ledger', [ExportController::class, 'exportMaterialLedger'])->name('exportMaterialLedger');
     Route::get('/export/payments', [ExportController::class, 'exportPayments'])->name('exportPayments');
     Route::get('/export/channel-partners', [ExportController::class, 'exportChannelPartners'])->name('exportChannelPartners');
+    Route::get('/export/users', [ExportController::class, 'exportUsers'])->name('exportUsers');
 
     Route::get('/financial-dashboard', [FinancialController::class, 'dashboard'])->name('adminFinancialDashboard');
     Route::get('/profit-loss', [FinancialController::class, 'profitLoss'])->name('adminProfitLoss');

@@ -161,7 +161,7 @@
                         <td>{{ ucfirst($p->payment_mode) }}</td>
                         <td>{{ $p->reference_number ?: '-' }}</td>
                         <td style="white-space:nowrap;">{{ \Carbon\Carbon::parse($p->payment_date)->format('d M Y') }}</td>
-                        <td>{{ $p->cpOrder->order_id ?? '-' }}</td>
+                        <td>{{ $p->order_id_ref ?: ($p->cpOrder->order_id ?? '-') }}</td>
                         <td>
                             <span class="pt-badge pt-badge-{{ $p->status }}">{{ ucfirst($p->status) }}</span>
                         </td>
@@ -224,10 +224,8 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Link to Order <small style="color:var(--muted);">(optional)</small></label>
-                        <select name="cp_order_id" id="paymentOrderSelect" class="form-select">
-                            <option value="">No specific order</option>
-                        </select>
+                        <label class="form-label">Order ID <small style="color:var(--muted);">(optional)</small></label>
+                        <input type="text" name="order_id_ref" class="form-control" placeholder="e.g. ORD-12345">
                     </div>
                     <div class="row mb-3">
                         <div class="col-6">
@@ -274,22 +272,8 @@
 </div>
 @endsection
 
-@section('scripts')
+@section('js')
 <script>
-document.getElementById('paymentCpSelect').addEventListener('change', function() {
-    const sel = document.getElementById('paymentOrderSelect');
-    sel.innerHTML = '<option value="">Loading...</option>';
-    if (!this.value) { sel.innerHTML = '<option value="">No specific order</option>'; return; }
-    fetch('/admin/cp-payment-orders/' + this.value)
-        .then(r => r.json())
-        .then(orders => {
-            sel.innerHTML = '<option value="">No specific order</option>';
-            orders.forEach(o => {
-                sel.innerHTML += `<option value="${o.id}">${o.order_id} - ₹${o.grand_total || 0} (${o.status})</option>`;
-            });
-        });
-});
-
 document.querySelectorAll('.delete-payment-form').forEach(f => {
     f.addEventListener('submit', function(e) {
         e.preventDefault();

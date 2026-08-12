@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class CpPayment extends Model
 {
     protected $fillable = [
-        'cp_id', 'cp_order_id', 'amount', 'payment_mode', 'reference_number',
+        'cp_id', 'cp_order_id', 'order_id_ref', 'amount', 'payment_mode', 'reference_number',
         'screenshot', 'payment_date', 'status', 'verified_by', 'verified_at',
         'remarks', 'admin_notes', 'recorded_by',
     ];

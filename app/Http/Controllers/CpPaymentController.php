@@ -46,7 +46,7 @@ class CpPaymentController extends Controller
     {
         $request->validate([
             'cp_id' => 'required|exists:channel_partners,id',
-            'cp_order_id' => 'nullable|exists:cp_orders,id',
+            'order_id_ref' => 'nullable|string|max:100',
             'amount' => 'required|numeric|min:0.01',
             'payment_mode' => 'required|string|max:50',
             'reference_number' => 'nullable|string|max:100',
@@ -55,11 +55,12 @@ class CpPaymentController extends Controller
             'remarks' => 'nullable|string|max:500',
         ]);
 
-        $data = $request->only(['cp_id', 'cp_order_id', 'amount', 'payment_mode', 'reference_number', 'payment_date', 'remarks']);
+        $data = $request->only(['cp_id', 'amount', 'payment_mode', 'reference_number', 'payment_date', 'remarks']);
         $data['recorded_by'] = Auth::id();
-        $data['status'] = 'verified';
-        $data['verified_by'] = Auth::id();
-        $data['verified_at'] = now();
+        $data['status'] = 'pending';
+        if ($request->filled('order_id_ref')) {
+            $data['order_id_ref'] = $request->order_id_ref;
+        }
 
         if ($request->hasFile('screenshot')) {
             $data['screenshot'] = $request->file('screenshot')->store('cp-payments', 'public');

@@ -9,13 +9,21 @@ use App\Models\CpPayment;
 use App\Models\CustomerOrder;
 use App\Models\ProductInventory;
 use Illuminate\Http\Request;
+use App\Models\User;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExportController extends Controller
 {
     public function index()
     {
-        return view('Admin.export.index');
+        $customerOrders = CustomerOrder::with('user')->orderByDesc('id')->limit(50)->get();
+        $cpOrders = CpOrder::with('channelPartner')->orderByDesc('id')->limit(50)->get();
+        $cpPayments = CpPayment::with('channelPartner')->orderByDesc('payment_date')->limit(50)->get();
+        $materialLedger = CpMaterialLedger::with('channelPartner')->orderByDesc('entry_date')->limit(50)->get();
+        $users = User::where('role_id', 3)->orderByDesc('id')->limit(50)->get();
+        $channelPartners = ChannelPartner::orderByDesc('id')->limit(50)->get();
+
+        return view('Admin.export.index', compact('customerOrders', 'cpOrders', 'cpPayments', 'materialLedger', 'users', 'channelPartners'));
     }
 
     public function exportCpOrders(Request $request)
@@ -143,6 +151,26 @@ class ExportController extends Controller
                 $c->state,
                 $c->is_active ? 'Yes' : 'No',
                 $c->created_at?->format('Y-m-d'),
+            ];
+        });
+    }
+
+    public function exportUsers()
+    {
+        $users = User::where('role_id', 3)->orderByDesc('id')->get();
+        $headers = ['Name', 'Email', 'Phone', 'Address', 'City', 'District', 'State', 'Pincode', 'Registered'];
+
+        return $this->streamCsv('users.csv', $headers, $users, function ($u) {
+            return [
+                $u->name,
+                $u->email,
+                $u->mobile_number ?? '',
+                $u->address ?? '',
+                $u->city ?? '',
+                $u->district ?? '',
+                $u->state ?? '',
+                $u->pincode ?? '',
+                $u->created_at?->format('Y-m-d'),
             ];
         });
     }
