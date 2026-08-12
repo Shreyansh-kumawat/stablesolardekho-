@@ -292,6 +292,7 @@ Route::prefix('channel-partner')->middleware(['auth', ChannelPartnerMiddleware::
     Route::get('/cp-material-ledger', [CpMaterialLedgerController::class, 'cpIndex'])->name('cpMaterialLedger');
     Route::get('/cp-documents', [CpDocumentController::class, 'cpIndex'])->name('cpDocuments');
     Route::post('/cp-documents', [CpDocumentController::class, 'cpStore'])->name('cpDocumentStore');
+    Route::delete('/cp-documents/batch/{batchId}', [CpDocumentController::class, 'cpDeleteBatch'])->name('cpDocumentDeleteBatch');
     Route::delete('/cp-documents/{id}', [CpDocumentController::class, 'cpDelete'])->name('cpDocumentDelete');
     Route::get('/cp-payments', [CpPaymentController::class, 'cpIndex'])->name('cpPayments');
 
