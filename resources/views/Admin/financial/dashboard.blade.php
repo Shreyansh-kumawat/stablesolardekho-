@@ -25,24 +25,18 @@
     .fd-stat-value { font-size: 1.4rem; font-weight: 700; color: var(--text); margin-top: 3px; }
     .fd-stat-sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
 
-    .fd-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-    .fd-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-    .fd-table thead { background: #f8fafc; }
-    .fd-table th { padding: 10px 12px; font-weight: 700; color: #374151; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); text-align: left; white-space: nowrap; }
-    .fd-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #374151; }
-    .fd-table tbody tr:hover { background: #f8fafc; }
-    .fd-cp-name { font-weight: 700; color: var(--text); }
-
-    .fd-bar-wrap { padding: 1.25rem; }
-    .fd-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-    .fd-bar-label { font-size: 0.75rem; font-weight: 600; color: var(--text); width: 70px; text-align: right; flex-shrink: 0; }
-    .fd-bar-track { flex: 1; height: 22px; background: #f1f5f9; border-radius: 6px; overflow: hidden; }
-    .fd-bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: 8px; font-size: 0.7rem; font-weight: 700; color: #fff; min-width: fit-content; }
-    .fd-bar-value { font-size: 0.75rem; font-weight: 600; color: var(--text); width: 80px; flex-shrink: 0; }
+    .fd-revenue-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .fd-rev-header { padding: 12px 16px; font-weight: 700; font-size: 0.88rem; color: #059669; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+    .fd-rev-row { display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 0.84rem; }
+    .fd-rev-row:last-child { border-bottom: none; }
+    .fd-rev-label { color: #374151; }
+    .fd-rev-value { font-weight: 700; color: #059669; }
+    .fd-rev-total { background: #f0fdf4; font-weight: 700; font-size: 0.9rem; }
+    .fd-rev-total .fd-rev-label { color: var(--text); }
+    .fd-rev-total .fd-rev-value { font-size: 1rem; }
 
     @media (max-width: 768px) {
         .fd-stats { grid-template-columns: repeat(2, 1fr); }
-        .fd-card { overflow-x: auto; }
     }
 </style>
 @endsection
@@ -66,6 +60,33 @@
         </div>
     </div>
 
+    {{-- Total Revenue Card --}}
+    <div class="fd-section">
+        <div class="fd-revenue-card">
+            <div class="fd-rev-header">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg>
+                Total Revenue
+            </div>
+            <div class="fd-rev-row">
+                <span class="fd-rev-label">CP Orders (Delivered/Completed)</span>
+                <span class="fd-rev-value">{{ number_format($revenue['cp_orders'], 2) }}</span>
+            </div>
+            <div class="fd-rev-row">
+                <span class="fd-rev-label">Customer Orders (Paid)</span>
+                <span class="fd-rev-value">{{ number_format($revenue['customer_orders'], 2) }}</span>
+            </div>
+            <div class="fd-rev-row">
+                <span class="fd-rev-label">CP Payments Received (Verified)</span>
+                <span class="fd-rev-value">{{ number_format($revenue['cp_payments'], 2) }}</span>
+            </div>
+            <div class="fd-rev-row fd-rev-total">
+                <span class="fd-rev-label">Total Revenue</span>
+                <span class="fd-rev-value">{{ number_format($revenue['total'], 2) }}</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- CP Orders --}}
     <div class="fd-section">
         <div class="fd-section-title">CP Orders</div>
         <div class="fd-stats">
@@ -75,7 +96,7 @@
                 <div class="fd-stat-sub">{{ $cpOrderStats['count'] }} orders</div>
             </div>
             <div class="fd-stat">
-                <div class="fd-stat-label">Completed</div>
+                <div class="fd-stat-label">Completed / Delivered</div>
                 <div class="fd-stat-value">{{ number_format($cpOrderStats['completed'], 2) }}</div>
             </div>
             <div class="fd-stat">
@@ -85,11 +106,12 @@
         </div>
     </div>
 
+    {{-- Customer Orders --}}
     <div class="fd-section">
         <div class="fd-section-title">Customer Orders</div>
         <div class="fd-stats">
             <div class="fd-stat">
-                <div class="fd-stat-label">Total Revenue</div>
+                <div class="fd-stat-label">Total Value</div>
                 <div class="fd-stat-value" style="color:#059669;">{{ number_format($custOrderStats['total'], 2) }}</div>
                 <div class="fd-stat-sub">{{ $custOrderStats['count'] }} orders</div>
             </div>
@@ -100,8 +122,9 @@
         </div>
     </div>
 
+    {{-- Payments Received --}}
     <div class="fd-section">
-        <div class="fd-section-title">Payments Received</div>
+        <div class="fd-section-title">CP Payments</div>
         <div class="fd-stats">
             <div class="fd-stat">
                 <div class="fd-stat-label">Verified</div>
@@ -115,6 +138,7 @@
         </div>
     </div>
 
+    {{-- Material Expenses --}}
     <div class="fd-section">
         <div class="fd-section-title">Material Expenses</div>
         <div class="fd-stats">
@@ -125,60 +149,5 @@
             </div>
         </div>
     </div>
-
-    @if($monthlyRevenue->count())
-    <div class="fd-section">
-        <div class="fd-section-title">Monthly CP Revenue</div>
-        <div class="fd-card">
-            <div class="fd-bar-wrap">
-                @php $maxRev = $monthlyRevenue->max('total') ?: 1; @endphp
-                @foreach($monthlyRevenue as $m)
-                <div class="fd-bar-row">
-                    <div class="fd-bar-label">{{ \Carbon\Carbon::parse($m->month . '-01')->format('M Y') }}</div>
-                    <div class="fd-bar-track">
-                        <div class="fd-bar-fill" style="width: {{ max(($m->total / $maxRev) * 100, 5) }}%; background: #2563eb;">
-                            {{ number_format($m->total, 0) }}
-                        </div>
-                    </div>
-                </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-    @endif
-
-    @if($topCps->count())
-    <div class="fd-section">
-        <div class="fd-section-title">Top Channel Partners</div>
-        <div class="fd-card">
-            <div style="overflow-x:auto;">
-                <table class="fd-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>CP Name</th>
-                            <th>Total Orders</th>
-                            <th>Total Paid</th>
-                            <th>Outstanding</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($topCps as $cp)
-                        <tr>
-                            <td>{{ $loop->iteration }}</td>
-                            <td><span class="fd-cp-name">{{ $cp->cp_name }}</span></td>
-                            <td style="font-weight:700; color:#059669;">{{ number_format($cp->total_orders, 2) }}</td>
-                            <td>{{ number_format($cp->total_paid, 2) }}</td>
-                            <td style="color: {{ ($cp->total_orders - $cp->total_paid) > 0 ? '#dc2626' : '#059669' }}; font-weight:700;">
-                                {{ number_format($cp->total_orders - $cp->total_paid, 2) }}
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    @endif
 </div>
 @endsection

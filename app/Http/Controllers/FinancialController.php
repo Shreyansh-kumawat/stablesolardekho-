@@ -60,29 +60,16 @@ class FinancialController extends Controller
             'entries' => (clone $materials)->count(),
         ];
 
-        $topCps = ChannelPartner::select('channel_partners.*')
-            ->selectRaw("COALESCE((SELECT SUM({$amtCol}) FROM cp_orders WHERE cp_orders.cp_id = channel_partners.id), 0) as total_orders")
-            ->selectRaw('COALESCE((SELECT SUM(amount) FROM cp_payments WHERE cp_payments.cp_id = channel_partners.id AND cp_payments.status = "verified"), 0) as total_paid')
-            ->where('is_active', 1)
-            ->orderByDesc('total_orders')
-            ->limit(10)
-            ->get();
-
-        $driver = config('database.default');
-        $monthExpr = $driver === 'sqlite'
-            ? 'strftime("%Y-%m", order_date)'
-            : 'DATE_FORMAT(order_date, "%Y-%m")';
-
-        $monthlyRevenue = CpOrder::selectRaw("$monthExpr as month, SUM({$amtCol}) as total")
-            ->whereNotNull($amtCol)
-            ->groupBy('month')
-            ->orderBy('month')
-            ->limit(12)
-            ->get();
+        $revenue = [
+            'cp_orders' => $cpOrderStats['completed'],
+            'customer_orders' => $custOrderStats['paid'],
+            'cp_payments' => $paymentStats['received'],
+        ];
+        $revenue['total'] = $revenue['cp_orders'] + $revenue['customer_orders'] + $revenue['cp_payments'];
 
         return view('Admin.financial.dashboard', compact(
             'cpOrderStats', 'custOrderStats', 'paymentStats', 'materialStats',
-            'topCps', 'monthlyRevenue', 'period'
+            'revenue', 'period'
         ));
     }
 
