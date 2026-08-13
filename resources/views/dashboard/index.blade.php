@@ -281,7 +281,7 @@
         color: var(--muted); font-size: 0.8rem; font-weight: 600;
         transition: all 0.18s; user-select: none; background: var(--card2); cursor: pointer;
     }
-    .bill-chip.active { background: rgba(249,115,22,0.12); color: var(--orange); border-color: rgba(249,115,22,0.4); }
+    .bill-chip.active { background: rgba(249,115,22,0.12) !important; color: var(--orange) !important; border-color: rgba(249,115,22,0.4) !important; }
 
     /* ── skeleton ── */
     @keyframes shimmer {
@@ -312,6 +312,9 @@
         .feat-grid { grid-template-columns: repeat(2, 1fr); }
         .all-grid  { grid-template-columns: repeat(3, 1fr); }
     }
+    .quote-grid { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:start; }
+    .trust-strip-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; text-align:center; }
+
     @media (max-width: 768px) {
         .sec { padding: 40px 0 0; }
         .sec-title { font-size: 1.25rem; }
@@ -325,6 +328,8 @@
         .banner-slide-img { height: 340px !important; }
         .banner-slide h1 { font-size: 2rem !important; }
         .banner-slide p { font-size: 0.88rem !important; }
+        .quote-grid { grid-template-columns: 1fr; }
+        .trust-strip-grid { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 480px) {
         .wrap { padding: 0 14px; }
@@ -744,76 +749,109 @@ $catGradients = [
 
 
 {{-- ───────────────── QUOTE FORM ───────────────── --}}
-<div class="wrap" style="padding-top:56px; padding-bottom:72px;">
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:3rem; align-items:center;">
-        <div>
-            <p style="color:var(--orange); font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin:0 0 12px;">Free Consultation</p>
-            <h2 style="color:#fff; font-size:2rem; font-weight:900; margin:0 0 14px; line-height:1.15;">Get your free<br>solar quote today</h2>
-            <p style="color:var(--muted); font-size:0.9rem; line-height:1.75; margin:0 0 28px; max-width:380px;">Share a few details and our solar expert will call you back with a customised solution and savings estimate.</p>
-            <div style="display:flex;flex-direction:column;gap:12px;">
-                @foreach(['No hidden charges','Subsidy assistance included','Installation by certified team'] as $point)
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:22px;height:22px;border-radius:50%;background:rgba(249,115,22,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <svg width="12" height="12" fill="none" stroke="var(--orange)" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                    </div>
-                    <span style="color:#cbd5e1; font-size:0.87rem;">{{ $point }}</span>
-                </div>
-                @endforeach
-            </div>
-            <img src="{{ asset('imgs/iPhone02.png') }}" alt="Solar Panel & Inverter" style="max-width:320px; width:100%; margin-top:32px; filter:drop-shadow(0 20px 40px rgba(0,0,0,0.4)); display:block;">
+<div style="background:#fff;padding:56px 0 0;">
+    <div class="wrap">
+        {{-- Top: Heading centered --}}
+        <div style="text-align:center;margin-bottom:36px;">
+            <p style="color:var(--orange);font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 8px;">Book a Free Solar Consultation</p>
+            <h2 style="color:#1e293b;font-size:2rem;font-weight:900;margin:0 0 10px;line-height:1.2;">Get your free solar quote today</h2>
+            <p style="color:#64748b;font-size:0.92rem;margin:0 auto;max-width:520px;">Share a few details and our solar expert will call you back with a customised solution and savings estimate.</p>
         </div>
-        <div class="qform">
-            <form action="{{ route('userQuoteQuery') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
-                    <div>
-                        <label class="qlabel">Full Name</label>
-                        <input type="text" name="name" required placeholder="Your name" class="qinput">
-                    </div>
-                    <div>
-                        <label class="qlabel">WhatsApp Number</label>
-                        <input type="text" name="mob_no" required placeholder="10-digit number" pattern="[6-9]\d{9}" maxlength="10" class="qinput">
-                    </div>
-                </div>
-                <div style="margin-bottom:14px;">
-                    <label class="qlabel" style="margin-bottom:10px;display:block;">Monthly Electricity Bill</label>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                        @foreach(['<1500'=>'< ₹1,500','1500-2500'=>'₹1,500–2,500','2500-4000'=>'₹2,500–4,000','4000-8000'=>'₹4,000–8,000','>8000'=>'> ₹8,000'] as $val=>$lbl)
-                        <label style="cursor:pointer;">
-                            <input type="radio" name="bill" value="{{ $val }}" required style="display:none;" class="bill-radio">
-                            <span class="bill-chip">{{ $lbl }}</span>
-                        </label>
-                        @endforeach
-                    </div>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
-                    <div>
-                        <label class="qlabel">PIN Code</label>
-                        <input type="text" name="pin" required placeholder="6-digit PIN" pattern="\d{6}" maxlength="6" class="qinput">
-                    </div>
-                    <div>
-                        <label class="qlabel">City</label>
-                        <input type="text" name="city" placeholder="Your city" class="qinput">
-                    </div>
-                </div>
 
-                {{-- Independence Day Offer --}}
-                <div style="background:linear-gradient(135deg,#fff7ed 0%,#fed7aa 100%);border:1px solid #fdba74;border-radius:10px;padding:14px;margin-bottom:16px;">
-                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                        <span style="font-size:1.2rem;">🇮🇳</span>
-                        <span style="font-weight:800;color:#c2410c;font-size:0.85rem;">15 August Special Offer!</span>
+        {{-- Main grid: Left image + Right form --}}
+        <div class="quote-grid">
+            {{-- Left: Independence Day image + trust points --}}
+            <div>
+                <img src="/stable/images/indipendence.jpeg" alt="Independence Day Offer" style="width:100%;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.12);margin-bottom:24px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+                    @foreach([
+                        ['icon'=>'M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z','title'=>'Guaranteed Savings','desc'=>'Save up to 90% on electricity bills with solar energy'],
+                        ['icon'=>'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z','title'=>'Subsidy Assistance','desc'=>'Complete help with government subsidy applications'],
+                        ['icon'=>'M11.42 15.17l-5.84-5.84a.75.75 0 010-1.06l.7-.7a.75.75 0 011.06 0l4.6 4.6 8.6-8.6a.75.75 0 011.06 0l.7.7a.75.75 0 010 1.06l-9.84 9.84a.75.75 0 01-1.06 0z','title'=>'No Hidden Charges','desc'=>'Transparent pricing with no surprise costs'],
+                        ['icon'=>'M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z','title'=>'Certified Team','desc'=>'Installation by trained & certified professionals']
+                    ] as $tp)
+                    <div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#fff7ed,#fed7aa);display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+                            <svg width="18" height="18" fill="none" stroke="#ea580c" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $tp['icon'] }}"/></svg>
+                        </div>
+                        <p style="font-weight:700;color:#1e293b;font-size:0.82rem;margin:0 0 3px;">{{ $tp['title'] }}</p>
+                        <p style="color:#64748b;font-size:0.72rem;line-height:1.4;margin:0;">{{ $tp['desc'] }}</p>
                     </div>
-                    <p style="font-size:0.78rem;color:#7c2d12;line-height:1.5;margin:0 0 10px;">Take a selfie with the Tiranga on your rooftop and get <b>5% or ₹5,000 discount</b> on solar installation!</p>
-                    <label class="qlabel" style="color:#9a3412;">Upload Your Tiranga Selfie (Optional)</label>
-                    <input type="file" name="selfie_image" accept="image/*" class="qinput" style="background:#fff;padding:8px;font-size:0.82rem;">
+                    @endforeach
                 </div>
+            </div>
 
-                <button type="submit"
-                        style="width:100%;padding:13px;background:var(--orange);color:#fff;font-weight:800;font-size:0.95rem;border:none;border-radius:10px;cursor:pointer;transition:background 0.2s;"
-                        onmouseover="this.style.background='#ea6c0a'" onmouseout="this.style.background='var(--orange)'">
-                    Get My Free Quote
-                </button>
-            </form>
+            {{-- Right: Form --}}
+            <div style="background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:28px;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+                <h3 style="font-size:1.1rem;font-weight:800;color:#1e293b;margin:0 0 4px;">Book a FREE Solar Consultation</h3>
+                <p style="font-size:0.78rem;color:#64748b;margin:0 0 20px;">And save up to ₹78,000 with subsidy</p>
+                <form action="{{ route('userQuoteQuery') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div style="margin-bottom:14px;">
+                        <label style="display:block;color:#374151;font-size:0.75rem;font-weight:600;margin-bottom:5px;">Full Name</label>
+                        <input type="text" name="name" required placeholder="Your name" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.88rem;color:#1e293b;background:#fff;box-sizing:border-box;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='#e2e8f0'">
+                    </div>
+                    <div style="margin-bottom:14px;">
+                        <label style="display:block;color:#374151;font-size:0.75rem;font-weight:600;margin-bottom:5px;">WhatsApp Number</label>
+                        <input type="text" name="mob_no" required placeholder="10-digit number" pattern="[6-9]\d{9}" maxlength="10" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.88rem;color:#1e293b;background:#fff;box-sizing:border-box;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='#e2e8f0'">
+                    </div>
+                    <div style="margin-bottom:14px;">
+                        <label style="display:block;color:#374151;font-size:0.75rem;font-weight:600;margin-bottom:5px;">PIN Code</label>
+                        <input type="text" name="pin" required placeholder="6-digit PIN" pattern="\d{6}" maxlength="6" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.88rem;color:#1e293b;background:#fff;box-sizing:border-box;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='#e2e8f0'">
+                    </div>
+                    <div style="margin-bottom:14px;">
+                        <label style="display:block;color:#374151;font-size:0.75rem;font-weight:600;margin-bottom:8px;">Monthly Electricity Bill</label>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                            @foreach(['<1500'=>'< ₹1,500','1500-2500'=>'₹1,500–2,500','2500-4000'=>'₹2,500–4,000','4000-8000'=>'₹4,000–8,000','>8000'=>'> ₹8,000'] as $val=>$lbl)
+                            <label style="cursor:pointer;">
+                                <input type="radio" name="bill" value="{{ $val }}" required style="display:none;" class="bill-radio">
+                                <span class="bill-chip" style="border-color:#e2e8f0;color:#374151;background:#fff;">{{ $lbl }}</span>
+                            </label>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div style="margin-bottom:18px;">
+                        <label style="display:block;color:#374151;font-size:0.75rem;font-weight:600;margin-bottom:5px;">City</label>
+                        <input type="text" name="city" placeholder="Your city" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.88rem;color:#1e293b;background:#fff;box-sizing:border-box;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='#e2e8f0'">
+                    </div>
+
+                    {{-- Independence Day Offer --}}
+                    <div style="background:linear-gradient(135deg,#fff7ed 0%,#fed7aa 100%);border:1px solid #fdba74;border-radius:10px;padding:14px;margin-bottom:16px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                            <span style="font-size:1.1rem;">🇮🇳</span>
+                            <span style="font-weight:800;color:#c2410c;font-size:0.82rem;">15 August Special Offer!</span>
+                        </div>
+                        <p style="font-size:0.76rem;color:#7c2d12;line-height:1.5;margin:0 0 10px;">Take a selfie with the Tiranga on your rooftop and get <b>5% or ₹5,000 discount</b> on solar installation!</p>
+                        <label style="display:block;color:#9a3412;font-size:0.72rem;font-weight:600;margin-bottom:5px;">Upload Your Tiranga Selfie (Optional)</label>
+                        <input type="file" name="selfie_image" accept="image/*" style="width:100%;padding:7px;background:#fff;border:1px solid #fdba74;border-radius:8px;font-size:0.78rem;color:#7c2d12;box-sizing:border-box;">
+                    </div>
+
+                    <button type="submit"
+                            style="width:100%;padding:14px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;font-weight:800;font-size:0.95rem;border:none;border-radius:10px;cursor:pointer;transition:opacity 0.2s;box-shadow:0 4px 14px rgba(249,115,22,0.35);"
+                            onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                        Book a FREE Consultation
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ───────────────── TRUST STRIP ───────────────── --}}
+<div style="background:#fff;padding:40px 0 56px;">
+    <div class="wrap">
+        <div class="trust-strip-grid">
+            @foreach([
+                ['num'=>'₹1000Cr+','label'=>'Savings Across India'],
+                ['num'=>'10+','label'=>'Years of Experience'],
+                ['num'=>'50,000+','label'=>'Homes Solarised'],
+                ['num'=>'4.8 ★','label'=>'Google Rating (8000+ Reviews)']
+            ] as $stat)
+            <div style="padding:16px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;">
+                <p style="font-size:1.35rem;font-weight:900;color:#1e293b;margin:0 0 2px;">{{ $stat['num'] }}</p>
+                <p style="font-size:0.72rem;color:#64748b;margin:0;font-weight:500;">{{ $stat['label'] }}</p>
+            </div>
+            @endforeach
         </div>
     </div>
 </div>
