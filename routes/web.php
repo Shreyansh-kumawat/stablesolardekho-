@@ -202,6 +202,11 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::get('/export/payments', [ExportController::class, 'exportPayments'])->name('exportPayments');
     Route::get('/export/channel-partners', [ExportController::class, 'exportChannelPartners'])->name('exportChannelPartners');
     Route::get('/export/users', [ExportController::class, 'exportUsers'])->name('exportUsers');
+    Route::get('/export/products', [ExportController::class, 'exportProducts'])->name('exportProducts');
+    Route::get('/export/inventory-stock', [ExportController::class, 'exportInventoryStock'])->name('exportInventoryStock');
+    Route::get('/export/inv-transactions', [ExportController::class, 'exportInvTransactions'])->name('exportInvTransactions');
+    Route::get('/export/solar-team', [ExportController::class, 'exportSolarTeam'])->name('exportSolarTeam');
+    Route::get('/export/stories', [ExportController::class, 'exportStories'])->name('exportStories');
 
     Route::get('/financial-dashboard', [FinancialController::class, 'dashboard'])->name('adminFinancialDashboard');
     Route::get('/profit-loss', [FinancialController::class, 'profitLoss'])->name('adminProfitLoss');

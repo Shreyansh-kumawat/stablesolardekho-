@@ -7,9 +7,14 @@ use App\Models\CpMaterialLedger;
 use App\Models\CpOrder;
 use App\Models\CpPayment;
 use App\Models\CustomerOrder;
+use App\Models\InstallationStory;
+use App\Models\Product;
 use App\Models\ProductInventory;
+use App\Models\ProductInventoryTransaction;
+use App\Models\SolarTeam;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExportController extends Controller
@@ -22,8 +27,19 @@ class ExportController extends Controller
         $materialLedger = CpMaterialLedger::with('channelPartner')->orderByDesc('entry_date')->limit(50)->get();
         $users = User::where('role_id', 3)->orderByDesc('id')->limit(50)->get();
         $channelPartners = ChannelPartner::orderByDesc('id')->limit(50)->get();
+        $products = Product::with('category')->orderByDesc('id')->limit(50)->get();
+        $inventoryStock = DB::table('products as p')
+            ->leftJoin('product_inventories as pi', 'pi.product_id', '=', 'p.id')
+            ->select('p.id', 'p.item_name', 'p.item_code', 'p.uom', DB::raw('COALESCE(pi.available_qty, 0) as available_qty'))
+            ->orderBy('p.item_name')->limit(50)->get();
+        $invTransactions = ProductInventoryTransaction::with('product')->orderByDesc('created_at')->limit(50)->get();
+        $solarTeam = SolarTeam::orderByDesc('id')->limit(50)->get();
+        $stories = InstallationStory::orderByDesc('id')->limit(50)->get();
 
-        return view('Admin.export.index', compact('customerOrders', 'cpOrders', 'cpPayments', 'materialLedger', 'users', 'channelPartners'));
+        return view('Admin.export.index', compact(
+            'customerOrders', 'cpOrders', 'cpPayments', 'materialLedger', 'users', 'channelPartners',
+            'products', 'inventoryStock', 'invTransactions', 'solarTeam', 'stories'
+        ));
     }
 
     public function exportCpOrders(Request $request)
@@ -171,6 +187,104 @@ class ExportController extends Controller
                 $u->state ?? '',
                 $u->pincode ?? '',
                 $u->created_at?->format('Y-m-d'),
+            ];
+        });
+    }
+
+    public function exportProducts()
+    {
+        $products = Product::with('category')->orderByDesc('id')->get();
+        $headers = ['Item Name', 'Item Code', 'Category', 'UOM', 'Price', 'Stock', 'Kit', 'Active', 'Featured', 'Created'];
+
+        return $this->streamCsv('products.csv', $headers, $products, function ($p) {
+            return [
+                $p->item_name,
+                $p->item_code,
+                $p->category->category_name ?? '-',
+                $p->uom,
+                $p->current_sale_price,
+                $p->quantity,
+                $p->is_kit ? 'Yes' : 'No',
+                $p->is_active ? 'Yes' : 'No',
+                $p->is_featured ? 'Yes' : 'No',
+                $p->created_at?->format('Y-m-d'),
+            ];
+        });
+    }
+
+    public function exportInventoryStock()
+    {
+        $items = DB::table('products as p')
+            ->leftJoin('product_inventories as pi', 'pi.product_id', '=', 'p.id')
+            ->leftJoin('product_inventory_transactions as t', 't.product_id', '=', 'p.id')
+            ->select(
+                'p.item_name', 'p.item_code', 'p.uom',
+                DB::raw("COALESCE(pi.available_qty, 0) as available_qty"),
+                DB::raw("SUM(CASE WHEN t.transaction_type = 'IN' THEN t.quantity ELSE 0 END) as total_in"),
+                DB::raw("SUM(CASE WHEN t.transaction_type = 'OUT' THEN t.quantity ELSE 0 END) as total_out")
+            )
+            ->groupBy('p.id', 'p.item_name', 'p.item_code', 'p.uom', 'pi.available_qty')
+            ->orderBy('p.item_name')->get();
+
+        $headers = ['Item Name', 'Item Code', 'UOM', 'Total IN', 'Total OUT', 'Current Stock'];
+
+        return $this->streamCsv('inventory_stock.csv', $headers, $items, function ($i) {
+            return [$i->item_name, $i->item_code, $i->uom, $i->total_in, $i->total_out, $i->available_qty];
+        });
+    }
+
+    public function exportInvTransactions()
+    {
+        $txns = ProductInventoryTransaction::with(['product', 'channelPartner'])->orderByDesc('created_at')->get();
+        $headers = ['Product', 'Type', 'Quantity', 'Unit Price', 'Invoice No', 'Invoice Date', 'Channel Partner', 'Remarks', 'Date'];
+
+        return $this->streamCsv('inventory_transactions.csv', $headers, $txns, function ($t) {
+            return [
+                $t->product->item_name ?? '-',
+                $t->transaction_type,
+                $t->quantity,
+                $t->unit_price ?? 0,
+                $t->invoice_number ?? '',
+                $t->invoice_date ?? '',
+                $t->channelPartner->cp_name ?? '-',
+                $t->remarks ?? '',
+                $t->created_at?->format('Y-m-d H:i'),
+            ];
+        });
+    }
+
+    public function exportSolarTeam()
+    {
+        $team = SolarTeam::orderByDesc('id')->get();
+        $headers = ['Name', 'Position', 'Mobile', 'Address', 'District', 'State', 'Status', 'Created'];
+
+        return $this->streamCsv('solar_team.csv', $headers, $team, function ($m) {
+            return [
+                $m->name,
+                $m->position,
+                $m->mobile_number ?? '',
+                $m->address ?? '',
+                $m->district ?? '',
+                $m->state ?? '',
+                $m->status ? 'Active' : 'Inactive',
+                $m->created_at?->format('Y-m-d'),
+            ];
+        });
+    }
+
+    public function exportStories()
+    {
+        $stories = InstallationStory::orderByDesc('id')->get();
+        $headers = ['Type', 'Location', 'System Size (KW)', 'Installation Date', 'Active', 'Created'];
+
+        return $this->streamCsv('installation_stories.csv', $headers, $stories, function ($s) {
+            return [
+                $s->installation_type,
+                $s->location,
+                $s->system_size_kw ?? '',
+                $s->installation_date ?? '',
+                $s->active_status ? 'Yes' : 'No',
+                $s->created_at?->format('Y-m-d'),
             ];
         });
     }

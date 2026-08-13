@@ -61,6 +61,11 @@
         <button class="ex-tab" data-tab="material-ledger">Material Ledger</button>
         <button class="ex-tab" data-tab="users">Users</button>
         <button class="ex-tab" data-tab="channel-partners">Channel Partners</button>
+        <button class="ex-tab" data-tab="products">Products</button>
+        <button class="ex-tab" data-tab="inventory-stock">Inventory Stock</button>
+        <button class="ex-tab" data-tab="inv-transactions">Inventory Txns</button>
+        <button class="ex-tab" data-tab="solar-team">Solar Team</button>
+        <button class="ex-tab" data-tab="stories">Stories</button>
     </div>
 
     {{-- Customer Orders --}}
@@ -264,6 +269,176 @@
                         </tr>
                         @empty
                         <tr><td colspan="9" class="ex-empty">No channel partners found.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{-- Products --}}
+    <div class="ex-panel" id="panel-products">
+        <div class="ex-toolbar">
+            <div class="ex-toolbar-left">Showing latest 50 products</div>
+            <a href="{{ route('exportProducts') }}" class="ex-btn">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                Download All (CSV)
+            </a>
+        </div>
+        <div class="ex-card">
+            <div class="ex-table-wrap">
+                <table class="ex-table">
+                    <thead><tr><th>#</th><th>Name</th><th>Code</th><th>Category</th><th>UOM</th><th>Price</th><th>Stock</th><th>Kit</th><th>Active</th><th>Created</th></tr></thead>
+                    <tbody>
+                        @forelse($products as $p)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td style="font-weight:700;">{{ $p->item_name }}</td>
+                            <td>{{ $p->item_code }}</td>
+                            <td>{{ $p->category->category_name ?? '-' }}</td>
+                            <td>{{ $p->uom }}</td>
+                            <td style="font-weight:700; color:#059669;">{{ $p->current_sale_price }}</td>
+                            <td>{{ $p->quantity }}</td>
+                            <td><span class="ex-badge {{ $p->is_kit ? 'ex-badge-blue' : 'ex-badge-yellow' }}">{{ $p->is_kit ? 'Kit' : 'Product' }}</span></td>
+                            <td><span class="ex-badge {{ $p->is_active ? 'ex-badge-green' : 'ex-badge-red' }}">{{ $p->is_active ? 'Yes' : 'No' }}</span></td>
+                            <td>{{ $p->created_at?->format('d M Y') }}</td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="10" class="ex-empty">No products found.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{-- Inventory Stock --}}
+    <div class="ex-panel" id="panel-inventory-stock">
+        <div class="ex-toolbar">
+            <div class="ex-toolbar-left">Showing latest 50 inventory items</div>
+            <a href="{{ route('exportInventoryStock') }}" class="ex-btn">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                Download All (CSV)
+            </a>
+        </div>
+        <div class="ex-card">
+            <div class="ex-table-wrap">
+                <table class="ex-table">
+                    <thead><tr><th>#</th><th>Item Name</th><th>Item Code</th><th>UOM</th><th>Available Qty</th></tr></thead>
+                    <tbody>
+                        @forelse($inventoryStock as $i)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td style="font-weight:700;">{{ $i->item_name }}</td>
+                            <td>{{ $i->item_code }}</td>
+                            <td>{{ $i->uom }}</td>
+                            <td style="font-weight:700; color:{{ $i->available_qty > 0 ? '#059669' : '#dc2626' }};">{{ $i->available_qty }}</td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="5" class="ex-empty">No inventory data found.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{-- Inventory Transactions --}}
+    <div class="ex-panel" id="panel-inv-transactions">
+        <div class="ex-toolbar">
+            <div class="ex-toolbar-left">Showing latest 50 transactions</div>
+            <a href="{{ route('exportInvTransactions') }}" class="ex-btn">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                Download All (CSV)
+            </a>
+        </div>
+        <div class="ex-card">
+            <div class="ex-table-wrap">
+                <table class="ex-table">
+                    <thead><tr><th>#</th><th>Product</th><th>Type</th><th>Qty</th><th>Unit Price</th><th>Invoice No</th><th>Invoice Date</th><th>CP</th><th>Date</th></tr></thead>
+                    <tbody>
+                        @forelse($invTransactions as $t)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td style="font-weight:700;">{{ $t->product->item_name ?? '-' }}</td>
+                            <td><span class="ex-badge {{ $t->transaction_type === 'IN' ? 'ex-badge-green' : 'ex-badge-red' }}">{{ $t->transaction_type }}</span></td>
+                            <td>{{ $t->quantity }}</td>
+                            <td>{{ $t->unit_price ? number_format($t->unit_price, 2) : '-' }}</td>
+                            <td>{{ $t->invoice_number ?? '-' }}</td>
+                            <td>{{ $t->invoice_date ? \Carbon\Carbon::parse($t->invoice_date)->format('d M Y') : '-' }}</td>
+                            <td>{{ $t->channelPartner->cp_name ?? '-' }}</td>
+                            <td>{{ $t->created_at?->format('d M Y') }}</td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="9" class="ex-empty">No inventory transactions found.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{-- Solar Team --}}
+    <div class="ex-panel" id="panel-solar-team">
+        <div class="ex-toolbar">
+            <div class="ex-toolbar-left">Showing latest 50 team members</div>
+            <a href="{{ route('exportSolarTeam') }}" class="ex-btn">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                Download All (CSV)
+            </a>
+        </div>
+        <div class="ex-card">
+            <div class="ex-table-wrap">
+                <table class="ex-table">
+                    <thead><tr><th>#</th><th>Name</th><th>Position</th><th>Mobile</th><th>Address</th><th>District</th><th>State</th><th>Status</th><th>Created</th></tr></thead>
+                    <tbody>
+                        @forelse($solarTeam as $m)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td style="font-weight:700;">{{ $m->name }}</td>
+                            <td>{{ $m->position ?? '-' }}</td>
+                            <td>{{ $m->mobile_number ?? '-' }}</td>
+                            <td>{{ $m->address ?? '-' }}</td>
+                            <td>{{ $m->district ?? '-' }}</td>
+                            <td>{{ $m->state ?? '-' }}</td>
+                            <td><span class="ex-badge {{ $m->status ? 'ex-badge-green' : 'ex-badge-red' }}">{{ $m->status ? 'Active' : 'Inactive' }}</span></td>
+                            <td>{{ $m->created_at?->format('d M Y') }}</td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="9" class="ex-empty">No team members found.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{-- Installation Stories --}}
+    <div class="ex-panel" id="panel-stories">
+        <div class="ex-toolbar">
+            <div class="ex-toolbar-left">Showing latest 50 stories</div>
+            <a href="{{ route('exportStories') }}" class="ex-btn">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                Download All (CSV)
+            </a>
+        </div>
+        <div class="ex-card">
+            <div class="ex-table-wrap">
+                <table class="ex-table">
+                    <thead><tr><th>#</th><th>Type</th><th>Location</th><th>System Size (KW)</th><th>Installation Date</th><th>Active</th><th>Created</th></tr></thead>
+                    <tbody>
+                        @forelse($stories as $s)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td style="font-weight:700;">{{ $s->installation_type }}</td>
+                            <td>{{ $s->location }}</td>
+                            <td>{{ $s->system_size_kw ?? '-' }}</td>
+                            <td>{{ $s->installation_date ? \Carbon\Carbon::parse($s->installation_date)->format('d M Y') : '-' }}</td>
+                            <td><span class="ex-badge {{ $s->active_status ? 'ex-badge-green' : 'ex-badge-red' }}">{{ $s->active_status ? 'Yes' : 'No' }}</span></td>
+                            <td>{{ $s->created_at?->format('d M Y') }}</td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="7" class="ex-empty">No stories found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
