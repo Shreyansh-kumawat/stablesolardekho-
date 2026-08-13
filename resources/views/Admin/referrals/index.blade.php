@@ -1,6 +1,18 @@
 @extends('layouts.adminLayout')
 @section('page_title', 'Referrals & Cashback')
 
+@section('css')
+<style>
+.rl-thumb{width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid #e5e7eb;transition:opacity .2s;}
+.rl-thumb:hover{opacity:.8;}
+.rl-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:none;align-items:center;justify-content:center;}
+.rl-lightbox.active{display:flex;}
+.rl-lightbox img{max-width:90vw;max-height:85vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.5);}
+.rl-lightbox-close{position:fixed;top:16px;right:20px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:2rem;width:44px;height:44px;border-radius:50%;cursor:pointer;line-height:1;z-index:10000;}
+.rl-lightbox-close:hover{background:rgba(255,255,255,.3);}
+</style>
+@endsection
+
 @section('content')
 <div style="padding:20px;">
 
@@ -66,10 +78,16 @@
                     <p style="font-weight:700;color:#1e293b;font-size:.92rem;margin:0 0 4px;">{{ $lead->name }}</p>
                     <p style="color:#6b7280;font-size:.8rem;margin:0 0 2px;">{{ $lead->email }}</p>
                     <p style="color:#6b7280;font-size:.8rem;margin:0 0 2px;">{{ $lead->phone }}</p>
-                    <div style="display:flex;gap:16px;margin-top:8px;">
+                    <div style="display:flex;gap:16px;margin-top:8px;align-items:center;">
                         @if($lead->city)<span style="font-size:.78rem;color:#4b5563;"><svg width="10" height="10" fill="#9ca3af" viewBox="0 0 384 512" style="display:inline;vertical-align:middle;margin-right:3px;"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 110 128 64 64 0 010-128z"/></svg>{{ $lead->city }}@if($lead->state), {{ $lead->state }}@endif</span>@endif
                         @if($lead->system_size)<span style="font-size:.78rem;color:#4b5563;"><svg width="10" height="10" fill="#9ca3af" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:3px;"><path d="M4 4h16v16H4V4zm2 2v5h5V6H6zm7 0v5h5V6h-5zM6 13v5h5v-5H6zm7 0v5h5v-5h-5z"/></svg>{{ $lead->system_size }}</span>@endif
                     </div>
+                    @if($lead->selfie_image)
+                    <div style="margin-top:10px;">
+                        <p style="font-size:.68rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px;">Tiranga Selfie</p>
+                        <img src="{{ url('serve/' . $lead->selfie_image) }}" alt="Selfie" class="rl-thumb" onclick="openRlLightbox(this.src)">
+                    </div>
+                    @endif
                 </div>
                 {{-- Right: Referred By + Bank Details --}}
                 <div style="padding:16px 18px;">
@@ -325,9 +343,30 @@
 </div></div>
 @endsection
 
+{{-- Lightbox --}}
+<div class="rl-lightbox" id="rlLightbox" onclick="closeRlLightbox(event)">
+    <button class="rl-lightbox-close" onclick="closeRlLightbox(event)">&times;</button>
+    <img id="rlLightboxImg" src="" alt="Selfie">
+</div>
+
 @section('js')
 <script>
 var csrf='{{ csrf_token() }}';
+
+function openRlLightbox(src){
+    document.getElementById('rlLightboxImg').src=src;
+    document.getElementById('rlLightbox').classList.add('active');
+    document.body.style.overflow='hidden';
+}
+function closeRlLightbox(e){
+    if(e.target.id==='rlLightbox'||e.target.classList.contains('rl-lightbox-close')){
+        document.getElementById('rlLightbox').classList.remove('active');
+        document.body.style.overflow='';
+    }
+}
+document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){document.getElementById('rlLightbox').classList.remove('active');document.body.style.overflow='';}
+});
 
 function copyText(btn,text){
     navigator.clipboard.writeText(text).then(function(){

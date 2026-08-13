@@ -74,11 +74,22 @@
             <h1>CP Interest Requests</h1>
             <p>Review and approve channel partner applications</p>
         </div>
-        <div class="cpi-badges">
-            <span class="cpi-badge cpi-badge-pending">{{ $interests->where('status', 'pending')->count() }} Pending</span>
-            <span class="cpi-badge cpi-badge-approved">{{ $interests->where('status', 'approved')->count() }} Approved</span>
-            @if($interests->where('status', 'rejected')->count() > 0)
-                <span class="cpi-badge cpi-badge-rejected">{{ $interests->where('status', 'rejected')->count() }} Rejected</span>
+        <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+            <div class="cpi-badges">
+                <span class="cpi-badge cpi-badge-pending">{{ $interests->where('status', 'pending')->count() }} Pending</span>
+                <span class="cpi-badge cpi-badge-approved">{{ $interests->where('status', 'approved')->count() }} Approved</span>
+                @if($interests->where('status', 'rejected')->count() > 0)
+                    <span class="cpi-badge cpi-badge-rejected">{{ $interests->where('status', 'rejected')->count() }} Rejected</span>
+                @endif
+            </div>
+            @if($interests->count())
+            <form action="{{ route('deleteAllCpInterests') }}" method="POST" onsubmit="return confirm('Delete ALL {{ $interests->count() }} interest requests? This cannot be undone.')">
+                @csrf @method('DELETE')
+                <button type="submit" style="padding:6px 14px;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    Delete All
+                </button>
+            </form>
             @endif
         </div>
     </div>
@@ -107,7 +118,7 @@
                     <h3 class="cpi-card-company">{{ $i->company_name }}</h3>
                     <div class="cpi-card-date">{{ $i->created_at->format('d M Y, h:i A') }}</div>
                 </div>
-                <div class="cpi-card-status">
+                <div style="display:flex;align-items:center;gap:6px;">
                     @if($i->status === 'approved')
                         <span class="status-badge status-approved">Approved</span>
                     @elseif($i->status === 'rejected')
@@ -115,6 +126,12 @@
                     @else
                         <span class="status-badge status-pending">Pending</span>
                     @endif
+                    <form action="{{ route('deleteCpInterest', $i->id) }}" method="POST" style="margin:0;" onsubmit="return confirm('Delete {{ addslashes($i->company_name) }}?')">
+                        @csrf @method('DELETE')
+                        <button type="submit" style="background:none;border:none;cursor:pointer;color:#9ca3af;padding:4px;line-height:1;transition:color .15s;" title="Delete" onmouseover="this.style.color='#dc2626'" onmouseout="this.style.color='#9ca3af'">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </form>
                 </div>
             </div>
 

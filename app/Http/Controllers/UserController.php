@@ -713,6 +713,23 @@ class UserController extends Controller
         return redirect()->route('cpInterestList')->with('success', $interest->company_name . ' rejected.');
     }
 
+    public function deleteCpInterest($id)
+    {
+        $interest = CpInterest::findOrFail($id);
+        $name = $interest->company_name;
+        $interest->delete();
+
+        return redirect()->route('cpInterestList')->with('success', $name . ' deleted.');
+    }
+
+    public function deleteAllCpInterests()
+    {
+        $count = CpInterest::count();
+        CpInterest::truncate();
+
+        return redirect()->route('cpInterestList')->with('success', $count . ' interest requests deleted.');
+    }
+
     public function manageSecondaryAdmins()
     {
         abort_unless(auth()->user()->role?->name === 'master_admin', 403);

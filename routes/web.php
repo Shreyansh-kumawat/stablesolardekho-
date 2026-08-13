@@ -121,6 +121,8 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::get('/cp-interest-list', [UserController::class, 'cpInterestList'])->name('cpInterestList');
     Route::post('/cp-interest/{id}/approve', [UserController::class, 'approveCpInterest'])->name('approveCpInterest');
     Route::post('/cp-interest/{id}/reject', [UserController::class, 'rejectCpInterest'])->name('rejectCpInterest');
+    Route::delete('/cp-interest/{id}', [UserController::class, 'deleteCpInterest'])->name('deleteCpInterest');
+    Route::delete('/cp-interest-all', [UserController::class, 'deleteAllCpInterests'])->name('deleteAllCpInterests');
 
     Route::get('/secondary-admins', [UserController::class, 'manageSecondaryAdmins'])->name('manageSecondaryAdmins');
     Route::post('/secondary-admins/add', [UserController::class, 'addSecondaryAdmin'])->name('addSecondaryAdmin');

@@ -27,6 +27,13 @@
     .fl-btn-call { display: inline-flex; align-items: center; gap: 4px; background: #059669; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; text-decoration: none; }
     .fl-btn-call:hover { background: #047857; color: #fff; }
     .fl-empty { text-align: center; padding: 3rem 1rem; color: #94a3b8; }
+    .fl-thumb { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; cursor: pointer; border: 1px solid #e2e8f0; transition: transform 0.15s; }
+    .fl-thumb:hover { transform: scale(1.1); }
+    .fl-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: none; align-items: center; justify-content: center; cursor: pointer; }
+    .fl-lightbox.active { display: flex; }
+    .fl-lightbox img { max-width: 90vw; max-height: 85vh; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.4); cursor: default; }
+    .fl-lightbox-close { position: absolute; top: 16px; right: 20px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.15); border: none; color: #fff; font-size: 1.3rem; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+    .fl-lightbox-close:hover { background: rgba(255,255,255,0.3); }
     .fl-footer { padding: 10px 16px; border-top: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; color: #64748b; flex-wrap: wrap; gap: 8px; }
     .fl-pagination { display: flex; gap: 4px; }
     .fl-pagination button { padding: 4px 10px; border: 1px solid #e2e8f0; border-radius: 4px; background: #fff; font-size: 0.75rem; cursor: pointer; color: #374151; }
@@ -87,6 +94,7 @@
                         <th>PIN</th>
                         <th>City</th>
                         <th>Date</th>
+                        <th>Selfie</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -100,6 +108,13 @@
                         <td>{{ $lead->pin_code ?? '-' }}</td>
                         <td>{{ $lead->city ?? '-' }}</td>
                         <td><span class="fl-date">{{ $lead->created_at ? $lead->created_at->format('d M Y, h:i A') : '-' }}</span></td>
+                        <td>
+                            @if($lead->selfie_image)
+                                <img src="{{ url('serve/' . $lead->selfie_image) }}" alt="Selfie" class="fl-thumb" onclick="openLightbox(this.src)">
+                            @else
+                                <span style="color:#94a3b8;font-size:0.72rem;">-</span>
+                            @endif
+                        </td>
                         <td style="display:flex;gap:6px;align-items:center;">
                             @if($lead->mobile_number)
                             <a href="https://wa.me/91{{ $lead->mobile_number }}" target="_blank" class="fl-btn-call">
@@ -130,6 +145,11 @@
         </div>
         @endif
     </div>
+</div>
+
+<div class="fl-lightbox" id="flLightbox" onclick="closeLightbox(event)">
+    <button class="fl-lightbox-close" onclick="closeLightbox(event)">&times;</button>
+    <img id="flLightboxImg" src="" alt="Selfie">
 </div>
 @endsection
 
@@ -191,5 +211,23 @@
 
     render();
 })();
+
+function openLightbox(src) {
+    document.getElementById('flLightboxImg').src = src;
+    document.getElementById('flLightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function closeLightbox(e) {
+    if (e.target.id === 'flLightbox' || e.target.classList.contains('fl-lightbox-close')) {
+        document.getElementById('flLightbox').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.getElementById('flLightbox').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+});
 </script>
 @endsection

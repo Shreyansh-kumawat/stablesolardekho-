@@ -27,7 +27,7 @@
         @endif
 
         {{-- Form --}}
-        <form action="{{ route('referral.submit', $referralCode->code) }}" method="POST"
+        <form action="{{ route('referral.submit', $referralCode->code) }}" method="POST" enctype="multipart/form-data"
               style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:28px 24px;">
             @csrf
 
@@ -104,6 +104,18 @@
                     <option value="10kW" {{ old('system_size')=='10kW'?'selected':'' }}>10 kW</option>
                     <option value="10kW+" {{ old('system_size')=='10kW+'?'selected':'' }}>10 kW+</option>
                 </select>
+            </div>
+
+            {{-- Independence Day Offer --}}
+            <div style="background:linear-gradient(135deg,#fff7ed 0%,#fed7aa 100%);border:1px solid #fdba74;border-radius:12px;padding:16px;margin-bottom:20px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    <span style="font-size:1.2rem;">🇮🇳</span>
+                    <span style="font-weight:800;color:#c2410c;font-size:.9rem;">15 August Special Offer!</span>
+                </div>
+                <p style="font-size:.82rem;color:#7c2d12;line-height:1.5;margin:0 0 12px;">Take a selfie with the Tiranga on your rooftop and get <b>5% or ₹5,000 discount</b> on solar installation!</p>
+                <label style="display:block;color:#9a3412;font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Upload Your Tiranga Selfie (Optional)</label>
+                <input type="file" name="selfie_image" accept="image/*"
+                       style="width:100%;padding:8px;background:#fff;border:1px solid #fdba74;border-radius:8px;color:#7c2d12;font-size:.85rem;box-sizing:border-box;">
             </div>
 
             <button type="submit"

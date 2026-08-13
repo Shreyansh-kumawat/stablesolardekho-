@@ -763,7 +763,7 @@ $catGradients = [
             <img src="{{ asset('imgs/iPhone02.png') }}" alt="Solar Panel & Inverter" style="max-width:320px; width:100%; margin-top:32px; filter:drop-shadow(0 20px 40px rgba(0,0,0,0.4)); display:block;">
         </div>
         <div class="qform">
-            <form action="{{ route('userQuoteQuery') }}" method="POST">
+            <form action="{{ route('userQuoteQuery') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
                     <div>
@@ -796,6 +796,18 @@ $catGradients = [
                         <input type="text" name="city" placeholder="Your city" class="qinput">
                     </div>
                 </div>
+
+                {{-- Independence Day Offer --}}
+                <div style="background:linear-gradient(135deg,#fff7ed 0%,#fed7aa 100%);border:1px solid #fdba74;border-radius:10px;padding:14px;margin-bottom:16px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                        <span style="font-size:1.2rem;">🇮🇳</span>
+                        <span style="font-weight:800;color:#c2410c;font-size:0.85rem;">15 August Special Offer!</span>
+                    </div>
+                    <p style="font-size:0.78rem;color:#7c2d12;line-height:1.5;margin:0 0 10px;">Take a selfie with the Tiranga on your rooftop and get <b>5% or ₹5,000 discount</b> on solar installation!</p>
+                    <label class="qlabel" style="color:#9a3412;">Upload Your Tiranga Selfie (Optional)</label>
+                    <input type="file" name="selfie_image" accept="image/*" class="qinput" style="background:#fff;padding:8px;font-size:0.82rem;">
+                </div>
+
                 <button type="submit"
                         style="width:100%;padding:13px;background:var(--orange);color:#fff;font-weight:800;font-size:0.95rem;border:none;border-radius:10px;cursor:pointer;transition:background 0.2s;"
                         onmouseover="this.style.background='#ea6c0a'" onmouseout="this.style.background='var(--orange)'">

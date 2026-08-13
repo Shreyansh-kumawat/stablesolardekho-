@@ -15,7 +15,13 @@ class LeadController extends Controller
             'bill' => 'required|string|max:50',
             'pin' => 'required|string|max:10',
             'city' => 'nullable|string|max:100',
+            'selfie_image' => 'nullable|image|max:5120',
         ]);
+
+        $imagePath = null;
+        if ($request->hasFile('selfie_image')) {
+            $imagePath = $request->file('selfie_image')->store('lead-selfies', 'public');
+        }
 
         SolarLead::create([
             'lead_id' => 'LEAD' . time() . rand(100, 999),
@@ -25,6 +31,7 @@ class LeadController extends Controller
             'connection_type' => 'residential',
             'pin_code' => $request->pin,
             'city' => $request->city,
+            'selfie_image' => $imagePath,
             'lead_status' => 0,
         ]);
 

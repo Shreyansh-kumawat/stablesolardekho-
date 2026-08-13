@@ -239,7 +239,14 @@ class ReferralController extends Controller
             'pin_code' => 'nullable|string|max:10',
             'system_size' => 'nullable|string|max:50',
             'monthly_bill' => 'nullable|string|max:50',
+            'selfie_image' => 'nullable|image|max:5120',
         ]);
+
+        if ($request->hasFile('selfie_image')) {
+            $validated['selfie_image'] = $request->file('selfie_image')->store('lead-selfies', 'public');
+        } else {
+            unset($validated['selfie_image']);
+        }
 
         $validated['referrer_id'] = $referralCode->user_id;
 
