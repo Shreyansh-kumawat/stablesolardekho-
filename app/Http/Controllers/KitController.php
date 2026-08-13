@@ -53,7 +53,7 @@ class KitController extends Controller
         $product->item_name = $request->kit_name;
         $product->item_code = 'KIT-' . strtoupper(\Illuminate\Support\Str::random(6));
         $product->uom = 'Kit';
-        $product->category_id = $request->category_id ?? null;
+        $product->category_id = $request->category_id ?? ProductCategory::first()?->id ?? 1;
         $product->current_sale_price = $request->base_price;
         $product->quantity = $request->quantity;
         $product->description = $request->description;
