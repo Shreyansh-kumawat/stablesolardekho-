@@ -9,6 +9,7 @@ use App\Models\CpPayment;
 use App\Models\CustomerOrder;
 use App\Models\InstallationStory;
 use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
 use App\Models\SolarTeam;
@@ -35,10 +36,11 @@ class ExportController extends Controller
         $invTransactions = ProductInventoryTransaction::with('product')->orderByDesc('created_at')->limit(50)->get();
         $solarTeam = SolarTeam::orderByDesc('id')->limit(50)->get();
         $stories = InstallationStory::orderByDesc('id')->limit(50)->get();
+        $categories = ProductCategory::with(['subCategories.products', 'products'])->orderBy('category_name')->get();
 
         return view('Admin.export.index', compact(
             'customerOrders', 'cpOrders', 'cpPayments', 'materialLedger', 'users', 'channelPartners',
-            'products', 'inventoryStock', 'invTransactions', 'solarTeam', 'stories'
+            'products', 'inventoryStock', 'invTransactions', 'solarTeam', 'stories', 'categories'
         ));
     }
 
@@ -287,6 +289,26 @@ class ExportController extends Controller
                 $s->created_at?->format('Y-m-d'),
             ];
         });
+    }
+
+    public function exportCategories()
+    {
+        $categories = ProductCategory::with(['subCategories.products', 'products'])->orderBy('category_name')->get();
+
+        return response()->streamDownload(function () use ($categories) {
+            $handle = fopen('php://output', 'w');
+            fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($handle, ['Type', 'Category', 'Sub Category', 'Status']);
+            foreach ($categories as $cat) {
+                fputcsv($handle, ['Category', $cat->category_name, '', $cat->active_status ? 'Active' : 'Inactive']);
+                foreach ($cat->subCategories as $sub) {
+                    fputcsv($handle, ['Sub Category', $cat->category_name, $sub->sub_category_name, '']);
+                }
+            }
+            fclose($handle);
+        }, 'categories.csv', [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 
     private function streamCsv(string $filename, array $headers, $data, callable $rowMapper): StreamedResponse

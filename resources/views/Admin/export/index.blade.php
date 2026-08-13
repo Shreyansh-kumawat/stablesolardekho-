@@ -66,6 +66,7 @@
         <button class="ex-tab" data-tab="inv-transactions">Inventory Txns</button>
         <button class="ex-tab" data-tab="solar-team">Solar Team</button>
         <button class="ex-tab" data-tab="stories">Stories</button>
+        <button class="ex-tab" data-tab="categories">Categories</button>
     </div>
 
     {{-- Customer Orders --}}
@@ -439,6 +440,46 @@
                         </tr>
                         @empty
                         <tr><td colspan="7" class="ex-empty">No stories found.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{-- Categories --}}
+    <div class="ex-panel" id="panel-categories">
+        <div class="ex-toolbar">
+            <div class="ex-toolbar-left">{{ $categories->count() }} categories, {{ $categories->sum(fn($c) => $c->subCategories->count()) }} sub categories</div>
+            <a href="{{ route('exportCategories') }}" class="ex-btn">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                Download All (CSV)
+            </a>
+        </div>
+        <div class="ex-card">
+            <div class="ex-table-wrap">
+                <table class="ex-table">
+                    <thead><tr><th>#</th><th>Category</th><th>Sub Categories</th><th>Products</th><th>Status</th></tr></thead>
+                    <tbody>
+                        @forelse($categories as $cat)
+                        <tr style="background:#f8fafc;">
+                            <td>{{ $loop->iteration }}</td>
+                            <td style="font-weight:700;">{{ $cat->category_name }}</td>
+                            <td>{{ $cat->subCategories->count() }}</td>
+                            <td>{{ $cat->products->count() }}</td>
+                            <td><span class="ex-badge {{ $cat->active_status ? 'ex-badge-green' : 'ex-badge-red' }}">{{ $cat->active_status ? 'Active' : 'Inactive' }}</span></td>
+                        </tr>
+                        @foreach($cat->subCategories as $sub)
+                        <tr>
+                            <td></td>
+                            <td style="padding-left:28px;color:#6b7280;">&#8627; {{ $sub->sub_category_name }}</td>
+                            <td></td>
+                            <td>{{ $sub->products->count() }}</td>
+                            <td></td>
+                        </tr>
+                        @endforeach
+                        @empty
+                        <tr><td colspan="5" class="ex-empty">No categories found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
