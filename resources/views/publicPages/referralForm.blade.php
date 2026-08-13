@@ -16,7 +16,7 @@
             <p style="color:#94a3b8;font-size:.9rem;margin:0 0 28px;">Fill in your details and our solar expert will contact you with the best solar solution.</p>
         </div>
         <div style="max-width:520px;margin:0 auto;padding:0 16px;">
-            <img src="/stable/images/indipendence.jpeg" alt="Independence Day Offer" style="width:100%;border-radius:14px 14px 0 0;display:block;">
+            <img src="{{ asset('stable/images/indipendence.jpeg') }}" alt="Independence Day Offer" style="width:100%;border-radius:14px 14px 0 0;display:block;">
         </div>
     </div>
 
@@ -121,8 +121,12 @@
                     </div>
                     <p style="font-size:.76rem;color:#7c2d12;line-height:1.5;margin:0 0 10px;">Take a selfie with the Tiranga on your rooftop and get <b>5% or ₹5,000 discount</b> on solar installation!</p>
                     <label style="display:block;color:#9a3412;font-size:.72rem;font-weight:600;margin-bottom:5px;">Upload Your Tiranga Selfie (Optional)</label>
-                    <input type="file" name="selfie_image" accept="image/*"
-                           style="width:100%;padding:7px;background:#fff;border:1px solid #fdba74;border-radius:8px;font-size:.78rem;color:#7c2d12;box-sizing:border-box;">
+                    <input type="file" name="selfie_image" id="refSelfieInput" accept="image/*" style="display:none;">
+                    <div onclick="document.getElementById('refSelfieInput').click()" style="cursor:pointer;border:2px dashed #fdba74;border-radius:10px;padding:16px;text-align:center;background:#fffbf5;transition:border-color .15s;" onmouseover="this.style.borderColor='#ea580c'" onmouseout="this.style.borderColor='#fdba74'">
+                        <svg width="28" height="28" fill="none" stroke="#ea580c" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom:6px;"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"/></svg>
+                        <p id="refSelfieFileName" style="font-size:.78rem;color:#9a3412;margin:0;font-weight:600;">Click to upload selfie</p>
+                    </div>
+                    <script>document.getElementById('refSelfieInput').addEventListener('change',function(){document.getElementById('refSelfieFileName').textContent=this.files[0]?this.files[0].name:'Click to upload selfie';});</script>
                 </div>
 
                 <button type="submit"
