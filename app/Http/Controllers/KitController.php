@@ -136,6 +136,7 @@ class KitController extends Controller
 
         $relatedKits = Product::where('is_kit', true)
             ->where('is_active', true)
+            ->inStock()
             ->where('id', '!=', $kit->id)
             ->limit(4)
             ->get();

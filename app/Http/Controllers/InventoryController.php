@@ -4,13 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\ChannelPartner;
 use App\Models\ChannelPartnerRole;
+use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\ProductCustomSpec;
+use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
 use App\Services\cpInventoryService;
 use App\Services\InventoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class InventoryController extends Controller
 {
@@ -174,5 +178,155 @@ class InventoryController extends Controller
             dd($e->getMessage());
             return redirect()->back()->with('error',  $e->getMessage());
         }
+    }
+
+    public function addProductForm()
+    {
+        $categories = ProductCategory::with('subCategories')->get();
+        $suppliers = ChannelPartner::where('cp_role', '1')->get();
+        return view('Admin.inventorySetting.addProduct', compact('categories', 'suppliers'));
+    }
+
+    public function storeProduct(Request $request, InventoryService $inventoryService)
+    {
+        try {
+            $product = new Product();
+            $product->category_id = $request->category_id;
+            $product->sub_category_id = $request->sub_category_id ?: null;
+            $product->item_name = $request->product_name;
+            $product->item_code = $request->item_code;
+            $product->uom = $request->uom;
+            $product->current_sale_price = $request->current_sale_price ?: null;
+            $product->quantity = $request->quantity ?? 0;
+            $product->description = $request->description ?: null;
+            $product->is_featured = $request->is_featured ? 1 : 0;
+            $product->is_active = 1;
+            $product->type = $request->type;
+            $product->brand = $request->brand;
+            $product->model = $request->product_model;
+            $product->operating_voltage = $request->operating_voltage;
+            $product->solar_panel_type = $request->solar_panel_type;
+            $product->mnre_approved = $request->mnre_approved;
+            $product->certifications = $request->certifications;
+            $product->manufacturer_warranty = $request->manufacturer_warranty;
+            $product->number_of_cells = $request->number_of_cells;
+            $product->encapsulate = $request->encapsulate;
+            $product->country_of_origin = $request->country_of_origin;
+            $product->input_voltage = $request->input_voltage;
+            $product->max_supported_panel_power = $request->max_supported_panel_power;
+            if ($request->hasFile('image')) {
+                $product->image = $request->file('image')->store('products', 'public');
+            }
+            $product->save();
+
+            if ($request->hasFile('product_images')) {
+                foreach ($request->file('product_images') as $i => $img) {
+                    if ($i >= 8) break;
+                    $product->images()->create([
+                        'image' => $img->store('product-gallery', 'public'),
+                        'sort_order' => $i,
+                    ]);
+                }
+            }
+
+            if ($request->filled('custom_spec_names')) {
+                foreach ($request->custom_spec_names as $i => $name) {
+                    if (empty(trim($name))) continue;
+                    ProductCustomSpec::create([
+                        'product_id' => $product->id,
+                        'spec_name' => trim($name),
+                        'spec_value' => trim($request->custom_spec_values[$i] ?? ''),
+                        'sort_order' => $i,
+                    ]);
+                }
+            }
+
+            $qty = (int) ($request->quantity ?? 0);
+            if ($qty > 0) {
+                $txn_id = $this->getTxnId();
+                ProductInventory::create([
+                    'product_id' => $product->id,
+                    'available_qty' => $qty,
+                ]);
+                ProductInventoryTransaction::create([
+                    'product_id' => $product->id,
+                    'transaction_type' => 'IN',
+                    'quantity' => $qty,
+                    'txn_done_from' => $request->supplier_id ?: null,
+                    'unit_price' => $request->unit_price ?: null,
+                    'invoice_number' => $request->invoice_number ?: null,
+                    'invoice_date' => $request->invoice_date ?: null,
+                    'performed_by' => Auth::id(),
+                    'txn_id' => $txn_id,
+                    'remarks' => 'Product added to inventory',
+                ]);
+            }
+
+            return redirect()->route('inventoryEntries')->with('success', $product->item_name . ' has been added successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
+    }
+
+    public function quickStockUpdate(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'new_qty' => 'required|integer|min:0',
+        ]);
+
+        $productId = $request->product_id;
+        $newQty = (int) $request->new_qty;
+
+        $inventory = ProductInventory::firstOrCreate(
+            ['product_id' => $productId],
+            ['available_qty' => 0]
+        );
+
+        $oldQty = $inventory->available_qty;
+        $diff = $newQty - $oldQty;
+
+        if ($diff === 0) {
+            return response()->json(['success' => true, 'message' => 'No change', 'stock' => $newQty]);
+        }
+
+        $inventory->update(['available_qty' => $newQty]);
+
+        $txnType = $diff > 0 ? 'IN' : 'OUT';
+        ProductInventoryTransaction::create([
+            'product_id' => $productId,
+            'transaction_type' => $txnType,
+            'quantity' => abs($diff),
+            'performed_by' => Auth::id(),
+            'txn_id' => $this->getTxnId(),
+            'remarks' => 'Quick stock update: ' . $oldQty . ' → ' . $newQty,
+        ]);
+
+        $product = Product::find($productId);
+        if ($product) {
+            $product->update(['quantity' => $newQty]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Stock updated: ' . $oldQty . ' → ' . $newQty,
+            'stock' => $newQty,
+        ]);
+    }
+
+    public function inventoryEntries()
+    {
+        $entries = ProductInventoryTransaction::with([
+            'product.category',
+            'product.customSpecs',
+            'channelPartner',
+            'serialNumbers',
+        ])
+            ->join('users', 'users.id', '=', 'product_inventory_transactions.performed_by')
+            ->select('product_inventory_transactions.*', 'users.name as performer_name')
+            ->orderByDesc('product_inventory_transactions.created_at')
+            ->get();
+
+        return view('Admin.inventorySetting.inventoryEntries', compact('entries'));
     }
 }

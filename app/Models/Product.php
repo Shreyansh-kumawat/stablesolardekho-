@@ -43,9 +43,19 @@ class Product extends Model
         return $this->belongsTo(ProductSubCategory::class, 'sub_category_id');
     }
 
+    public function scopeInStock($query)
+    {
+        return $query->whereHas('inventory', fn($q) => $q->where('available_qty', '>', 0));
+    }
+
+    public function inventory()
+    {
+        return $this->hasOne(ProductInventory::class);
+    }
+
     public function scopeActive($query)
     {
-        $query = $query->where('is_active', true);
+        $query = $query->where('is_active', true)->inStock();
         if (\Illuminate\Support\Facades\Schema::hasColumn('products', 'is_kit')) {
             $query->where('is_kit', false);
         }
@@ -54,11 +64,16 @@ class Product extends Model
 
     public function scopeFeatured($query)
     {
-        $query = $query->where('is_featured', true)->where('is_active', true);
+        $query = $query->where('is_featured', true)->where('is_active', true)->inStock();
         if (\Illuminate\Support\Facades\Schema::hasColumn('products', 'is_kit')) {
             $query->where('is_kit', false);
         }
         return $query;
+    }
+
+    public function customSpecs()
+    {
+        return $this->hasMany(ProductCustomSpec::class)->orderBy('sort_order');
     }
 
     public function kitItems()

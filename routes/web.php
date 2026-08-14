@@ -174,6 +174,10 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::get('/get-product-availableQty', [InventoryController::class, 'getProductAvailableQty'])->name('getProductAvailableQty');
     Route::get('/get-available-serial', [InventoryController::class, 'getAvailableSerial'])->name('getAvailableSerial');
     Route::get('/admin-inv-txnx', [InventoryController::class, 'invTxnsAdmin'])->name('invTxnsAdmin');
+    Route::get('/inventory/add-product', [InventoryController::class, 'addProductForm'])->name('inventoryAddProduct');
+    Route::post('/inventory/add-product', [InventoryController::class, 'storeProduct'])->name('inventoryStoreProduct');
+    Route::get('/inventory/entries', [InventoryController::class, 'inventoryEntries'])->name('inventoryEntries');
+    Route::post('/inventory/quick-stock-update', [InventoryController::class, 'quickStockUpdate'])->name('inventoryQuickStockUpdate');
 
     Route::get('/cp-inventory-list', [CpInventoryController::class, 'adminCpInventoryList'])->name('adminCpInventoryList');
     Route::get('/cp-inventory/{cpId}', [CpInventoryController::class, 'adminCpInventoryDetail'])->name('adminCpInventoryDetail');

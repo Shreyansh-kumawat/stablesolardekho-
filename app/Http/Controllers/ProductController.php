@@ -16,14 +16,14 @@ class ProductController extends Controller
 {
     public function categoriesPage()
     {
-        $categories = ProductCategory::withCount(['products' => fn($q) => $q->where('is_active', true)])->orderBy('id', 'desc')->get();
+        $categories = ProductCategory::withCount(['products' => fn($q) => $q->where('is_active', true)->inStock()])->orderBy('id', 'desc')->get();
         return view('shop.categories', compact('categories'));
     }
 
     public function shopPage(Request $request, $slug = null)
     {
-        $categories = ProductCategory::withCount(['products' => fn($q) => $q->where('is_active', true)])->orderBy('id', 'desc')->get();
-        $query = Product::with('category')->where('is_active', true);
+        $categories = ProductCategory::withCount(['products' => fn($q) => $q->where('is_active', true)->inStock()])->orderBy('id', 'desc')->get();
+        $query = Product::with('category')->where('is_active', true)->inStock();
         if (Schema::hasColumn('products', 'is_kit')) $query->where('is_kit', false);
         $activeCategory = null;
 
@@ -63,7 +63,7 @@ class ProductController extends Controller
         $products = $query->paginate(12)->appends($request->query());
 
         $kits = Schema::hasColumn('products', 'is_kit')
-            ? Product::where('is_kit', true)->where('is_active', true)->with('kitSlabPrices')->latest()->get()
+            ? Product::where('is_kit', true)->where('is_active', true)->inStock()->with('kitSlabPrices')->latest()->get()
             : collect();
 
         return view('shop.index', compact('products', 'categories', 'activeCategory', 'kits'));
@@ -71,7 +71,7 @@ class ProductController extends Controller
 
     public function shopSearch(Request $request)
     {
-        $query = Product::with('category')->where('is_active', true);
+        $query = Product::with('category')->where('is_active', true)->inStock();
         if (Schema::hasColumn('products', 'is_kit')) $query->where('is_kit', false);
 
         if ($request->filled('category_slug')) {
@@ -166,7 +166,7 @@ class ProductController extends Controller
     public function featuredPage(Request $request)
     {
         $categories = ProductCategory::all();
-        $query = Product::with('category')->where('is_active', true)->where('is_featured', true);
+        $query = Product::with('category')->where('is_active', true)->where('is_featured', true)->inStock();
         if (Schema::hasColumn('products', 'is_kit')) $query->where('is_kit', false);
 
         if ($request->filled('category')) {

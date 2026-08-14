@@ -1,30 +1,38 @@
 <button type="button" data-toggle="submenu-manageinventory"
-    class="w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors hover:bg-slate-800 {{ request()->routeIs('addNewInventory','manageInventory','transferInventory') ? 'bg-slate-700 text-white' : '' }}"
+    class="w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors hover:bg-slate-800 {{ request()->routeIs('inventoryAddProduct','addNewInventory','manageInventory','transferInventory','invTxnsAdmin','inventoryEntries') ? 'bg-slate-700 text-white' : '' }}"
     data-submenu="manageinventory">
     <span class="flex items-center gap-3">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round"
-                d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.107-1.204l-.527-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
         </svg>
         <span>Manage Inventory</span>
     </span>
-    <svg class="w-4 h-4 transition-transform {{ request()->routeIs('addNewInventory','manageInventory','transferInventory') ? 'rotate-180' : '' }}"
+    <svg class="w-4 h-4 transition-transform {{ request()->routeIs('inventoryAddProduct','addNewInventory','manageInventory','transferInventory','invTxnsAdmin','inventoryEntries') ? 'rotate-180' : '' }}"
         data-arrow="submenu-manageinventory" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
     </svg>
 </button>
 <ul id="submenu-manageinventory"
-    class="ml-8 mt-1 space-y-1 {{ request()->routeIs('manageInventory','transferInventory','addNewInventory','invTxnsAdmin','adminCpInventoryList','adminCpInventoryDetail') ? '' : 'hidden' }}">
+    class="ml-8 mt-1 space-y-1 {{ request()->routeIs('inventoryAddProduct','manageInventory','transferInventory','addNewInventory','invTxnsAdmin','inventoryEntries','adminCpInventoryList','adminCpInventoryDetail') ? '' : 'hidden' }}">
+
+    <li>
+        <a href="{{ route('inventoryAddProduct') }}"
+            class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('inventoryAddProduct') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <span>Add Product</span>
+        </a>
+    </li>
 
     <li>
         <a href="{{ route('addNewInventory') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('addNewInventory') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>New Inventory</span>
+            <span>Add Stock</span>
         </a>
     </li>
 
@@ -32,10 +40,19 @@
         <a href="{{ route('manageInventory') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('manageInventory') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
             </svg>
             <span>Inventory List</span>
+        </a>
+    </li>
+
+    <li>
+        <a href="{{ route('inventoryEntries') }}"
+            class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('inventoryEntries') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
+            <span>Inventory Entries</span>
         </a>
     </li>
 
@@ -43,17 +60,17 @@
         <a href="{{ route('transferInventory') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('transferInventory') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
             </svg>
             <span>Transfer Inventory</span>
         </a>
-    </li><li>
+    </li>
+
+    <li>
         <a href="{{ route('invTxnsAdmin') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('invTxnsAdmin') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H6" />
             </svg>
             <span>Transfer List</span>
         </a>
