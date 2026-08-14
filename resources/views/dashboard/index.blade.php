@@ -161,6 +161,7 @@
     .all-img-wrap {
         overflow: hidden;
         aspect-ratio: 1/1;
+        position: relative;
     }
     .all-img-wrap img {
         width: 100%; height: 100%;
@@ -596,6 +597,47 @@ $catGradients = [
     <p class="skel-label">No products — <a href="{{ route('manageProducts') }}" style="color:var(--orange);">add from admin</a></p>
     @endif
 </div>
+
+
+{{-- ───────────────── SOLAR KITS ───────────────── --}}
+@if(isset($kits) && $kits->count())
+<div class="wrap sec sr">
+    <div class="sec-head">
+        <div>
+            <h2 class="sec-title">Solar Kits</h2>
+            <p class="sec-sub">Complete solar system packages ready to install</p>
+        </div>
+        <a href="{{ route('shop') }}" class="view-all">Browse All</a>
+    </div>
+    <div class="all-grid">
+        @foreach($kits as $kit)
+        <a href="{{ route('kit.show', $kit->slug) }}" class="all-card">
+            <div class="all-img-wrap">
+                @if($kit->image)
+                    <img src="{{ Storage::url($kit->image) }}" alt="{{ $kit->item_name }}">
+                @else
+                    <div class="all-img-empty" style="width:100%;aspect-ratio:1/1;">
+                        <span style="color:rgba(249,115,22,0.18);font-size:2rem;font-weight:900;">{{ strtoupper(substr($kit->item_name,0,2)) }}</span>
+                    </div>
+                @endif
+                <div style="position:absolute;top:10px;left:10px;background:var(--orange);color:#fff;font-size:0.65rem;font-weight:700;padding:3px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:0.05em;">Kit</div>
+            </div>
+            <div class="all-info">
+                <div class="all-name">{{ $kit->item_name }}</div>
+                <div class="all-cat">{{ $kit->category->category_name ?? 'Solar Kit' }}</div>
+                <div class="all-price">
+                    @if($kit->current_sale_price)
+                        ₹{{ number_format($kit->current_sale_price) }}
+                    @else
+                        <span style="color:var(--muted);font-size:0.75rem;font-weight:500;">Get Quote</span>
+                    @endif
+                </div>
+            </div>
+        </a>
+        @endforeach
+    </div>
+</div>
+@endif
 
 
 {{-- ───────────────── STATS BAR ───────────────── --}}
