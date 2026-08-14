@@ -769,9 +769,9 @@ $catGradients = [
     <div class="review-grid">
         @php
         $reviews = [
-            ['name'=>'Ramesh Sharma','city'=>'Jaipur','review'=>'Bill dropped from ₹4,500 to ₹300/month after installing a 5kW system. Excellent quality and service.','rating'=>'4/5','initials'=>'RS'],
-            ['name'=>'Priya Verma','city'=>'Jodhpur','review'=>'Professional team, installed in one day, and filed the subsidy on our behalf. Highly recommended.','rating'=>'5/5','initials'=>'PV'],
-            ['name'=>'Mukesh Patel','city'=>'Udaipur','review'=>'After 6 months the savings speak for themselves. Top quality panels and outstanding after-sales support.','rating'=>'5/5','initials'=>'MP'],
+            ['name'=>'Ramesh Kumar','city'=>'Jaipur','review'=>'Bill dropped from ₹4,500 to ₹300/month after installing a 5kW system. Excellent quality and service.','rating'=>'5/5','initials'=>'RS'],
+            ['name'=>'Priya Maheswari','city'=>'Jodhpur','review'=>'Professional team, installed in one day, and filed the subsidy on our behalf. Highly recommended.','rating'=>'5/5','initials'=>'PV'],
+            ['name'=>'Mahesh Tiwari','city'=>'Udaipur','review'=>'After 6 months the savings speak for themselves. Top quality panels and outstanding after-sales support.','rating'=>'5/5','initials'=>'MP'],
         ];
         @endphp
         @foreach($reviews as $r)
