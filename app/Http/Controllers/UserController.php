@@ -464,6 +464,37 @@ class UserController extends Controller
         }
     }
 
+    public function makeUserCp(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'role_id' => 'required|exists:channel_partner_roles,id',
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+
+        if ($user->role_id == 4 && $user->cp_id) {
+            return response()->json(['success' => false, 'message' => 'This user is already a Channel Partner.'], 422);
+        }
+
+        $cp = new ChannelPartner();
+        $cp->cp_name = $user->name;
+        $cp->contact_person = $user->name;
+        $cp->email = $user->email;
+        $cp->phone_number = $user->mobile_number ?? '';
+        $cp->cp_role = $request->role_id;
+        $cp->active_status = 1;
+        $cp->is_active = 1;
+        $cp->save();
+
+        $user->role_id = 4;
+        $user->cp_id = $cp->id;
+        $user->cp_permissions = ['new_request', 'view_requests', 'product_pricing', 'view_inventory'];
+        $user->save();
+
+        return response()->json(['success' => true, 'message' => $user->name . ' is now a Channel Partner.']);
+    }
+
     public function cpDashboard()
     {
         try {
@@ -533,7 +564,9 @@ class UserController extends Controller
     public function cpList()
     {
         $cp_list = ChannelPartner::with('role', 'associateUsers', 'wallet')->orderBy('created_at', 'desc')->get();
-        return view('Admin.cpSetting.cpList')->with('cp_list', $cp_list);
+        $users = User::where('role_id', 3)->whereNull('cp_id')->orderBy('name')->get(['id', 'name', 'email', 'mobile_number']);
+        $cp_roles = ChannelPartnerRole::all();
+        return view('Admin.cpSetting.cpList', compact('cp_list', 'users', 'cp_roles'));
     }
 
     public function cpDetail($id)

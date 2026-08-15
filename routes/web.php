@@ -108,6 +108,7 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
 
     Route::get('/addNewCp', [UserController::class, 'addNewCp'])->name('addNewCp');
     Route::post('/addNewCp', [UserController::class, 'storeNewCp'])->name('storeNewCp');
+    Route::post('/make-user-cp', [UserController::class, 'makeUserCp'])->name('makeUserCp');
     Route::get('/cpList', [UserController::class, 'cpList'])->name('cpList');
     Route::get('edit_cp/{id?}', [UserController::class, 'edit_cp'])->name('edit_cp');
     route::post('editCpQuery/', [UserController::class, 'editCpQuery'])->name('editCpQuery');

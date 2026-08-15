@@ -69,6 +69,39 @@
     .status-inactive { background: #fee2e2; color: #991b1b; }
 
     .cp-empty { text-align: center; padding: 3rem 1rem; color: #9ca3af; font-size: .9rem; }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: #fff; border-radius: 14px; width: 100%; max-width: 520px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+    .modal-head { padding: 1.1rem 1.25rem; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; }
+    .modal-head h2 { font-size: 1rem; font-weight: 700; color: #1f2937; margin: 0; }
+    .modal-close { background: none; border: none; font-size: 1.3rem; color: #9ca3af; cursor: pointer; padding: .25rem; line-height: 1; }
+    .modal-close:hover { color: #374151; }
+    .modal-body { padding: 1rem 1.25rem; overflow-y: auto; flex: 1; }
+    .modal-search { width: 100%; padding: .5rem .75rem; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: .85rem; margin-bottom: .75rem; }
+    .modal-search:focus { outline: none; border-color: #4A90E2; }
+    .user-list { list-style: none; padding: 0; margin: 0; }
+    .user-item { display: flex; align-items: center; justify-content: space-between; padding: .6rem .75rem; border: 1.5px solid #e5e7eb; border-radius: 8px; margin-bottom: .4rem; cursor: pointer; transition: all .12s; }
+    .user-item:hover { border-color: #4A90E2; background: #f0f7ff; }
+    .user-item.selected { border-color: #4A90E2; background: #dbeafe; }
+    .user-item-info { min-width: 0; }
+    .user-item-name { font-size: .88rem; font-weight: 600; color: #1f2937; }
+    .user-item-detail { font-size: .75rem; color: #6b7280; }
+    .user-item-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #d1d5db; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all .12s; }
+    .user-item.selected .user-item-check { background: #4A90E2; border-color: #4A90E2; }
+    .user-item.selected .user-item-check::after { content: ''; width: 6px; height: 6px; background: #fff; border-radius: 50%; }
+    .modal-role-wrap { margin-top: .75rem; padding-top: .75rem; border-top: 1px solid #f3f4f6; display: none; }
+    .modal-role-wrap.show { display: block; }
+    .modal-role-wrap label { font-size: .78rem; font-weight: 600; color: #374151; margin-bottom: .35rem; display: block; }
+    .modal-role-select { width: 100%; padding: .5rem .75rem; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: .85rem; }
+    .modal-foot { padding: 1rem 1.25rem; border-top: 1px solid #e5e7eb; display: flex; gap: .5rem; justify-content: flex-end; }
+    .modal-btn { padding: .5rem 1.25rem; border-radius: 8px; font-size: .85rem; font-weight: 700; border: none; cursor: pointer; transition: all .12s; }
+    .modal-btn-cancel { background: #f3f4f6; color: #374151; }
+    .modal-btn-cancel:hover { background: #e5e7eb; }
+    .modal-btn-confirm { background: #4A90E2; color: #fff; }
+    .modal-btn-confirm:hover { background: #3b7dc4; }
+    .modal-btn-confirm:disabled { background: #93c5fd; cursor: not-allowed; }
+    .no-users-msg { text-align: center; padding: 1.5rem; color: #9ca3af; font-size: .85rem; }
 </style>
 @endsection
 
@@ -80,9 +113,9 @@
             <p>Manage all channel partners and their information</p>
         </div>
         <div class="cp-header-right">
-            <a href="{{ route('addNewCp') }}" class="cp-add-btn">
+            <button type="button" class="cp-add-btn" onclick="document.getElementById('addCpModal').classList.add('show')">
                 <i class="fas fa-plus"></i> Add New Partner
-            </a>
+            </button>
         </div>
     </div>
 
@@ -188,8 +221,47 @@
         @endforeach
     </div>
     @else
-        <div class="cp-empty">No channel partners yet. <a href="{{ route('addNewCp') }}">Add your first partner</a></div>
+        <div class="cp-empty">No channel partners yet. <button type="button" class="cp-add-btn" onclick="document.getElementById('addCpModal').classList.add('show')" style="display:inline-flex;">Add your first partner</button></div>
     @endif
+</div>
+{{-- Add CP Modal --}}
+<div class="modal-overlay" id="addCpModal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h2>Select User to Make Channel Partner</h2>
+            <button class="modal-close" onclick="closeAddCpModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            @if($users->count())
+            <input type="text" class="modal-search" id="modalUserSearch" placeholder="Search by name, email, mobile...">
+            <ul class="user-list" id="userList">
+                @foreach($users as $u)
+                <li class="user-item" data-id="{{ $u->id }}" data-search="{{ strtolower($u->name . ' ' . $u->email . ' ' . ($u->mobile_number ?? '')) }}" onclick="selectUser(this)">
+                    <div class="user-item-info">
+                        <div class="user-item-name">{{ $u->name }}</div>
+                        <div class="user-item-detail">{{ $u->email }}{{ $u->mobile_number ? ' | ' . $u->mobile_number : '' }}</div>
+                    </div>
+                    <div class="user-item-check"></div>
+                </li>
+                @endforeach
+            </ul>
+            <div class="modal-role-wrap" id="roleWrap">
+                <label>CP Role</label>
+                <select class="modal-role-select" id="cpRoleSelect">
+                    @foreach($cp_roles as $role)
+                    <option value="{{ $role->id }}">{{ $role->role_name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            @else
+            <div class="no-users-msg">No users available to convert. All users are either admins or already channel partners.</div>
+            @endif
+        </div>
+        <div class="modal-foot">
+            <button class="modal-btn modal-btn-cancel" onclick="closeAddCpModal()">Cancel</button>
+            <button class="modal-btn modal-btn-confirm" id="confirmCpBtn" disabled onclick="confirmMakeCp()">Confirm</button>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -220,6 +292,76 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     searchInput.addEventListener('input', applyFilters);
+});
+
+var selectedUserId = null;
+
+function closeAddCpModal() {
+    document.getElementById('addCpModal').classList.remove('show');
+    selectedUserId = null;
+    document.querySelectorAll('.user-item').forEach(function(i) { i.classList.remove('selected'); });
+    document.getElementById('roleWrap').classList.remove('show');
+    document.getElementById('confirmCpBtn').disabled = true;
+    var search = document.getElementById('modalUserSearch');
+    if (search) search.value = '';
+    filterModalUsers();
+}
+
+function selectUser(el) {
+    document.querySelectorAll('.user-item').forEach(function(i) { i.classList.remove('selected'); });
+    el.classList.add('selected');
+    selectedUserId = el.dataset.id;
+    document.getElementById('roleWrap').classList.add('show');
+    document.getElementById('confirmCpBtn').disabled = false;
+}
+
+function filterModalUsers() {
+    var q = (document.getElementById('modalUserSearch') ? document.getElementById('modalUserSearch').value : '').toLowerCase().trim();
+    document.querySelectorAll('.user-item').forEach(function(item) {
+        item.style.display = !q || item.dataset.search.indexOf(q) !== -1 ? '' : 'none';
+    });
+}
+
+if (document.getElementById('modalUserSearch')) {
+    document.getElementById('modalUserSearch').addEventListener('input', filterModalUsers);
+}
+
+function confirmMakeCp() {
+    if (!selectedUserId) return;
+    var roleId = document.getElementById('cpRoleSelect').value;
+    var btn = document.getElementById('confirmCpBtn');
+    btn.disabled = true;
+    btn.textContent = 'Processing...';
+
+    fetch('{{ route("makeUserCp") }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({ user_id: selectedUserId, role_id: roleId })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            closeAddCpModal();
+            Swal.fire('Done!', data.message, 'success').then(function() { location.reload(); });
+        } else {
+            Swal.fire('Error', data.message || 'Something went wrong.', 'error');
+            btn.disabled = false;
+            btn.textContent = 'Confirm';
+        }
+    })
+    .catch(function() {
+        Swal.fire('Error', 'Something went wrong.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Confirm';
+    });
+}
+
+document.getElementById('addCpModal').addEventListener('click', function(e) {
+    if (e.target === this) closeAddCpModal();
 });
 
 function deleteCp(id) {
