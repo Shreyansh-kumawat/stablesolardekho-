@@ -214,42 +214,7 @@ class OrderController extends Controller
                 ]);
             }
 
-            $products = $order->products;
-            if (is_string($products)) $products = json_decode($products, true);
-            if (is_array($products)) {
-                foreach ($products as $product) {
-                    $productId = $product['product_id'] ?? null;
-                    $qty = (int) ($product['quantity'] ?? 0);
-                    if (!$productId || $qty <= 0) continue;
-
-                    $prod = Product::find($productId);
-                    if (!$prod) continue;
-
-                    $prod->quantity = max(0, ($prod->quantity ?? 0) - $qty);
-                    $prod->save();
-
-                    $inventory = ProductInventory::where('product_id', $productId)->first();
-                    if ($inventory) {
-                        $inventory->available_qty = max(0, $inventory->available_qty - $qty);
-                        $inventory->save();
-                    }
-
-                    $salePrice = $product['price'] ?? $product['sale_price'] ?? $prod->current_sale_price ?? 0;
-
-                    $txnId = 'INV' . date('Ymd') . strtoupper(substr(uniqid(), -4));
-                    ProductInventoryTransaction::create([
-                        'product_id' => $productId,
-                        'transaction_type' => 'OUT',
-                        'quantity' => $qty,
-                        'unit_price' => $salePrice,
-                        'performed_by' => Auth::id(),
-                        'txn_id' => $txnId,
-                        'remarks' => 'CP Order #' . $order->order_id . ' approved',
-                    ]);
-                }
-            }
-
-            return redirect()->route('pendingOrders')->with('success', 'Order approved and stock deducted.');
+            return redirect()->route('pendingOrders')->with('success', 'Order approved. Stock will be deducted when marked as delivered.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
@@ -317,21 +282,6 @@ class OrderController extends Controller
             'status' => 'confirmed',
         ]);
 
-        $products = $order->products;
-        if (is_string($products)) $products = json_decode($products, true);
-        if (is_array($products)) {
-            foreach ($products as $product) {
-                $productId = $product['product_id'] ?? null;
-                $qty = (int) ($product['quantity'] ?? 0);
-                if (!$productId || $qty <= 0) continue;
-                $prod = Product::find($productId);
-                if ($prod) {
-                    $prod->quantity = max(0, $prod->quantity - $qty);
-                    $prod->save();
-                }
-            }
-        }
-
         return redirect()->back()->with('success', 'CP payment approved and order confirmed.');
     }
 
@@ -366,6 +316,29 @@ class OrderController extends Controller
                     'performed_by' => auth()->id(),
                     'txn_id' => 'DEL' . date('Ymd') . strtoupper(substr(uniqid(), -4)),
                     'remarks' => 'Auto-added from delivered order ' . $order->order_id,
+                ]);
+
+                $prod = Product::find($productId);
+                if ($prod) {
+                    $prod->quantity = max(0, ($prod->quantity ?? 0) - $qty);
+                    $prod->save();
+                }
+
+                $inventory = ProductInventory::where('product_id', $productId)->first();
+                if ($inventory) {
+                    $inventory->available_qty = max(0, $inventory->available_qty - $qty);
+                    $inventory->save();
+                }
+
+                $salePrice = $product['price'] ?? $product['sale_price'] ?? ($prod ? $prod->current_sale_price : 0) ?? 0;
+                ProductInventoryTransaction::create([
+                    'product_id' => $productId,
+                    'transaction_type' => 'OUT',
+                    'quantity' => $qty,
+                    'unit_price' => $salePrice,
+                    'performed_by' => auth()->id(),
+                    'txn_id' => 'INV' . date('Ymd') . strtoupper(substr(uniqid(), -4)),
+                    'remarks' => 'CP Order #' . $order->order_id . ' delivered',
                 ]);
             }
         }
