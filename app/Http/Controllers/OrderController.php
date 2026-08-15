@@ -6,6 +6,8 @@ use App\Models\CpOrder;
 use App\Models\CustomerOrder;
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\ProductInventory;
+use App\Models\ProductInventoryTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -219,11 +221,31 @@ class OrderController extends Controller
                     $productId = $product['product_id'] ?? null;
                     $qty = (int) ($product['quantity'] ?? 0);
                     if (!$productId || $qty <= 0) continue;
+
                     $prod = Product::find($productId);
-                    if ($prod) {
-                        $prod->quantity = max(0, ($prod->quantity ?? 0) - $qty);
-                        $prod->save();
+                    if (!$prod) continue;
+
+                    $prod->quantity = max(0, ($prod->quantity ?? 0) - $qty);
+                    $prod->save();
+
+                    $inventory = ProductInventory::where('product_id', $productId)->first();
+                    if ($inventory) {
+                        $inventory->available_qty = max(0, $inventory->available_qty - $qty);
+                        $inventory->save();
                     }
+
+                    $salePrice = $product['price'] ?? $product['sale_price'] ?? $prod->current_sale_price ?? 0;
+
+                    $txnId = 'INV' . date('Ymd') . strtoupper(substr(uniqid(), -4));
+                    ProductInventoryTransaction::create([
+                        'product_id' => $productId,
+                        'transaction_type' => 'OUT',
+                        'quantity' => $qty,
+                        'unit_price' => $salePrice,
+                        'performed_by' => Auth::id(),
+                        'txn_id' => $txnId,
+                        'remarks' => 'CP Order #' . $order->order_id . ' approved',
+                    ]);
                 }
             }
 
@@ -410,10 +432,29 @@ class OrderController extends Controller
 
         foreach ($order->items as $item) {
             $product = Product::find($item->product_id);
-            if ($product) {
-                $product->quantity = max(0, $product->quantity - $item->quantity);
-                $product->save();
+            if (!$product) continue;
+
+            $product->quantity = max(0, $product->quantity - $item->quantity);
+            $product->save();
+
+            $inventory = ProductInventory::where('product_id', $item->product_id)->first();
+            if ($inventory) {
+                $inventory->available_qty = max(0, $inventory->available_qty - $item->quantity);
+                $inventory->save();
             }
+
+            $salePrice = $item->price ?? $product->current_sale_price ?? 0;
+
+            $txnId = 'INV' . date('Ymd') . strtoupper(substr(uniqid(), -4));
+            ProductInventoryTransaction::create([
+                'product_id' => $item->product_id,
+                'transaction_type' => 'OUT',
+                'quantity' => $item->quantity,
+                'unit_price' => $salePrice,
+                'performed_by' => Auth::id(),
+                'txn_id' => $txnId,
+                'remarks' => 'Customer Order #' . ($order->order_number ?? $order->id) . ' approved',
+            ]);
         }
 
         return redirect()->back()->with('success', 'Payment approved and order confirmed.');
