@@ -92,10 +92,9 @@
                             <td style="font-weight:700;" id="stockDisplay-{{ $item->id }}">{{ $item->current_stock ?? 0 }}</td>
                             <td>
                                 <div class="stock-ctrl">
-                                    <button type="button" class="stock-btn minus" onclick="stockChange({{ $item->id }}, -1)">−</button>
-                                    <input type="number" min="0" class="stock-input" id="stockInput-{{ $item->id }}" value="{{ $item->current_stock ?? 0 }}" data-original="{{ $item->current_stock ?? 0 }}">
-                                    <button type="button" class="stock-btn" onclick="stockChange({{ $item->id }}, 1)">+</button>
-                                    <button type="button" class="stock-save" id="stockSave-{{ $item->id }}" onclick="stockSave({{ $item->id }})">Done</button>
+                                    <button type="button" class="stock-btn minus" onclick="stockAdjust({{ $item->id }}, -1)">−</button>
+                                    <input type="number" min="0" class="stock-input" id="stockInput-{{ $item->id }}" value="0">
+                                    <button type="button" class="stock-btn" onclick="stockAdjust({{ $item->id }}, 1)">+</button>
                                     <span class="stock-msg" id="stockMsg-{{ $item->id }}"></span>
                                 </div>
                             </td>
@@ -125,42 +124,33 @@ $(function() {
         pageLength: 25,
         order: [[1,'asc']]
     });
-
-    document.querySelectorAll('.stock-input').forEach(input => {
-        input.addEventListener('input', function() {
-            const id = this.id.replace('stockInput-','');
-            const orig = parseInt(this.dataset.original);
-            const val = parseInt(this.value) || 0;
-            if (val < 0) this.value = 0;
-            const btn = document.getElementById('stockSave-' + id);
-            if (val !== orig) {
-                btn.classList.add('show');
-            } else {
-                btn.classList.remove('show');
-            }
-        });
-    });
 });
 
-function stockChange(id, delta) {
+function stockAdjust(id, direction) {
     const input = document.getElementById('stockInput-' + id);
-    let val = parseInt(input.value) || 0;
-    val += delta;
-    if (val < 0) val = 0;
-    input.value = val;
-    input.dispatchEvent(new Event('input'));
-}
-
-function stockSave(id) {
-    const input = document.getElementById('stockInput-' + id);
-    const btn = document.getElementById('stockSave-' + id);
     const msg = document.getElementById('stockMsg-' + id);
     const display = document.getElementById('stockDisplay-' + id);
-    const newQty = parseInt(input.value) || 0;
+    const delta = parseInt(input.value) || 0;
 
-    btn.textContent = '...';
-    btn.disabled = true;
+    if (delta <= 0) {
+        msg.textContent = 'Enter qty first';
+        msg.style.color = '#e74c3c';
+        msg.style.display = 'inline';
+        setTimeout(() => { msg.style.display = 'none'; }, 2000);
+        return;
+    }
 
+    const currentStock = parseInt(display.textContent) || 0;
+    const newQty = currentStock + (delta * direction);
+    if (newQty < 0) {
+        msg.textContent = 'Not enough stock';
+        msg.style.color = '#e74c3c';
+        msg.style.display = 'inline';
+        setTimeout(() => { msg.style.display = 'none'; }, 2000);
+        return;
+    }
+
+    input.disabled = true;
     fetch('{{ route("inventoryQuickStockUpdate") }}', {
         method: 'POST',
         headers: {
@@ -173,10 +163,9 @@ function stockSave(id) {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            input.dataset.original = data.stock;
             display.textContent = data.stock;
-            btn.classList.remove('show');
-            msg.textContent = 'Saved!';
+            input.value = 0;
+            msg.textContent = (direction > 0 ? '+' : '-') + delta + ' done!';
             msg.style.color = '#27ae60';
             msg.style.display = 'inline';
             setTimeout(() => { msg.style.display = 'none'; }, 2000);
@@ -192,8 +181,7 @@ function stockSave(id) {
         msg.style.display = 'inline';
     })
     .finally(() => {
-        btn.textContent = 'Done';
-        btn.disabled = false;
+        input.disabled = false;
     });
 }
 </script>
