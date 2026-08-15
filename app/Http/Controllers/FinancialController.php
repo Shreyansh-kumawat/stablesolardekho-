@@ -8,7 +8,9 @@ use App\Models\CpOrder;
 use App\Models\CpPayment;
 use App\Models\CustomerOrder;
 use App\Models\CpWalletTransaction;
+use App\Models\ProductInventoryTransaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class FinancialController extends Controller
@@ -60,6 +62,16 @@ class FinancialController extends Controller
             'entries' => (clone $materials)->count(),
         ];
 
+        $inventoryCost = ProductInventoryTransaction::where('transaction_type', 'IN')
+            ->whereNotNull('unit_price');
+        if ($dateFilter) {
+            $inventoryCost->whereBetween('created_at', [$dateFilter[0], $dateFilter[1] . ' 23:59:59']);
+        }
+        $inventoryCostStats = [
+            'total' => (clone $inventoryCost)->selectRaw('SUM(unit_price * quantity) as total')->value('total') ?? 0,
+            'entries' => (clone $inventoryCost)->count(),
+        ];
+
         $revenue = [
             'cp_orders' => $cpOrderStats['completed'],
             'customer_orders' => $custOrderStats['paid'],
@@ -69,7 +81,7 @@ class FinancialController extends Controller
 
         return view('Admin.financial.dashboard', compact(
             'cpOrderStats', 'custOrderStats', 'paymentStats', 'materialStats',
-            'revenue', 'period'
+            'inventoryCostStats', 'revenue', 'period'
         ));
     }
 
@@ -102,11 +114,19 @@ class FinancialController extends Controller
         ];
         $revenue['total'] = $revenue['cp_orders'] + $revenue['customer_orders'] + $revenue['cp_payments'];
 
+        $inventoryPurchase = ProductInventoryTransaction::where('transaction_type', 'IN')
+            ->whereNotNull('unit_price');
+        if ($dateFilter) {
+            $inventoryPurchase->whereBetween('created_at', [$dateFilter[0], $dateFilter[1] . ' 23:59:59']);
+        }
+        $inventoryPurchaseCost = (clone $inventoryPurchase)->selectRaw('SUM(unit_price * quantity) as total')->value('total') ?? 0;
+
         $expenses = [
+            'inventory_purchase' => $inventoryPurchaseCost,
             'material_cost' => $materialExpenses->sum('total_amount'),
             'wallet_transfers' => $walletCredits->sum('amount'),
         ];
-        $expenses['total'] = $expenses['material_cost'] + $expenses['wallet_transfers'];
+        $expenses['total'] = $expenses['inventory_purchase'] + $expenses['material_cost'] + $expenses['wallet_transfers'];
 
         $profitLoss = $revenue['total'] - $expenses['total'];
 

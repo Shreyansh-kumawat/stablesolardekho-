@@ -138,6 +138,18 @@
         </div>
     </div>
 
+    {{-- Inventory Purchase Cost --}}
+    <div class="fd-section">
+        <div class="fd-section-title">Inventory Purchase Cost</div>
+        <div class="fd-stats">
+            <div class="fd-stat">
+                <div class="fd-stat-label">Total Purchase Cost</div>
+                <div class="fd-stat-value" style="color:#dc2626;">{{ number_format($inventoryCostStats['total'], 2) }}</div>
+                <div class="fd-stat-sub">{{ $inventoryCostStats['entries'] }} purchase entries</div>
+            </div>
+        </div>
+    </div>
+
     {{-- Material Expenses --}}
     <div class="fd-section">
         <div class="fd-section-title">Material Expenses</div>

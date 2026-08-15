@@ -96,6 +96,10 @@
                 Expenses
             </div>
             <div class="pl-row">
+                <span class="pl-row-label">Inventory Purchase Cost</span>
+                <span class="pl-row-value" style="color:#dc2626;">{{ number_format($expenses['inventory_purchase'], 2) }}</span>
+            </div>
+            <div class="pl-row">
                 <span class="pl-row-label">Material Costs (Given to CPs)</span>
                 <span class="pl-row-value" style="color:#dc2626;">{{ number_format($expenses['material_cost'], 2) }}</span>
             </div>

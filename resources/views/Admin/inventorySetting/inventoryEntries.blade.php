@@ -120,7 +120,12 @@
                     <div class="val">{{ $entry->invoice_date }}</div>
                 </div>
                 @endif
-                @if($entry->channelPartner)
+                @if($entry->supplier_name)
+                <div class="entry-field">
+                    <div class="lbl">Supplier</div>
+                    <div class="val">{{ $entry->supplier_name }}</div>
+                </div>
+                @elseif($entry->channelPartner)
                 <div class="entry-field">
                     <div class="lbl">{{ $entry->transaction_type === 'IN' ? 'Supplier' : 'Transferred To' }}</div>
                     <div class="val">{{ $entry->channelPartner->cp_name }}</div>

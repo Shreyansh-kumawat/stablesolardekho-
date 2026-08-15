@@ -12,6 +12,7 @@ class ProductInventoryTransaction extends Model
         'transaction_type',
         'quantity',
         'txn_done_from',
+        'supplier_name',
         'unit_price',
         'invoice_number',
         'invoice_date',

@@ -169,13 +169,8 @@
             <p class="sec-label">Inventory Details</p>
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">Supplier</label>
-                    <select name="supplier_id" id="fSupplier" class="form-select">
-                        <option value="">Select Supplier (optional)</option>
-                        @foreach($suppliers as $sup)
-                        <option value="{{ $sup->id }}">{{ $sup->cp_name }}</option>
-                        @endforeach
-                    </select>
+                    <label class="form-label">Supplier Name</label>
+                    <input type="text" class="form-control" name="supplier_name" id="fSupplierName" placeholder="e.g. Waaree Energies" value="{{ old('supplier_name') }}">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Unit Price (Purchase)</label>
