@@ -151,7 +151,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Supplier Name</label>
-                        <input type="text" class="form-control" name="supplier_name" placeholder="e.g. Waaree Energies">
+                        <input type="text" class="form-control" name="supplier_name" placeholder="e.g. Shreyansh Energies">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Unit Price (Purchase)</label>
@@ -250,7 +250,7 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Supplier Name</label>
-                        <input type="text" class="form-control" name="supplier_name" placeholder="e.g. Waaree Energies" value="{{ old('supplier_name') }}">
+                        <input type="text" class="form-control" name="supplier_name" placeholder="e.g. Shreyansh Energies" value="{{ old('supplier_name') }}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Unit Price (Purchase)</label>
@@ -272,7 +272,7 @@
                 <p class="sec-label">Specifications <small style="color:var(--txt2);text-transform:none;letter-spacing:0;font-weight:400;">(all optional)</small></p>
                 <div class="row g-2 mb-2">
                     <div class="col-md-4"><label class="form-label mb-0">Type</label><input type="text" class="form-control" name="type" placeholder="e.g. Solar Panel"></div>
-                    <div class="col-md-4"><label class="form-label mb-0">Brand</label><input type="text" class="form-control" name="brand" placeholder="e.g. Waaree, Adani"></div>
+                    <div class="col-md-4"><label class="form-label mb-0">Brand</label><input type="text" class="form-control" name="brand" placeholder="e.g. Shreyansh, Adani"></div>
                     <div class="col-md-4"><label class="form-label mb-0">Model</label><input type="text" class="form-control" name="product_model" placeholder="e.g. WS-545"></div>
                 </div>
                 <div class="row g-2 mb-2">
