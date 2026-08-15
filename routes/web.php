@@ -174,8 +174,10 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::get('/get-product-availableQty', [InventoryController::class, 'getProductAvailableQty'])->name('getProductAvailableQty');
     Route::get('/get-available-serial', [InventoryController::class, 'getAvailableSerial'])->name('getAvailableSerial');
     Route::get('/admin-inv-txnx', [InventoryController::class, 'invTxnsAdmin'])->name('invTxnsAdmin');
-    Route::get('/inventory/add-product', [InventoryController::class, 'addProductForm'])->name('inventoryAddProduct');
+    Route::get('/inventory/add-product/{id?}', [InventoryController::class, 'addProductForm'])->name('inventoryAddProduct');
     Route::post('/inventory/add-product', [InventoryController::class, 'storeProduct'])->name('inventoryStoreProduct');
+    Route::put('/inventory/update-product/{id}', [InventoryController::class, 'updateProduct'])->name('inventoryUpdateProduct');
+    Route::get('/inventory/product-json/{id}', [InventoryController::class, 'getProductJson'])->name('inventoryProductJson');
     Route::get('/inventory/entries', [InventoryController::class, 'inventoryEntries'])->name('inventoryEntries');
     Route::post('/inventory/quick-stock-update', [InventoryController::class, 'quickStockUpdate'])->name('inventoryQuickStockUpdate');
 

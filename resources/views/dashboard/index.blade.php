@@ -404,14 +404,8 @@ function nextSlide(){goToSlide(bc+1);}function prevSlide(){goToSlide(bc-1);}
 if(bds.length)goToSlide(0);setInterval(nextSlide,5000);
 </script>
 @else
-<div style="position:relative;width:100%;background:var(--card);overflow:hidden;">
-    <div class="skel" style="width:100%;height:480px;"></div>
-    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:0 6%;gap:14px;">
-        <div class="skel" style="width:380px;height:42px;"></div>
-        <div class="skel" style="width:280px;height:20px;"></div>
-        <div class="skel" style="width:140px;height:46px;border-radius:10px;"></div>
-        <p class="skel-label">No banners — <a href="{{ route('admin.banners') }}" style="color:var(--orange);">add from admin</a></p>
-    </div>
+<div style="width:100%;background:var(--card);padding:60px 0;text-align:center;">
+    <p style="color:#374151;font-size:0.9rem;font-weight:600;margin:0;">No banners available</p>
 </div>
 @endif
 
@@ -456,14 +450,7 @@ $catGradients = [
         @endforeach
     </div>
     @else
-    <div class="cat-scroll">
-        @for($i = 0; $i < 5; $i++)
-        <div style="flex-shrink:0;width:155px;height:195px;border-radius:18px;overflow:hidden;">
-            <div class="skel" style="width:100%;height:100%;border-radius:18px;"></div>
-        </div>
-        @endfor
-    </div>
-    <p class="skel-label">No categories — <a href="{{ route('manageCategory') }}" style="color:var(--orange);">add from admin</a></p>
+    <p style="color:#374151;font-size:0.9rem;font-weight:600;text-align:center;padding:30px 0;">No categories available</p>
     @endif
 </div>
 
@@ -520,19 +507,7 @@ $catGradients = [
         @endforeach
     </div>
     @else
-    <div class="feat-grid">
-        @for($i = 0; $i < 4; $i++)
-        <div style="background:var(--card);border-radius:20px;overflow:hidden;">
-            <div class="skel" style="aspect-ratio:4/3;border-radius:0;"></div>
-            <div style="padding:14px 16px 18px;">
-                <div class="skel" style="height:10px;width:40%;margin-bottom:8px;"></div>
-                <div class="skel" style="height:14px;width:85%;margin-bottom:14px;"></div>
-                <div class="skel" style="height:16px;width:35%;"></div>
-            </div>
-        </div>
-        @endfor
-    </div>
-    <p class="skel-label">No featured products — <a href="{{ route('manageProducts') }}" style="color:var(--orange);">mark as featured</a></p>
+    <p style="color:rgba(255,255,255,0.5);font-size:0.9rem;font-weight:600;text-align:center;padding:30px 0;">No featured products available</p>
     @endif
 </div>
 </div>
@@ -582,25 +557,12 @@ $catGradients = [
         @endforeach
     </div>
     @else
-    <div class="all-grid">
-        @for($i = 0; $i < 8; $i++)
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;">
-            <div class="skel" style="aspect-ratio:1/1;border-radius:0;"></div>
-            <div style="padding:10px 12px 13px;">
-                <div class="skel" style="height:13px;width:88%;margin-bottom:6px;"></div>
-                <div class="skel" style="height:10px;width:55%;margin-bottom:6px;"></div>
-                <div class="skel" style="height:14px;width:38%;"></div>
-            </div>
-        </div>
-        @endfor
-    </div>
-    <p class="skel-label">No products — <a href="{{ route('manageProducts') }}" style="color:var(--orange);">add from admin</a></p>
+    <p style="color:#374151;font-size:0.9rem;font-weight:600;text-align:center;padding:30px 0;">No products available</p>
     @endif
 </div>
 
 
 {{-- ───────────────── SOLAR KITS ───────────────── --}}
-@if(isset($kits) && $kits->count())
 <div class="wrap sec sr">
     <div class="sec-head">
         <div>
@@ -609,6 +571,7 @@ $catGradients = [
         </div>
         <a href="{{ route('shop') }}" class="view-all">Browse All</a>
     </div>
+    @if(isset($kits) && $kits->count())
     <div class="all-grid">
         @foreach($kits as $kit)
         <a href="{{ route('kit.show', $kit->slug) }}" class="all-card">
@@ -636,8 +599,10 @@ $catGradients = [
         </a>
         @endforeach
     </div>
+    @else
+    <p style="color:#374151;font-size:0.9rem;font-weight:600;text-align:center;padding:30px 0;">No kits available</p>
+    @endif
 </div>
-@endif
 
 
 {{-- ───────────────── STATS BAR ───────────────── --}}

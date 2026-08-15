@@ -71,24 +71,11 @@
     </li>
     @endif
 
-    {{-- Add Product (Inventory) --}}
+    {{-- Add Stock (New + Edit Product) --}}
     @if(Auth::user()->hasAdminPermission('products'))
     <li>
         <a href="{{ route('inventoryAddProduct') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('inventoryAddProduct') ? 'ec-active' : '' }}">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            <span>Add Product</span>
-        </a>
-    </li>
-    @endif
-
-    {{-- Add Stock --}}
-    @if(Auth::user()->hasAdminPermission('products'))
-    <li>
-        <a href="{{ route('addNewInventory') }}"
-            class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('addNewInventory') ? 'ec-active' : '' }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
