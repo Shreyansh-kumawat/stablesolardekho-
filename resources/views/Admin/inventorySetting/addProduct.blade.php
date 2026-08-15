@@ -126,6 +126,23 @@
             <input type="hidden" name="existing_stock_only" value="1">
 
             <div class="sec-card">
+                <p class="sec-label">Product Settings</p>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Sale Price (&#8377;)</label>
+                        <input type="text" class="form-control" name="current_sale_price" id="epSalePrice" placeholder="e.g. 20000">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Featured</label>
+                        <div class="form-check form-switch mt-1">
+                            <input class="form-check-input" type="checkbox" name="is_featured" value="1" id="epFeaturedCheck">
+                            <label class="form-check-label" for="epFeaturedCheck" style="font-size:.85rem;">Mark as Featured</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sec-card">
                 <p class="sec-label">Update Stock</p>
                 <div class="row g-3">
                     <div class="col-md-4">
@@ -392,6 +409,9 @@ function onProductSelect() {
             document.getElementById('epQuantity').value = currentStock;
 
             document.getElementById('epFeatured').textContent = p.is_featured == 1 ? 'Yes' : 'No';
+
+            document.getElementById('epSalePrice').value = p.current_sale_price || '';
+            document.getElementById('epFeaturedCheck').checked = p.is_featured == 1;
 
             const specsWrap = document.getElementById('epSpecsWrap');
             const specsPills = document.getElementById('epSpecs');

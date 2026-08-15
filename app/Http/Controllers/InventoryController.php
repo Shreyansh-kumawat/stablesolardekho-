@@ -203,6 +203,10 @@ class InventoryController extends Controller
         try {
             $product = Product::findOrFail($id);
 
+            $product->current_sale_price = $request->current_sale_price ?: $product->current_sale_price;
+            $product->is_featured = $request->is_featured ? 1 : 0;
+            $product->save();
+
             if (!$request->has('existing_stock_only')) {
                 $product->category_id = $request->category_id;
                 $product->sub_category_id = $request->sub_category_id ?: null;
