@@ -71,16 +71,12 @@
                 Revenue (Income)
             </div>
             <div class="pl-row">
-                <span class="pl-row-label">CP Orders (Delivered/Completed)</span>
-                <span class="pl-row-value" style="color:#059669;">{{ number_format($revenue['cp_orders'], 2) }}</span>
+                <span class="pl-row-label">Sales Revenue (Delivered Orders)</span>
+                <span class="pl-row-value" style="color:#059669;">{{ number_format($revenue['sales'], 2) }}</span>
             </div>
             <div class="pl-row">
                 <span class="pl-row-label">Customer Orders (Paid)</span>
                 <span class="pl-row-value" style="color:#059669;">{{ number_format($revenue['customer_orders'], 2) }}</span>
-            </div>
-            <div class="pl-row">
-                <span class="pl-row-label">CP Payments Received (Verified)</span>
-                <span class="pl-row-value" style="color:#059669;">{{ number_format($revenue['cp_payments'], 2) }}</span>
             </div>
             <div class="pl-row pl-row-total">
                 <span class="pl-row-label">Total Revenue</span>
@@ -117,7 +113,7 @@
     <div class="pl-outstanding">
         <div class="pl-out-card">
             <div class="pl-out-label">CP Orders Pending</div>
-            <div class="pl-out-value">{{ number_format($outstanding['cp_pending'], 2) }}</div>
+            <div class="pl-out-value">{{ $outstanding['cp_pending'] }} orders</div>
         </div>
         <div class="pl-out-card">
             <div class="pl-out-label">Customer Orders Unpaid</div>

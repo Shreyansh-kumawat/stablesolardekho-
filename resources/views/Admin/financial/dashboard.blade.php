@@ -68,16 +68,12 @@
                 Total Revenue
             </div>
             <div class="fd-rev-row">
-                <span class="fd-rev-label">CP Orders (Delivered/Completed)</span>
-                <span class="fd-rev-value">{{ number_format($revenue['cp_orders'], 2) }}</span>
+                <span class="fd-rev-label">Sales Revenue (Delivered Orders)</span>
+                <span class="fd-rev-value">{{ number_format($revenue['sales'], 2) }}</span>
             </div>
             <div class="fd-rev-row">
                 <span class="fd-rev-label">Customer Orders (Paid)</span>
                 <span class="fd-rev-value">{{ number_format($revenue['customer_orders'], 2) }}</span>
-            </div>
-            <div class="fd-rev-row">
-                <span class="fd-rev-label">CP Payments Received (Verified)</span>
-                <span class="fd-rev-value">{{ number_format($revenue['cp_payments'], 2) }}</span>
             </div>
             <div class="fd-rev-row fd-rev-total">
                 <span class="fd-rev-label">Total Revenue</span>
@@ -91,17 +87,16 @@
         <div class="fd-section-title">CP Orders</div>
         <div class="fd-stats">
             <div class="fd-stat">
-                <div class="fd-stat-label">Total Value</div>
-                <div class="fd-stat-value" style="color:#059669;">{{ number_format($cpOrderStats['total'], 2) }}</div>
-                <div class="fd-stat-sub">{{ $cpOrderStats['count'] }} orders</div>
+                <div class="fd-stat-label">Total Orders</div>
+                <div class="fd-stat-value" style="color:#059669;">{{ $cpOrderStats['count'] }}</div>
             </div>
             <div class="fd-stat">
-                <div class="fd-stat-label">Completed / Delivered</div>
-                <div class="fd-stat-value">{{ number_format($cpOrderStats['completed'], 2) }}</div>
+                <div class="fd-stat-label">Delivered / Completed</div>
+                <div class="fd-stat-value">{{ $cpOrderStats['delivered_count'] }}</div>
             </div>
             <div class="fd-stat">
                 <div class="fd-stat-label">Pending</div>
-                <div class="fd-stat-value" style="color:#f59e0b;">{{ number_format($cpOrderStats['pending'], 2) }}</div>
+                <div class="fd-stat-value" style="color:#f59e0b;">{{ $cpOrderStats['pending_count'] }}</div>
             </div>
         </div>
     </div>
