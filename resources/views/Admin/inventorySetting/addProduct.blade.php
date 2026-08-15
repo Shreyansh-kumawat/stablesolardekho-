@@ -34,9 +34,14 @@
     .mode-btn { padding: .55rem 1.25rem; font-size: .85rem; font-weight: 600; cursor: pointer; border: none; background: #fff; color: var(--txt2); transition: all .15s; }
     .mode-btn.active { background: var(--blue); color: #fff; }
     .mode-btn:hover:not(.active) { background: var(--light); }
-    .product-search-wrap { position: relative; }
-    .product-search-wrap select { font-size: .9rem; }
-    @media(max-width:768px) { .sec-card { padding: 1rem; } .pg-head { flex-direction: column; align-items: flex-start; } }
+    .prod-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: .75rem; }
+    .prod-field { background: var(--light); border-radius: 8px; padding: .6rem .85rem; }
+    .prod-field .lbl { font-size: .7rem; font-weight: 600; color: var(--txt2); text-transform: uppercase; letter-spacing: .03em; }
+    .prod-field .val { font-size: .88rem; font-weight: 600; color: var(--txt); margin-top: 2px; }
+    .prod-img-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--bdr); }
+    .spec-pills { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
+    .spec-pill { background: #eef3ff; color: var(--blue); font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: 6px; }
+    @media(max-width:768px) { .sec-card { padding: 1rem; } .pg-head { flex-direction: column; align-items: flex-start; } .prod-summary { grid-template-columns: 1fr 1fr; } }
 </style>
 @endsection
 
@@ -44,8 +49,8 @@
 <div class="container-fluid">
     <div class="pg-head">
         <div>
-            <h1 id="pageTitle">{{ isset($editProduct) ? 'Edit Product' : 'Add Stock' }}</h1>
-            <p id="pageDesc">{{ isset($editProduct) ? 'Update product details and stock' : 'Add a new product or update existing product stock' }}</p>
+            <h1 id="pageTitle">Add Stock</h1>
+            <p id="pageDesc">Add a new product or add stock to existing product</p>
         </div>
         <div style="display:flex;gap:.5rem;align-items:center;">
             <a href="{{ route('inventoryEntries') }}" class="btn-outline">View Entries</a>
@@ -68,211 +73,250 @@
 
     {{-- Mode selector --}}
     <div class="sec-card">
-        <p class="sec-label">Select Product</p>
         <div class="row g-3 align-items-end">
             <div class="col-md-3">
                 <div class="mode-toggle">
-                    <button type="button" class="mode-btn {{ !isset($editProduct) ? 'active' : '' }}" id="modeNew" onclick="setMode('new')">New Product</button>
-                    <button type="button" class="mode-btn {{ isset($editProduct) ? 'active' : '' }}" id="modeExisting" onclick="setMode('existing')">Existing Product</button>
+                    <button type="button" class="mode-btn active" id="modeNew" onclick="setMode('new')">New Product</button>
+                    <button type="button" class="mode-btn" id="modeExisting" onclick="setMode('existing')">Existing Product</button>
                 </div>
             </div>
-            <div class="col-md-6" id="productSelectorWrap" style="{{ !isset($editProduct) ? 'display:none;' : '' }}">
+            <div class="col-md-6" id="productSelectorWrap" style="display:none;">
                 <label class="form-label">Choose Product</label>
-                <select class="form-select" id="productSelector">
+                <select class="form-select" id="productSelector" onchange="onProductSelect()">
                     <option value="">-- Select a product --</option>
                     @foreach($products as $p)
-                    <option value="{{ $p->id }}" {{ (isset($editProduct) && $editProduct->id == $p->id) ? 'selected' : '' }}>
-                        {{ $p->item_name }} ({{ $p->item_code ?? 'N/A' }}) — {{ $p->category->category_name ?? '' }}
-                    </option>
+                    <option value="{{ $p->id }}">{{ $p->item_name }} ({{ $p->item_code ?? 'N/A' }})</option>
                     @endforeach
                 </select>
-            </div>
-            <div class="col-md-3" id="loadBtnWrap" style="{{ !isset($editProduct) ? 'display:none;' : '' }}">
-                <button type="button" class="btn-blue" onclick="loadProduct()" id="loadBtn">Load Product</button>
             </div>
         </div>
     </div>
 
-    <form action="{{ isset($editProduct) ? route('inventoryUpdateProduct', $editProduct->id) : route('inventoryStoreProduct') }}" method="POST" enctype="multipart/form-data" id="addProductForm">
-        @csrf
-        @if(isset($editProduct))
-        @method('PUT')
-        @endif
-
-        {{-- Classification --}}
+    {{-- ============ EXISTING PRODUCT: Read-only summary + stock form ============ --}}
+    <div id="existingProductSection" style="display:none;">
         <div class="sec-card">
-            <p class="sec-label">Classification</p>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Category <span class="req">*</span></label>
-                    <select name="category_id" id="categorySelect" class="form-select" required>
-                        <option value="">Select Category</option>
-                        @foreach($categories as $cat)
-                        <option value="{{ $cat->id }}" {{ (isset($editProduct) && $editProduct->category_id == $cat->id) ? 'selected' : '' }}>{{ $cat->category_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Sub Category</label>
-                    <select name="sub_category_id" id="subCategorySelect" class="form-select">
-                        <option value="">Select Sub Category</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        {{-- Product Info --}}
-        <div class="sec-card">
-            <p class="sec-label">Product Information</p>
-            <div class="row g-3">
-                <div class="col-md-8">
-                    <label class="form-label">Product Name <span class="req">*</span></label>
-                    <input type="text" class="form-control" name="product_name" id="fProductName" required placeholder="e.g. Solar Panel 400W" maxlength="100" value="{{ $editProduct->item_name ?? old('product_name') }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Product Code <span class="req">*</span></label>
-                    <input type="text" class="form-control" name="item_code" id="fItemCode" required placeholder="e.g. SOL-001" maxlength="50" value="{{ $editProduct->item_code ?? old('item_code') }}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Sale Price (&#8377;)</label>
-                    <input type="text" class="form-control" name="current_sale_price" id="fSalePrice" placeholder="e.g. 20000" value="{{ $editProduct->current_sale_price ?? old('current_sale_price') }}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Quantity <span class="req">*</span></label>
-                    <input type="number" min="0" class="form-control" name="quantity" id="fQuantity" placeholder="0" value="{{ isset($editProduct) ? ($editProduct->inventory->available_qty ?? $editProduct->quantity ?? 0) : old('quantity', 0) }}" required>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">UOM <span class="req">*</span></label>
-                    <select name="uom" id="fUom" class="form-select" required>
-                        <option value="">Select</option>
-                        @foreach(['Piece','Kilogram','Liter','Meter','Box','Pack','Watt','KW','Set'] as $u)
-                        <option value="{{ $u }}" {{ (isset($editProduct) && $editProduct->uom == $u) ? 'selected' : (old('uom')==$u?'selected':'') }}>{{ $u }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Featured</label>
-                    <div class="form-check form-switch mt-1">
-                        <input class="form-check-input" type="checkbox" name="is_featured" value="1" id="fFeatured" {{ (isset($editProduct) && $editProduct->is_featured) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="fFeatured" style="font-size:.85rem;">Mark as Featured</label>
+            <p class="sec-label">Product Details</p>
+            <div id="existingProductLoading" style="text-align:center;padding:1rem;color:var(--txt2);display:none;">Loading...</div>
+            <div id="existingProductInfo" style="display:none;">
+                <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
+                    <img id="epImage" class="prod-img-thumb" src="" alt="" style="display:none;">
+                    <div>
+                        <div style="font-size:1.05rem;font-weight:700;color:var(--txt);" id="epName"></div>
+                        <div style="font-size:.8rem;color:var(--txt2);" id="epCode"></div>
                     </div>
                 </div>
-                <div class="col-12">
-                    <label class="form-label">Description</label>
-                    <textarea class="form-control" name="description" id="fDescription" rows="2" placeholder="Brief product description (optional)">{{ $editProduct->description ?? old('description') }}</textarea>
+                <div class="prod-summary">
+                    <div class="prod-field"><div class="lbl">Category</div><div class="val" id="epCategory"></div></div>
+                    <div class="prod-field"><div class="lbl">Sub Category</div><div class="val" id="epSubCategory"></div></div>
+                    <div class="prod-field"><div class="lbl">Sale Price</div><div class="val" id="epPrice"></div></div>
+                    <div class="prod-field"><div class="lbl">UOM</div><div class="val" id="epUom"></div></div>
+                    <div class="prod-field"><div class="lbl">Current Stock</div><div class="val" id="epCurrentStock" style="color:var(--green);"></div></div>
+                    <div class="prod-field"><div class="lbl">Featured</div><div class="val" id="epFeatured"></div></div>
+                </div>
+                <div id="epSpecsWrap" style="margin-top:.75rem;display:none;">
+                    <div style="font-size:.75rem;font-weight:600;color:var(--txt2);text-transform:uppercase;margin-bottom:.35rem;">Specifications</div>
+                    <div class="spec-pills" id="epSpecs"></div>
                 </div>
             </div>
         </div>
 
-        {{-- Inventory Details --}}
-        <div class="sec-card">
-            <p class="sec-label">Inventory Details</p>
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">Supplier Name</label>
-                    <input type="text" class="form-control" name="supplier_name" id="fSupplierName" placeholder="e.g. Waaree Energies" value="{{ old('supplier_name') }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Unit Price (Purchase)</label>
-                    <input type="number" step="0.01" min="0" class="form-control" name="unit_price" id="fUnitPrice" placeholder="Purchase price per unit" value="{{ old('unit_price') }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Invoice Number</label>
-                    <input type="text" class="form-control" name="invoice_number" id="fInvoiceNumber" placeholder="Invoice #" value="{{ old('invoice_number') }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Invoice Date</label>
-                    <input type="date" class="form-control" name="invoice_date" id="fInvoiceDate" value="{{ old('invoice_date') }}">
-                </div>
-            </div>
-        </div>
+        <form method="POST" id="existingStockForm">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="existing_stock_only" value="1">
 
-        {{-- Specifications --}}
-        <div class="sec-card">
-            <p class="sec-label">Specifications <small style="color:var(--txt2);text-transform:none;letter-spacing:0;font-weight:400;">(all optional)</small></p>
-            <div class="row g-2 mb-2">
-                <div class="col-md-4"><label class="form-label mb-0">Type</label><input type="text" class="form-control" name="type" id="fType" placeholder="e.g. Solar Panel" value="{{ $editProduct->type ?? '' }}"></div>
-                <div class="col-md-4"><label class="form-label mb-0">Brand</label><input type="text" class="form-control" name="brand" id="fBrand" placeholder="e.g. Waaree, Adani" value="{{ $editProduct->brand ?? '' }}"></div>
-                <div class="col-md-4"><label class="form-label mb-0">Model</label><input type="text" class="form-control" name="product_model" id="fModel" placeholder="e.g. WS-545" value="{{ $editProduct->model ?? '' }}"></div>
-            </div>
-            <div class="row g-2 mb-2">
-                <div class="col-md-4"><label class="form-label mb-0">Operating Voltage</label><input type="text" class="form-control" name="operating_voltage" id="fOpVolt" placeholder="e.g. 24V / 48V" value="{{ $editProduct->operating_voltage ?? '' }}"></div>
-                <div class="col-md-4"><label class="form-label mb-0">Solar Panel Type</label><input type="text" class="form-control" name="solar_panel_type" id="fPanelType" placeholder="e.g. Mono PERC" value="{{ $editProduct->solar_panel_type ?? '' }}"></div>
-                <div class="col-md-4"><label class="form-label mb-0">MNRE Approved</label><input type="text" class="form-control" name="mnre_approved" id="fMnre" placeholder="e.g. Yes / No" value="{{ $editProduct->mnre_approved ?? '' }}"></div>
-            </div>
-            <div class="row g-2 mb-2">
-                <div class="col-md-6"><label class="form-label mb-0">Certifications</label><input type="text" class="form-control" name="certifications" id="fCerts" placeholder="e.g. BIS, IEC 61215" value="{{ $editProduct->certifications ?? '' }}"></div>
-                <div class="col-md-6"><label class="form-label mb-0">Manufacturer Warranty</label><input type="text" class="form-control" name="manufacturer_warranty" id="fWarranty" placeholder="e.g. 25 Years" value="{{ $editProduct->manufacturer_warranty ?? '' }}"></div>
-            </div>
-            <div class="row g-2 mb-2">
-                <div class="col-md-4"><label class="form-label mb-0">Number of Cells</label><input type="text" class="form-control" name="number_of_cells" id="fCells" placeholder="e.g. 144" value="{{ $editProduct->number_of_cells ?? '' }}"></div>
-                <div class="col-md-4"><label class="form-label mb-0">Encapsulate</label><input type="text" class="form-control" name="encapsulate" id="fEncap" placeholder="e.g. EVA" value="{{ $editProduct->encapsulate ?? '' }}"></div>
-                <div class="col-md-4"><label class="form-label mb-0">Country of Origin</label><input type="text" class="form-control" name="country_of_origin" id="fCountry" placeholder="e.g. India" value="{{ $editProduct->country_of_origin ?? '' }}"></div>
-            </div>
-            <div class="row g-2 mb-3">
-                <div class="col-md-6"><label class="form-label mb-0">Input Voltage</label><input type="text" class="form-control" name="input_voltage" id="fInputVolt" placeholder="e.g. 12V - 48V" value="{{ $editProduct->input_voltage ?? '' }}"></div>
-                <div class="col-md-6"><label class="form-label mb-0">Max Supported Panel Power</label><input type="text" class="form-control" name="max_supported_panel_power" id="fMaxPanel" placeholder="e.g. 6000W" value="{{ $editProduct->max_supported_panel_power ?? '' }}"></div>
+            <div class="sec-card">
+                <p class="sec-label">Update Stock</p>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">New Quantity <span class="req">*</span></label>
+                        <input type="number" min="0" class="form-control" name="quantity" id="epQuantity" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Supplier Name</label>
+                        <input type="text" class="form-control" name="supplier_name" placeholder="e.g. Waaree Energies">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Unit Price (Purchase)</label>
+                        <input type="number" step="0.01" min="0" class="form-control" name="unit_price" placeholder="Purchase price per unit">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Invoice Number</label>
+                        <input type="text" class="form-control" name="invoice_number" placeholder="Invoice #">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Invoice Date</label>
+                        <input type="date" class="form-control" name="invoice_date">
+                    </div>
+                </div>
             </div>
 
-            {{-- Custom Specifications --}}
-            <div style="border-top:1px solid #eef1f5;padding-top:.75rem;margin-top:.5rem;">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;">
-                    <label class="form-label mb-0" style="color:var(--blue);">Custom Specifications</label>
-                    <button type="button" onclick="addCustomSpec()" style="background:var(--blue);color:#fff;border:none;border-radius:6px;padding:.3rem .75rem;font-size:.78rem;font-weight:600;cursor:pointer;">+ Add Spec</button>
+            <div style="display:flex;gap:.75rem;margin-bottom:2rem;">
+                <button type="submit" class="btn-green" id="epSubmitBtn">Update Stock</button>
+            </div>
+        </form>
+    </div>
+
+    {{-- ============ NEW PRODUCT: Full creation form ============ --}}
+    <div id="newProductSection">
+        <form action="{{ route('inventoryStoreProduct') }}" method="POST" enctype="multipart/form-data" id="addProductForm">
+            @csrf
+
+            {{-- Classification --}}
+            <div class="sec-card">
+                <p class="sec-label">Classification</p>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Category <span class="req">*</span></label>
+                        <select name="category_id" id="categorySelect" class="form-select" required>
+                            <option value="">Select Category</option>
+                            @foreach($categories as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->category_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Sub Category</label>
+                        <select name="sub_category_id" id="subCategorySelect" class="form-select">
+                            <option value="">Select Sub Category</option>
+                        </select>
+                    </div>
                 </div>
-                <div id="customSpecsContainer">
-                    @if(isset($editProduct) && $editProduct->customSpecs->count())
-                        @foreach($editProduct->customSpecs as $spec)
-                        <div class="custom-spec-row">
-                            <input type="text" class="form-control" name="custom_spec_names[]" placeholder="Spec name" value="{{ $spec->spec_name }}">
-                            <input type="text" class="form-control" name="custom_spec_values[]" placeholder="Spec value" value="{{ $spec->spec_value }}">
-                            <button type="button" onclick="this.parentElement.remove()" title="Remove">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                            </button>
+            </div>
+
+            {{-- Product Info --}}
+            <div class="sec-card">
+                <p class="sec-label">Product Information</p>
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label">Product Name <span class="req">*</span></label>
+                        <input type="text" class="form-control" name="product_name" required placeholder="e.g. Solar Panel 400W" maxlength="100" value="{{ old('product_name') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Product Code <span class="req">*</span></label>
+                        <input type="text" class="form-control" name="item_code" required placeholder="e.g. SOL-001" maxlength="50" value="{{ old('item_code') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Sale Price (&#8377;)</label>
+                        <input type="text" class="form-control" name="current_sale_price" placeholder="e.g. 20000" value="{{ old('current_sale_price') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Quantity <span class="req">*</span></label>
+                        <input type="number" min="0" class="form-control" name="quantity" placeholder="0" value="{{ old('quantity', 0) }}" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">UOM <span class="req">*</span></label>
+                        <select name="uom" class="form-select" required>
+                            <option value="">Select</option>
+                            @foreach(['Piece','Kilogram','Liter','Meter','Box','Pack','Watt','KW','Set'] as $u)
+                            <option value="{{ $u }}" {{ old('uom')==$u?'selected':'' }}>{{ $u }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Featured</label>
+                        <div class="form-check form-switch mt-1">
+                            <input class="form-check-input" type="checkbox" name="is_featured" value="1" id="isFeatured">
+                            <label class="form-check-label" for="isFeatured" style="font-size:.85rem;">Mark as Featured</label>
                         </div>
-                        @endforeach
-                    @endif
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="2" placeholder="Brief product description (optional)">{{ old('description') }}</textarea>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        {{-- Photos --}}
-        <div class="sec-card">
-            <p class="sec-label">Photos</p>
-            <div class="row g-3">
-                <div class="col-md-5">
-                    <label class="form-label">Main Photo</label>
-                    <div class="upload-area" id="mainUpload">
-                        <input type="file" name="image" accept="image/*" id="mainImageInput">
-                        <svg width="24" height="24" fill="none" stroke="var(--txt2)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        <p><strong>Click to upload</strong> main photo</p>
+            {{-- Inventory Details --}}
+            <div class="sec-card">
+                <p class="sec-label">Inventory Details</p>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Supplier Name</label>
+                        <input type="text" class="form-control" name="supplier_name" placeholder="e.g. Waaree Energies" value="{{ old('supplier_name') }}">
                     </div>
-                    <div class="preview-strip" id="mainPreview">
-                        @if(isset($editProduct) && $editProduct->image)
-                        <img src="/serve/{{ $editProduct->image }}" alt="Current">
-                        @endif
+                    <div class="col-md-4">
+                        <label class="form-label">Unit Price (Purchase)</label>
+                        <input type="number" step="0.01" min="0" class="form-control" name="unit_price" placeholder="Purchase price per unit" value="{{ old('unit_price') }}">
                     </div>
-                </div>
-                <div class="col-md-7">
-                    <label class="form-label">Gallery Photos <small style="color:var(--txt2);">(up to 8)</small></label>
-                    <div class="upload-area" id="galleryUpload">
-                        <input type="file" name="product_images[]" accept="image/*" multiple id="galleryInput">
-                        <svg width="24" height="24" fill="none" stroke="var(--txt2)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        <p><strong>Click to upload</strong> gallery images</p>
+                    <div class="col-md-4">
+                        <label class="form-label">Invoice Number</label>
+                        <input type="text" class="form-control" name="invoice_number" placeholder="Invoice #" value="{{ old('invoice_number') }}">
                     </div>
-                    <div class="preview-strip" id="galleryPreview"></div>
+                    <div class="col-md-4">
+                        <label class="form-label">Invoice Date</label>
+                        <input type="date" class="form-control" name="invoice_date" value="{{ old('invoice_date') }}">
+                    </div>
                 </div>
             </div>
-        </div>
 
-        {{-- Submit --}}
-        <div style="display:flex;gap:.75rem;margin-bottom:2rem;">
-            <button type="submit" class="{{ isset($editProduct) ? 'btn-green' : 'btn-blue' }}" id="submitBtn">
-                {{ isset($editProduct) ? 'Update Product' : 'Add Product to Inventory' }}
-            </button>
-            <button type="button" class="btn-outline" onclick="resetForm()">Clear Form</button>
-        </div>
-    </form>
+            {{-- Specifications --}}
+            <div class="sec-card">
+                <p class="sec-label">Specifications <small style="color:var(--txt2);text-transform:none;letter-spacing:0;font-weight:400;">(all optional)</small></p>
+                <div class="row g-2 mb-2">
+                    <div class="col-md-4"><label class="form-label mb-0">Type</label><input type="text" class="form-control" name="type" placeholder="e.g. Solar Panel"></div>
+                    <div class="col-md-4"><label class="form-label mb-0">Brand</label><input type="text" class="form-control" name="brand" placeholder="e.g. Waaree, Adani"></div>
+                    <div class="col-md-4"><label class="form-label mb-0">Model</label><input type="text" class="form-control" name="product_model" placeholder="e.g. WS-545"></div>
+                </div>
+                <div class="row g-2 mb-2">
+                    <div class="col-md-4"><label class="form-label mb-0">Operating Voltage</label><input type="text" class="form-control" name="operating_voltage" placeholder="e.g. 24V / 48V"></div>
+                    <div class="col-md-4"><label class="form-label mb-0">Solar Panel Type</label><input type="text" class="form-control" name="solar_panel_type" placeholder="e.g. Mono PERC"></div>
+                    <div class="col-md-4"><label class="form-label mb-0">MNRE Approved</label><input type="text" class="form-control" name="mnre_approved" placeholder="e.g. Yes / No"></div>
+                </div>
+                <div class="row g-2 mb-2">
+                    <div class="col-md-6"><label class="form-label mb-0">Certifications</label><input type="text" class="form-control" name="certifications" placeholder="e.g. BIS, IEC 61215"></div>
+                    <div class="col-md-6"><label class="form-label mb-0">Manufacturer Warranty</label><input type="text" class="form-control" name="manufacturer_warranty" placeholder="e.g. 25 Years"></div>
+                </div>
+                <div class="row g-2 mb-2">
+                    <div class="col-md-4"><label class="form-label mb-0">Number of Cells</label><input type="text" class="form-control" name="number_of_cells" placeholder="e.g. 144"></div>
+                    <div class="col-md-4"><label class="form-label mb-0">Encapsulate</label><input type="text" class="form-control" name="encapsulate" placeholder="e.g. EVA"></div>
+                    <div class="col-md-4"><label class="form-label mb-0">Country of Origin</label><input type="text" class="form-control" name="country_of_origin" placeholder="e.g. India"></div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6"><label class="form-label mb-0">Input Voltage</label><input type="text" class="form-control" name="input_voltage" placeholder="e.g. 12V - 48V"></div>
+                    <div class="col-md-6"><label class="form-label mb-0">Max Supported Panel Power</label><input type="text" class="form-control" name="max_supported_panel_power" placeholder="e.g. 6000W"></div>
+                </div>
+
+                <div style="border-top:1px solid #eef1f5;padding-top:.75rem;margin-top:.5rem;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;">
+                        <label class="form-label mb-0" style="color:var(--blue);">Custom Specifications</label>
+                        <button type="button" onclick="addCustomSpec()" style="background:var(--blue);color:#fff;border:none;border-radius:6px;padding:.3rem .75rem;font-size:.78rem;font-weight:600;cursor:pointer;">+ Add Spec</button>
+                    </div>
+                    <div id="customSpecsContainer"></div>
+                </div>
+            </div>
+
+            {{-- Photos --}}
+            <div class="sec-card">
+                <p class="sec-label">Photos</p>
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label">Main Photo</label>
+                        <div class="upload-area">
+                            <input type="file" name="image" accept="image/*" id="mainImageInput">
+                            <svg width="24" height="24" fill="none" stroke="var(--txt2)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <p><strong>Click to upload</strong> main photo</p>
+                        </div>
+                        <div class="preview-strip" id="mainPreview"></div>
+                    </div>
+                    <div class="col-md-7">
+                        <label class="form-label">Gallery Photos <small style="color:var(--txt2);">(up to 8)</small></label>
+                        <div class="upload-area">
+                            <input type="file" name="product_images[]" accept="image/*" multiple id="galleryInput">
+                            <svg width="24" height="24" fill="none" stroke="var(--txt2)" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <p><strong>Click to upload</strong> gallery images</p>
+                        </div>
+                        <div class="preview-strip" id="galleryPreview"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:.75rem;margin-bottom:2rem;">
+                <button type="submit" class="btn-blue">Add Product to Inventory</button>
+                <button type="reset" class="btn-outline">Clear Form</button>
+            </div>
+        </form>
+    </div>
 </div>
 @endsection
 
@@ -280,147 +324,120 @@
 <script src="/assets/js/jquery.dataTables.min.js"></script>
 <script>
 const subCats = @json($categories->mapWithKeys(fn($c) => [$c->id => $c->subCategories->map(fn($s) => ['id'=>$s->id,'name'=>$s->sub_category_name])]));
-let currentMode = '{{ isset($editProduct) ? "existing" : "new" }}';
-let editId = {{ isset($editProduct) ? $editProduct->id : 'null' }};
-
-@if(isset($editProduct) && $editProduct->sub_category_id)
-(function() {
-    const sel = document.getElementById('subCategorySelect');
-    const subs = subCats[{{ $editProduct->category_id }}] || [];
-    subs.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.id;
-        opt.textContent = s.name;
-        if (s.id == {{ $editProduct->sub_category_id ?? 'null' }}) opt.selected = true;
-        sel.appendChild(opt);
-    });
-})();
-@endif
+const catNames = @json($categories->pluck('category_name', 'id'));
+const subCatNames = @json($categories->flatMap(fn($c) => $c->subCategories)->pluck('sub_category_name', 'id'));
 
 document.getElementById('categorySelect').addEventListener('change', function() {
     const sel = document.getElementById('subCategorySelect');
     sel.innerHTML = '<option value="">Select Sub Category</option>';
-    const subs = subCats[this.value] || [];
-    subs.forEach(s => {
+    (subCats[this.value] || []).forEach(s => {
         sel.innerHTML += '<option value="'+s.id+'">'+s.name+'</option>';
     });
 });
 
 function setMode(mode) {
-    currentMode = mode;
     document.getElementById('modeNew').classList.toggle('active', mode === 'new');
     document.getElementById('modeExisting').classList.toggle('active', mode === 'existing');
     document.getElementById('productSelectorWrap').style.display = mode === 'existing' ? '' : 'none';
-    document.getElementById('loadBtnWrap').style.display = mode === 'existing' ? '' : 'none';
+    document.getElementById('newProductSection').style.display = mode === 'new' ? '' : 'none';
+    document.getElementById('existingProductSection').style.display = mode === 'existing' ? 'none' : 'none';
 
     if (mode === 'new') {
-        editId = null;
-        resetForm();
+        document.getElementById('existingProductSection').style.display = 'none';
         document.getElementById('productSelector').value = '';
-        setFormAction('{{ route("inventoryStoreProduct") }}', 'POST');
+        document.getElementById('existingProductInfo').style.display = 'none';
         document.getElementById('pageTitle').textContent = 'Add Stock';
-        document.getElementById('pageDesc').textContent = 'Add a new product or update existing product stock';
-        document.getElementById('submitBtn').textContent = 'Add Product to Inventory';
-        document.getElementById('submitBtn').className = 'btn-blue';
+        document.getElementById('pageDesc').textContent = 'Add a new product or add stock to existing product';
+    } else {
+        document.getElementById('newProductSection').style.display = 'none';
+        document.getElementById('pageTitle').textContent = 'Add Stock';
+        document.getElementById('pageDesc').textContent = 'Select an existing product to update stock';
     }
 }
 
-function setFormAction(url, method) {
-    const form = document.getElementById('addProductForm');
-    form.action = url;
-    let methodInput = form.querySelector('input[name="_method"]');
-    if (method === 'PUT') {
-        if (!methodInput) {
-            methodInput = document.createElement('input');
-            methodInput.type = 'hidden';
-            methodInput.name = '_method';
-            form.appendChild(methodInput);
-        }
-        methodInput.value = 'PUT';
-    } else if (methodInput) {
-        methodInput.remove();
-    }
-}
-
-function loadProduct() {
+function onProductSelect() {
     const id = document.getElementById('productSelector').value;
-    if (!id) return alert('Please select a product first.');
+    if (!id) {
+        document.getElementById('existingProductSection').style.display = 'none';
+        return;
+    }
+
+    document.getElementById('existingProductSection').style.display = '';
+    document.getElementById('existingProductLoading').style.display = '';
+    document.getElementById('existingProductInfo').style.display = 'none';
 
     fetch('/admin/inventory/product-json/' + id)
         .then(r => r.json())
         .then(p => {
-            editId = p.id;
-            setFormAction('/admin/inventory/update-product/' + p.id, 'PUT');
-            document.getElementById('pageTitle').textContent = 'Edit Product';
-            document.getElementById('pageDesc').textContent = 'Update product details and stock';
-            document.getElementById('submitBtn').textContent = 'Update Product';
-            document.getElementById('submitBtn').className = 'btn-green';
+            document.getElementById('existingProductLoading').style.display = 'none';
+            document.getElementById('existingProductInfo').style.display = '';
 
-            document.getElementById('categorySelect').value = p.category_id || '';
-            document.getElementById('categorySelect').dispatchEvent(new Event('change'));
-            setTimeout(() => {
-                if (p.sub_category_id) document.getElementById('subCategorySelect').value = p.sub_category_id;
-            }, 100);
+            const img = document.getElementById('epImage');
+            if (p.image) {
+                img.src = '/serve/' + p.image;
+                img.style.display = '';
+            } else {
+                img.style.display = 'none';
+            }
 
-            document.getElementById('fProductName').value = p.item_name || '';
-            document.getElementById('fItemCode').value = p.item_code || '';
-            document.getElementById('fSalePrice').value = p.current_sale_price || '';
-            document.getElementById('fQuantity').value = p.inventory ? p.inventory.available_qty : (p.quantity || 0);
-            document.getElementById('fUom').value = p.uom || '';
-            document.getElementById('fFeatured').checked = p.is_featured == 1;
-            document.getElementById('fDescription').value = p.description || '';
+            document.getElementById('epName').textContent = p.item_name || '';
+            document.getElementById('epCode').textContent = p.item_code || '';
+            document.getElementById('epCategory').textContent = catNames[p.category_id] || '-';
+            document.getElementById('epSubCategory').textContent = p.sub_category_id ? (subCatNames[p.sub_category_id] || '-') : '-';
+            document.getElementById('epPrice').textContent = p.current_sale_price ? '₹' + Number(p.current_sale_price).toLocaleString() : '-';
+            document.getElementById('epUom').textContent = p.uom || '-';
 
-            document.getElementById('fType').value = p.type || '';
-            document.getElementById('fBrand').value = p.brand || '';
-            document.getElementById('fModel').value = p.model || '';
-            document.getElementById('fOpVolt').value = p.operating_voltage || '';
-            document.getElementById('fPanelType').value = p.solar_panel_type || '';
-            document.getElementById('fMnre').value = p.mnre_approved || '';
-            document.getElementById('fCerts').value = p.certifications || '';
-            document.getElementById('fWarranty').value = p.manufacturer_warranty || '';
-            document.getElementById('fCells').value = p.number_of_cells || '';
-            document.getElementById('fEncap').value = p.encapsulate || '';
-            document.getElementById('fCountry').value = p.country_of_origin || '';
-            document.getElementById('fInputVolt').value = p.input_voltage || '';
-            document.getElementById('fMaxPanel').value = p.max_supported_panel_power || '';
+            const currentStock = p.inventory ? p.inventory.available_qty : (p.quantity || 0);
+            document.getElementById('epCurrentStock').textContent = currentStock;
+            document.getElementById('epQuantity').value = currentStock;
 
-            const specContainer = document.getElementById('customSpecsContainer');
-            specContainer.innerHTML = '';
+            document.getElementById('epFeatured').textContent = p.is_featured == 1 ? 'Yes' : 'No';
+
+            const specsWrap = document.getElementById('epSpecsWrap');
+            const specsPills = document.getElementById('epSpecs');
+            specsPills.innerHTML = '';
+            let hasSpecs = false;
+
+            const specFields = [
+                ['Type', p.type], ['Brand', p.brand], ['Model', p.model],
+                ['Voltage', p.operating_voltage], ['Panel Type', p.solar_panel_type],
+                ['MNRE', p.mnre_approved], ['Certs', p.certifications],
+                ['Warranty', p.manufacturer_warranty], ['Cells', p.number_of_cells],
+                ['Origin', p.country_of_origin]
+            ];
+            specFields.forEach(([lbl, val]) => {
+                if (val) {
+                    specsPills.innerHTML += '<span class="spec-pill">' + lbl + ': ' + val + '</span>';
+                    hasSpecs = true;
+                }
+            });
             if (p.custom_specs && p.custom_specs.length) {
                 p.custom_specs.forEach(s => {
-                    addCustomSpec(s.spec_name, s.spec_value);
+                    specsPills.innerHTML += '<span class="spec-pill">' + s.spec_name + ': ' + (s.spec_value || '-') + '</span>';
+                    hasSpecs = true;
                 });
             }
+            specsWrap.style.display = hasSpecs ? '' : 'none';
 
-            const mainPreview = document.getElementById('mainPreview');
-            mainPreview.innerHTML = '';
-            if (p.image) {
-                mainPreview.innerHTML = '<img src="/serve/' + p.image + '" alt="Current">';
-            }
+            document.getElementById('existingStockForm').action = '/admin/inventory/update-product/' + p.id;
+
+            const form = document.getElementById('existingStockForm');
+            form.querySelector('input[name="supplier_name"]').value = '';
+            form.querySelector('input[name="unit_price"]').value = '';
+            form.querySelector('input[name="invoice_number"]').value = '';
+            form.querySelector('input[name="invoice_date"]').value = '';
         })
-        .catch(() => alert('Failed to load product data.'));
+        .catch(() => {
+            document.getElementById('existingProductLoading').style.display = 'none';
+            alert('Failed to load product data.');
+        });
 }
 
-function resetForm() {
-    const form = document.getElementById('addProductForm');
-    form.reset();
-    document.getElementById('customSpecsContainer').innerHTML = '';
-    document.getElementById('mainPreview').innerHTML = '';
-    document.getElementById('galleryPreview').innerHTML = '';
-    document.getElementById('subCategorySelect').innerHTML = '<option value="">Select Sub Category</option>';
-    if (currentMode === 'new') {
-        setFormAction('{{ route("inventoryStoreProduct") }}', 'POST');
-        editId = null;
-        document.getElementById('submitBtn').textContent = 'Add Product to Inventory';
-        document.getElementById('submitBtn').className = 'btn-blue';
-    }
-}
-
-function addCustomSpec(name, value) {
+function addCustomSpec() {
     const row = document.createElement('div');
     row.className = 'custom-spec-row';
-    row.innerHTML = '<input type="text" class="form-control" name="custom_spec_names[]" placeholder="Spec name" value="'+(name||'')+'">'
-        + '<input type="text" class="form-control" name="custom_spec_values[]" placeholder="Spec value" value="'+(value||'')+'">'
+    row.innerHTML = '<input type="text" class="form-control" name="custom_spec_names[]" placeholder="Spec name">'
+        + '<input type="text" class="form-control" name="custom_spec_values[]" placeholder="Spec value">'
         + '<button type="button" onclick="this.parentElement.remove()" title="Remove">'
         + '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>'
         + '</button>';
@@ -430,21 +447,12 @@ function addCustomSpec(name, value) {
 document.getElementById('mainImageInput').addEventListener('change', function() {
     const p = document.getElementById('mainPreview');
     p.innerHTML = '';
-    if (this.files[0]) {
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(this.files[0]);
-        p.appendChild(img);
-    }
+    if (this.files[0]) { const img = document.createElement('img'); img.src = URL.createObjectURL(this.files[0]); p.appendChild(img); }
 });
-
 document.getElementById('galleryInput').addEventListener('change', function() {
     const p = document.getElementById('galleryPreview');
     p.innerHTML = '';
-    Array.from(this.files).slice(0, 8).forEach(f => {
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(f);
-        p.appendChild(img);
-    });
+    Array.from(this.files).slice(0, 8).forEach(f => { const img = document.createElement('img'); img.src = URL.createObjectURL(f); p.appendChild(img); });
 });
 </script>
 @endsection

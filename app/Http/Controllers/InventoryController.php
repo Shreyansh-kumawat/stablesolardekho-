@@ -202,54 +202,57 @@ class InventoryController extends Controller
     {
         try {
             $product = Product::findOrFail($id);
-            $product->category_id = $request->category_id;
-            $product->sub_category_id = $request->sub_category_id ?: null;
-            $product->item_name = $request->product_name;
-            $product->item_code = $request->item_code;
-            $product->uom = $request->uom;
-            $product->current_sale_price = $request->current_sale_price ?: null;
-            $product->description = $request->description ?: null;
-            $product->is_featured = $request->is_featured ? 1 : 0;
-            $product->type = $request->type;
-            $product->brand = $request->brand;
-            $product->model = $request->product_model;
-            $product->operating_voltage = $request->operating_voltage;
-            $product->solar_panel_type = $request->solar_panel_type;
-            $product->mnre_approved = $request->mnre_approved;
-            $product->certifications = $request->certifications;
-            $product->manufacturer_warranty = $request->manufacturer_warranty;
-            $product->number_of_cells = $request->number_of_cells;
-            $product->encapsulate = $request->encapsulate;
-            $product->country_of_origin = $request->country_of_origin;
-            $product->input_voltage = $request->input_voltage;
-            $product->max_supported_panel_power = $request->max_supported_panel_power;
 
-            if ($request->hasFile('image')) {
-                if ($product->image) Storage::disk('public')->delete($product->image);
-                $product->image = $request->file('image')->store('products', 'public');
-            }
-            $product->save();
+            if (!$request->has('existing_stock_only')) {
+                $product->category_id = $request->category_id;
+                $product->sub_category_id = $request->sub_category_id ?: null;
+                $product->item_name = $request->product_name;
+                $product->item_code = $request->item_code;
+                $product->uom = $request->uom;
+                $product->current_sale_price = $request->current_sale_price ?: null;
+                $product->description = $request->description ?: null;
+                $product->is_featured = $request->is_featured ? 1 : 0;
+                $product->type = $request->type;
+                $product->brand = $request->brand;
+                $product->model = $request->product_model;
+                $product->operating_voltage = $request->operating_voltage;
+                $product->solar_panel_type = $request->solar_panel_type;
+                $product->mnre_approved = $request->mnre_approved;
+                $product->certifications = $request->certifications;
+                $product->manufacturer_warranty = $request->manufacturer_warranty;
+                $product->number_of_cells = $request->number_of_cells;
+                $product->encapsulate = $request->encapsulate;
+                $product->country_of_origin = $request->country_of_origin;
+                $product->input_voltage = $request->input_voltage;
+                $product->max_supported_panel_power = $request->max_supported_panel_power;
 
-            if ($request->hasFile('product_images')) {
-                foreach ($request->file('product_images') as $i => $img) {
-                    if ($i >= 8) break;
-                    $product->images()->create([
-                        'image' => $img->store('product-gallery', 'public'),
-                        'sort_order' => $i,
-                    ]);
+                if ($request->hasFile('image')) {
+                    if ($product->image) Storage::disk('public')->delete($product->image);
+                    $product->image = $request->file('image')->store('products', 'public');
                 }
-            }
+                $product->save();
 
-            $product->customSpecs()->delete();
-            if ($request->filled('custom_spec_names')) {
-                foreach ($request->custom_spec_names as $i => $name) {
-                    if (empty(trim($name))) continue;
-                    ProductCustomSpec::create([
-                        'product_id' => $product->id,
-                        'spec_name' => trim($name),
-                        'spec_value' => trim($request->custom_spec_values[$i] ?? ''),
-                        'sort_order' => $i,
-                    ]);
+                if ($request->hasFile('product_images')) {
+                    foreach ($request->file('product_images') as $i => $img) {
+                        if ($i >= 8) break;
+                        $product->images()->create([
+                            'image' => $img->store('product-gallery', 'public'),
+                            'sort_order' => $i,
+                        ]);
+                    }
+                }
+
+                $product->customSpecs()->delete();
+                if ($request->filled('custom_spec_names')) {
+                    foreach ($request->custom_spec_names as $i => $name) {
+                        if (empty(trim($name))) continue;
+                        ProductCustomSpec::create([
+                            'product_id' => $product->id,
+                            'spec_name' => trim($name),
+                            'spec_value' => trim($request->custom_spec_values[$i] ?? ''),
+                            'sort_order' => $i,
+                        ]);
+                    }
                 }
             }
 
