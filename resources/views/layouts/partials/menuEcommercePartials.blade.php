@@ -110,31 +110,6 @@
     </li>
     @endif
 
-    {{-- Transfer Inventory --}}
-    @if(Auth::user()->hasAdminPermission('products'))
-    <li>
-        <a href="{{ route('transferInventory') }}"
-            class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('transferInventory') ? 'ec-active' : '' }}">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-            </svg>
-            <span>Transfer Inventory</span>
-        </a>
-    </li>
-    @endif
-
-    {{-- Transfer List --}}
-    @if(Auth::user()->hasAdminPermission('products'))
-    <li>
-        <a href="{{ route('invTxnsAdmin') }}"
-            class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('invTxnsAdmin') ? 'ec-active' : '' }}">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H6" />
-            </svg>
-            <span>Transfer List</span>
-        </a>
-    </li>
-    @endif
 
     {{-- Orders --}}
     @if(Auth::user()->hasAdminPermission('orders'))
