@@ -294,15 +294,17 @@
             color: #e2e8f0;
         }
         #submenu-ecommerce a.ec-active {
-            background: rgba(99,102,241,0.25);
-            color: white;
+            background: #3b82f6;
+            color: #fff;
+            font-weight: 600;
+            border-radius: 6px;
         }
         #submenu-ecommerce svg {
             color: #64748b;
         }
         #submenu-ecommerce a:hover svg,
         #submenu-ecommerce a.ec-active svg {
-            color: #a5b4fc;
+            color: #fff;
         }
 
         /* CP Sidebar Nav Links */

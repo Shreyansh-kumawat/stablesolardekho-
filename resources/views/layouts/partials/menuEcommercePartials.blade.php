@@ -13,7 +13,7 @@
     </span>
 </div>
 
-<ul class="ml-4 mt-1 space-y-0.5">
+<ul id="submenu-ecommerce" class="ml-4 mt-1 space-y-0.5">
 
     {{-- Home Banners --}}
     @if(Auth::user()->hasAdminPermission('banners'))
