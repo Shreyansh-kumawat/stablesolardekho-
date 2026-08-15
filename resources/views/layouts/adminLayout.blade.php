@@ -277,34 +277,34 @@
             color: var(--primary-blue) !important;
         }
 
-        /* Ecommerce submenu — dark panel */
+        /* Ecommerce submenu — light panel */
         #submenu-ecommerce {
-            background: #0f172a;
+            background: transparent;
             border-radius: 8px;
             padding: 4px;
             margin-top: 4px;
         }
         #submenu-ecommerce a {
-            color: #94a3b8;
+            color: #475569;
             border-left: none;
             background: transparent;
         }
         #submenu-ecommerce a:hover {
-            background: rgba(255,255,255,0.07);
-            color: #e2e8f0;
+            background: #f1f5f9;
+            color: var(--primary-blue);
         }
         #submenu-ecommerce a.ec-active {
-            background: #3b82f6;
-            color: #fff;
+            background: #dbeafe;
+            color: #1d4ed8;
             font-weight: 600;
             border-radius: 6px;
         }
         #submenu-ecommerce svg {
-            color: #64748b;
+            color: #94a3b8;
         }
         #submenu-ecommerce a:hover svg,
         #submenu-ecommerce a.ec-active svg {
-            color: #fff;
+            color: #1d4ed8;
         }
 
         /* CP Sidebar Nav Links */
