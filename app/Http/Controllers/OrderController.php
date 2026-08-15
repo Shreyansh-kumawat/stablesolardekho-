@@ -39,6 +39,18 @@ class OrderController extends Controller
                 $data['payment_reference'] = $request->input('payment_reference');
             }
 
+            $productsArr = json_decode($request->input('products'), true);
+            $grandTotal = 0;
+            if (is_array($productsArr)) {
+                foreach ($productsArr as $item) {
+                    $prod = Product::find($item['product_id'] ?? null);
+                    if ($prod) {
+                        $grandTotal += ($prod->current_sale_price ?? 0) * (int) ($item['quantity'] ?? 0);
+                    }
+                }
+            }
+            $data['grand_total'] = $grandTotal;
+
             CpOrder::create($data);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to submit order: ' . $e->getMessage()], 500);
@@ -295,6 +307,7 @@ class OrderController extends Controller
 
         $products = $order->products;
         if (is_string($products)) $products = json_decode($products, true);
+        $orderGrandTotal = 0;
         if (is_array($products)) {
             foreach ($products as $product) {
                 $productId = $product['product_id'] ?? null;
@@ -339,6 +352,14 @@ class OrderController extends Controller
                     'performed_by' => auth()->id(),
                     'txn_id' => 'INV' . date('Ymd') . strtoupper(substr(uniqid(), -4)),
                     'remarks' => 'CP Order #' . $order->order_id . ' delivered',
+                ]);
+
+                $orderGrandTotal += $salePrice * $qty;
+            }
+
+            if (empty($order->grand_total) || $order->grand_total == 0) {
+                \Illuminate\Support\Facades\DB::table('cp_orders')->where('id', $id)->update([
+                    'grand_total' => $orderGrandTotal,
                 ]);
             }
         }
