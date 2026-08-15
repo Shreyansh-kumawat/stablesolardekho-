@@ -398,16 +398,17 @@ class InventoryController extends Controller
         $inventory->update(['available_qty' => $newQty]);
 
         $txnType = $diff > 0 ? 'IN' : 'OUT';
+        $product = Product::find($productId);
         ProductInventoryTransaction::create([
             'product_id' => $productId,
             'transaction_type' => $txnType,
             'quantity' => abs($diff),
+            'unit_price' => $product->current_sale_price ?? 0,
             'performed_by' => Auth::id(),
             'txn_id' => $this->getTxnId(),
             'remarks' => 'Quick stock update: ' . $oldQty . ' → ' . $newQty,
         ]);
 
-        $product = Product::find($productId);
         if ($product) {
             $product->update(['quantity' => $newQty]);
         }

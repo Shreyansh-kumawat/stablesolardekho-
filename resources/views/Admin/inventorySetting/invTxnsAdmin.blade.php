@@ -280,7 +280,7 @@
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $txn->product->item_name ?? 'N/A' }}</td>
                                         <td>
-                                            <span class="badge" style="background-color: {{ $txn->transaction_type === 'IN' ? '#1c7ed6' : '#c92a2a' }}; color: white;">
+                                            <span class="badge" style="background-color: {{ $txn->transaction_type === 'IN' ? '#c92a2a' : '#059669' }}; color: white;">
                                                 {{ $txn->transaction_type }}
                                             </span>
                                         </td>

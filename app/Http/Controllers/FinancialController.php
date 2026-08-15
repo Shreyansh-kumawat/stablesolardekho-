@@ -60,19 +60,17 @@ class FinancialController extends Controller
             'entries' => (clone $materials)->count(),
         ];
 
-        $inventoryCost = ProductInventoryTransaction::where('transaction_type', 'IN')
-            ->whereNotNull('unit_price');
-        $salesRevenue = ProductInventoryTransaction::where('transaction_type', 'OUT')
-            ->whereNotNull('unit_price');
+        $inventoryCost = ProductInventoryTransaction::where('transaction_type', 'IN');
+        $salesRevenue = ProductInventoryTransaction::where('transaction_type', 'OUT');
         if ($dateFilter) {
             $inventoryCost->whereBetween('created_at', [$dateFilter[0], $dateFilter[1] . ' 23:59:59']);
             $salesRevenue->whereBetween('created_at', [$dateFilter[0], $dateFilter[1] . ' 23:59:59']);
         }
         $inventoryCostStats = [
-            'total' => (clone $inventoryCost)->selectRaw('SUM(unit_price * quantity) as total')->value('total') ?? 0,
+            'total' => (clone $inventoryCost)->selectRaw('SUM(COALESCE(unit_price, 0) * quantity) as total')->value('total') ?? 0,
             'entries' => (clone $inventoryCost)->count(),
         ];
-        $salesRevenueTotal = (clone $salesRevenue)->selectRaw('SUM(unit_price * quantity) as total')->value('total') ?? 0;
+        $salesRevenueTotal = (clone $salesRevenue)->selectRaw('SUM(COALESCE(unit_price, 0) * quantity) as total')->value('total') ?? 0;
 
         $revenue = [
             'sales' => $salesRevenueTotal,
@@ -102,16 +100,14 @@ class FinancialController extends Controller
             $walletCredits->whereBetween('created_at', [$dateFilter[0], $dateFilter[1] . ' 23:59:59']);
         }
 
-        $inventoryPurchase = ProductInventoryTransaction::where('transaction_type', 'IN')
-            ->whereNotNull('unit_price');
-        $salesOut = ProductInventoryTransaction::where('transaction_type', 'OUT')
-            ->whereNotNull('unit_price');
+        $inventoryPurchase = ProductInventoryTransaction::where('transaction_type', 'IN');
+        $salesOut = ProductInventoryTransaction::where('transaction_type', 'OUT');
         if ($dateFilter) {
             $inventoryPurchase->whereBetween('created_at', [$dateFilter[0], $dateFilter[1] . ' 23:59:59']);
             $salesOut->whereBetween('created_at', [$dateFilter[0], $dateFilter[1] . ' 23:59:59']);
         }
-        $inventoryPurchaseCost = (clone $inventoryPurchase)->selectRaw('SUM(unit_price * quantity) as total')->value('total') ?? 0;
-        $salesRevenueTotal = (clone $salesOut)->selectRaw('SUM(unit_price * quantity) as total')->value('total') ?? 0;
+        $inventoryPurchaseCost = (clone $inventoryPurchase)->selectRaw('SUM(COALESCE(unit_price, 0) * quantity) as total')->value('total') ?? 0;
+        $salesRevenueTotal = (clone $salesOut)->selectRaw('SUM(COALESCE(unit_price, 0) * quantity) as total')->value('total') ?? 0;
 
         $revenue = [
             'sales' => $salesRevenueTotal,

@@ -23,8 +23,8 @@
     .entry-name { font-weight: 700; font-size: .92rem; color: var(--txt); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .entry-code { font-size: .75rem; color: var(--txt2); }
     .entry-meta { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
-    .badge-in { background: #e8f8ef; color: var(--green); padding: .25rem .6rem; border-radius: 12px; font-weight: 700; font-size: .72rem; }
-    .badge-out { background: #fdf0ef; color: var(--red); padding: .25rem .6rem; border-radius: 12px; font-weight: 700; font-size: .72rem; }
+    .badge-in { background: #fdf0ef; color: var(--red); padding: .25rem .6rem; border-radius: 12px; font-weight: 700; font-size: .72rem; }
+    .badge-out { background: #e8f8ef; color: var(--green); padding: .25rem .6rem; border-radius: 12px; font-weight: 700; font-size: .72rem; }
     .entry-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .5rem .75rem; }
     .entry-field { font-size: .8rem; }
     .entry-field .lbl { color: var(--txt2); font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
