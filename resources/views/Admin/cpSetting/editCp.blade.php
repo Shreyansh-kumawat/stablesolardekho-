@@ -204,16 +204,8 @@
                     </div>
 
                     <div style="flex: 1; min-width: 280px;">
-                        <label for="city" class="form-label">City</label>
-                        <select id="city" name="city" class="select2-element form-control" required>
-                            <option value="">Select City</option>
-                            @foreach($cities as $city)
-                                <option value="{{ $city }}"
-                                    {{ trim(old('city', $cp->city ?? '')) === trim($city) ? 'selected' : '' }}>
-                                    {{ $city }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <label for="city" class="form-label">District</label>
+                        <input id="city" name="city" type="text" class="form-control" required placeholder="Enter district" value="{{ old('city', $cp->city ?? '') }}">
                         @error('city') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                     </div>
 
