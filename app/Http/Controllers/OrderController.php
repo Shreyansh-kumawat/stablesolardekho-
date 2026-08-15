@@ -49,7 +49,9 @@ class OrderController extends Controller
                     }
                 }
             }
-            $data['grand_total'] = $grandTotal;
+            if (\Illuminate\Support\Facades\Schema::hasColumn('cp_orders', 'grand_total')) {
+                $data['grand_total'] = $grandTotal;
+            }
 
             CpOrder::create($data);
         } catch (\Exception $e) {
@@ -357,10 +359,12 @@ class OrderController extends Controller
                 $orderGrandTotal += $salePrice * $qty;
             }
 
-            if (empty($order->grand_total) || $order->grand_total == 0) {
-                \Illuminate\Support\Facades\DB::table('cp_orders')->where('id', $id)->update([
-                    'grand_total' => $orderGrandTotal,
-                ]);
+            if (\Illuminate\Support\Facades\Schema::hasColumn('cp_orders', 'grand_total')) {
+                if (empty($order->grand_total) || $order->grand_total == 0) {
+                    \Illuminate\Support\Facades\DB::table('cp_orders')->where('id', $id)->update([
+                        'grand_total' => $orderGrandTotal,
+                    ]);
+                }
             }
         }
 
