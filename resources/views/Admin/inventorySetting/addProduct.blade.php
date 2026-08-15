@@ -338,20 +338,7 @@
 @endsection
 
 @section('js')
-<script src="/assets/js/jquery.dataTables.min.js"></script>
 <script>
-const subCats = @json($categories->mapWithKeys(fn($c) => [$c->id => $c->subCategories->map(fn($s) => ['id'=>$s->id,'name'=>$s->sub_category_name])]));
-const catNames = @json($categories->pluck('category_name', 'id'));
-const subCatNames = @json($categories->flatMap(fn($c) => $c->subCategories)->pluck('sub_category_name', 'id'));
-
-document.getElementById('categorySelect').addEventListener('change', function() {
-    const sel = document.getElementById('subCategorySelect');
-    sel.innerHTML = '<option value="">Select Sub Category</option>';
-    (subCats[this.value] || []).forEach(s => {
-        sel.innerHTML += '<option value="'+s.id+'">'+s.name+'</option>';
-    });
-});
-
 function setMode(mode) {
     document.getElementById('modeNew').classList.toggle('active', mode === 'new');
     document.getElementById('modeExisting').classList.toggle('active', mode === 'existing');
@@ -463,6 +450,18 @@ function addCustomSpec() {
         + '</button>';
     document.getElementById('customSpecsContainer').appendChild(row);
 }
+
+const subCats = @json($categories->mapWithKeys(fn($c) => [$c->id => $c->subCategories->map(fn($s) => ['id'=>$s->id,'name'=>$s->sub_category_name])]));
+const catNames = @json($categories->pluck('category_name', 'id'));
+const subCatNames = @json($categories->flatMap(fn($c) => $c->subCategories)->pluck('sub_category_name', 'id'));
+
+document.getElementById('categorySelect').addEventListener('change', function() {
+    const sel = document.getElementById('subCategorySelect');
+    sel.innerHTML = '<option value="">Select Sub Category</option>';
+    (subCats[this.value] || []).forEach(s => {
+        sel.innerHTML += '<option value="'+s.id+'">'+s.name+'</option>';
+    });
+});
 
 document.getElementById('mainImageInput').addEventListener('change', function() {
     const p = document.getElementById('mainPreview');

@@ -51,8 +51,8 @@
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                 Add Product
             </a>
-            <a href="{{ route('addNewInventory') }}" class="btn-out">Add Stock</a>
-            <a href="{{ route('transferInventory') }}" class="btn-out">Transfer</a>
+            {{-- <a href="{{ route('addNewInventory') }}" class="btn-out">Add Stock</a> --}}
+            {{-- <a href="{{ route('transferInventory') }}" class="btn-out">Transfer</a> --}}
         </div>
     </div>
 
