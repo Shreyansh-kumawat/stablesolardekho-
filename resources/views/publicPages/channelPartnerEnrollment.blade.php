@@ -414,22 +414,9 @@
                         </div>
                     </div>
                     <div>
-                        <label class="cp-label">City</label>
-                        <input type="hidden" name="city" id="cityHidden" value="{{ $userCity }}" required>
-                        <div class="cp-dd" id="cityDd">
-                            <div class="cp-dd-trigger" id="cityTrigger">
-                                <span id="cityLabel">{{ $userCity ?: '' }}</span>
-                                <svg class="cp-dd-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-                            </div>
-                            <div class="cp-dd-panel" id="cityPanel">
-                                <input type="text" class="cp-dd-search" id="citySearch" placeholder="Search city...">
-                                <div class="cp-dd-list" id="cityList">
-                                    @foreach($cities as $c)
-                                    <div class="cp-dd-opt {{ $userCity == $c ? 'active' : '' }}" data-val="{{ $c }}">{{ $c }}</div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
+                        <label class="cp-label" for="city">District</label>
+                        <input class="cp-input" id="city" name="city" type="text" required placeholder="Enter your district" value="{{ $userCity ?: old('city') }}">
+                        @error('city') <div class="error-text">{{ $message }}</div> @enderror
                     </div>
                     <div>
                         <label class="cp-label" for="pin_code">Pin Code</label>
@@ -556,7 +543,7 @@
         document.addEventListener('click', closeAll);
 
         initDd('stateTrigger', 'statePanel', 'stateSearch', 'stateList', 'stateHidden', 'stateLabel');
-        initDd('cityTrigger', 'cityPanel', 'citySearch', 'cityList', 'cityHidden', 'cityLabel');
+        // City is now a text input, no dropdown needed
     })();
 </script>
 @endsection
