@@ -435,4 +435,13 @@ class InventoryController extends Controller
 
         return view('Admin.inventorySetting.inventoryEntries', compact('entries'));
     }
+
+    public function updateEntryRemarks(Request $request, $id)
+    {
+        $request->validate(['remarks' => 'nullable|string|max:1000']);
+        $entry = ProductInventoryTransaction::findOrFail($id);
+        $entry->remarks = $request->remarks;
+        $entry->save();
+        return response()->json(['success' => true]);
+    }
 }

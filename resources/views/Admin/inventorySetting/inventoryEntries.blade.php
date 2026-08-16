@@ -137,12 +137,13 @@
                     <div class="val" style="font-family:monospace;font-size:.78rem;">{{ $entry->txn_id }}</div>
                 </div>
                 @endif
-                @if($entry->remarks)
                 <div class="entry-field" style="grid-column:1/-1;">
                     <div class="lbl">Remarks</div>
-                    <div class="val">{{ $entry->remarks }}</div>
+                    <div class="val remark-wrap" data-id="{{ $entry->id }}">
+                        <span class="remark-text" onclick="editRemark(this)" style="cursor:pointer;min-width:60px;display:inline-block;{{ $entry->remarks ? '' : 'color:#9ca3af;font-style:italic;' }}">{{ $entry->remarks ?: 'Add remark...' }}</span>
+                        <input type="text" class="remark-input" value="{{ $entry->remarks }}" style="display:none;width:100%;padding:4px 8px;border:1.5px solid #4A90E2;border-radius:6px;font-size:.82rem;outline:none;" onblur="saveRemark(this)" onkeydown="if(event.key==='Enter')this.blur()">
+                    </div>
                 </div>
-                @endif
             </div>
 
             @if($entry->product && ($entry->product->brand || $entry->product->manufacturer_warranty || $entry->product->type || $entry->product->customSpecs->count()))
@@ -187,6 +188,34 @@ function filterEntries() {
         const matchQ = !q || card.dataset.search.includes(q);
         const matchT = !type || card.dataset.type === type;
         card.style.display = (matchQ && matchT) ? '' : 'none';
+    });
+}
+
+function editRemark(span) {
+    const wrap = span.closest('.remark-wrap');
+    const input = wrap.querySelector('.remark-input');
+    span.style.display = 'none';
+    input.style.display = '';
+    input.focus();
+    input.select();
+}
+
+function saveRemark(input) {
+    const wrap = input.closest('.remark-wrap');
+    const span = wrap.querySelector('.remark-text');
+    const id = wrap.dataset.id;
+    const val = input.value.trim();
+
+    input.style.display = 'none';
+    span.style.display = '';
+    span.textContent = val || 'Add remark...';
+    span.style.color = val ? '' : '#9ca3af';
+    span.style.fontStyle = val ? '' : 'italic';
+
+    fetch(`/admin/inventory/entry/${id}/update-remarks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+        body: JSON.stringify({ remarks: val })
     });
 }
 </script>

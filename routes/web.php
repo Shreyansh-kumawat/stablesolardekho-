@@ -183,6 +183,7 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::put('/inventory/update-product/{id}', [InventoryController::class, 'updateProduct'])->name('inventoryUpdateProduct');
     Route::get('/inventory/product-json/{id}', [InventoryController::class, 'getProductJson'])->name('inventoryProductJson');
     Route::get('/inventory/entries', [InventoryController::class, 'inventoryEntries'])->name('inventoryEntries');
+    Route::post('/inventory/entry/{id}/update-remarks', [InventoryController::class, 'updateEntryRemarks'])->name('inventoryUpdateRemarks');
     Route::post('/inventory/quick-stock-update', [InventoryController::class, 'quickStockUpdate'])->name('inventoryQuickStockUpdate');
 
     Route::get('/cp-inventory-list', [CpInventoryController::class, 'adminCpInventoryList'])->name('adminCpInventoryList');
