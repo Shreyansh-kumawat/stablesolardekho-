@@ -31,7 +31,7 @@
     .kit-card-body { padding: 14px 16px; }
     .kit-card-name { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
     .kit-card-cat { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.03em; }
-    .kit-card-meta { display: flex; gap: 12px; margin-top: 8px; font-size: 0.78rem; }
+    .kit-card-meta { display: flex; gap: 12px; margin-top: 8px; font-size: 0.78rem; flex-wrap: wrap; }
     .kit-card-meta-item { display: flex; align-items: center; gap: 4px; }
     .kit-card-meta-label { color: var(--muted); }
     .kit-card-meta-val { font-weight: 700; color: var(--text); }
@@ -41,10 +41,6 @@
     .kit-card-stock.out { background: #fef2f2; color: #dc2626; }
     .kit-card-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
     .kit-card-inactive { opacity: 0.5; }
-
-    .kit-items-section { margin-top: 8px; }
-    .kit-items-count { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
-    .kit-slabs-inline { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
 
     .modal-content { border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
     .modal-header { background: #f8f9fa; border-bottom: 1px solid var(--border); border-radius: 12px 12px 0 0; padding: 1rem 1.25rem; }
@@ -56,13 +52,11 @@
 
     .dyn-section { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
     .dyn-section-title { font-size: 0.78rem; font-weight: 700; color: var(--text); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
-    .dyn-row-wrap { margin-bottom: 8px; }
-    .dyn-row { display: flex; gap: 6px; align-items: center; }
-    .dyn-row input, .dyn-row select { flex: 1; }
-    .cat-toggle { font-size: 0.68rem; color: var(--muted); cursor: pointer; display: flex; align-items: center; gap: 4px; margin: 2px 0 0 2px; user-select: none; }
-    .cat-toggle input { width: 13px; height: 13px; margin: 0; cursor: pointer; }
+    .dyn-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+    .dyn-row select, .dyn-row input { flex: 1; }
     .dyn-remove { width: 28px; height: 28px; border: none; background: #fee2e2; color: #dc2626; border-radius: 6px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .dyn-add { font-size: 0.75rem; font-weight: 600; color: var(--orange); border: 1px dashed var(--orange); background: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+    .stock-info { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
 
     .kit-empty { text-align: center; padding: 3rem; background: var(--white); border: 1px solid var(--border); border-radius: 12px; color: var(--muted); }
 
@@ -114,8 +108,8 @@
             <div class="kit-stat-value">{{ $kits->where('is_active', 1)->count() }}</div>
         </div>
         <div class="kit-stat">
-            <div class="kit-stat-label">Total Stock</div>
-            <div class="kit-stat-value">{{ $kits->sum('quantity') }}</div>
+            <div class="kit-stat-label">Total Available</div>
+            <div class="kit-stat-value">{{ $kits->sum('max_kits') }}</div>
         </div>
     </div>
 
@@ -136,8 +130,8 @@
                 <div class="kit-card-price">&#8377;{{ $kit->current_sale_price }}</div>
                 <div class="kit-card-meta">
                     <div class="kit-card-meta-item">
-                        <span class="kit-card-meta-label">Stock:</span>
-                        <span class="kit-card-meta-val">{{ $kit->quantity }}</span>
+                        <span class="kit-card-meta-label">Available:</span>
+                        <span class="kit-card-meta-val">{{ $kit->max_kits }} kits</span>
                     </div>
                     <div class="kit-card-meta-item">
                         <span class="kit-card-meta-label">Items:</span>
@@ -148,8 +142,8 @@
                         <span class="kit-card-meta-val">{{ $kit->kitSlabPrices->count() }}</span>
                     </div>
                 </div>
-                <span class="kit-card-stock {{ $kit->quantity > 0 ? 'in' : 'out' }}">
-                    {{ $kit->quantity > 0 ? 'In Stock' : 'Out of Stock' }}
+                <span class="kit-card-stock {{ $kit->max_kits > 0 ? 'in' : 'out' }}">
+                    {{ $kit->max_kits > 0 ? 'In Stock' : 'Out of Stock' }}
                 </span>
 
                 <div class="kit-card-actions">
@@ -188,28 +182,24 @@
                 </div>
                 <div class="modal-body" style="padding:1.25rem; max-height:70vh; overflow-y:auto;">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-12">
+                        <div class="col-md-8">
                             <label class="form-label">Kit Name *</label>
                             <input type="text" name="kit_name" class="form-control" required placeholder="e.g. Adani 3KW Bi Facial Kit">
                         </div>
-                    </div>
-                    <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Base Price (1 Kit) *</label>
                             <input type="text" name="base_price" class="form-control" required placeholder="e.g. 133000">
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Stock Quantity *</label>
-                            <input type="number" name="quantity" class="form-control" required min="0" value="0">
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="2" placeholder="Kit description (optional)"></textarea>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Image</label>
                             <input type="file" name="image" class="form-control" accept="image/*">
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea name="description" class="form-control" rows="2" placeholder="Kit description (optional)"></textarea>
                     </div>
                     <div class="mb-3">
                         <label class="form-check-label" style="font-size:0.82rem;">
@@ -220,31 +210,28 @@
                     <!-- Kit Items -->
                     <div class="dyn-section">
                         <div class="dyn-section-title">
-                            <span>Kit Items (Materials List)</span>
+                            <span>Kit Items (Select Products)</span>
                             <button type="button" class="dyn-add" onclick="addItemRow('add')">+ Add Item</button>
                         </div>
                         <div class="dyn-row" style="margin-bottom:4px;">
                             <small style="flex:1;color:var(--muted);font-size:0.7rem;font-weight:600;">Category</small>
-                            <small style="flex:1;color:var(--muted);font-size:0.7rem;font-weight:600;">Item Name</small>
-                            <small style="flex:0.5;color:var(--muted);font-size:0.7rem;font-weight:600;">Qty</small>
+                            <small style="flex:1;color:var(--muted);font-size:0.7rem;font-weight:600;">Product</small>
+                            <small style="flex:0.4;color:var(--muted);font-size:0.7rem;font-weight:600;">Qty per Kit</small>
                             <span style="width:28px;"></span>
                         </div>
                         <div id="addItemsContainer">
-                            <div class="dyn-row-wrap">
-                                <div class="dyn-row">
-                                    <div style="flex:1;" class="cat-field">
-                                        <select name="items[0][category_label]" class="form-select">
-                                            <option value="">Select Category</option>
-                                            @foreach($categories as $cat)
-                                                <option value="{{ $cat->category_name }}">{{ $cat->category_name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <input type="text" name="items[0][item_name]" class="form-control" placeholder="e.g. Bifacial DCR 545wp" style="flex:1;">
-                                    <input type="text" name="items[0][quantity_label]" class="form-control" placeholder="e.g. 6" style="flex:0.5;">
-                                    <button type="button" class="dyn-remove" onclick="this.closest('.dyn-row-wrap').remove()">&times;</button>
-                                </div>
-                                <label class="cat-toggle"><input type="checkbox" onchange="toggleCatField(this)"> Custom category</label>
+                            <div class="dyn-row">
+                                <select name="items[0][category_id]" class="form-select kit-cat-select" onchange="loadProducts(this, 'add', 0)" style="flex:1;">
+                                    <option value="">Select Category</option>
+                                    @foreach($categories as $cat)
+                                        <option value="{{ $cat->id }}">{{ $cat->category_name }}</option>
+                                    @endforeach
+                                </select>
+                                <select name="items[0][component_product_id]" class="form-select kit-prod-select" style="flex:1;" disabled>
+                                    <option value="">Select Product</option>
+                                </select>
+                                <input type="number" name="items[0][quantity]" class="form-control" placeholder="Qty" min="1" value="1" style="flex:0.4;">
+                                <button type="button" class="dyn-remove" onclick="this.closest('.dyn-row').remove()">&times;</button>
                             </div>
                         </div>
                     </div>
@@ -264,7 +251,7 @@
                         <div id="addSlabsContainer">
                             <div class="dyn-row">
                                 <input type="number" name="slabs[0][min_qty]" class="form-control" placeholder="1" min="1" style="flex:1;">
-                                <input type="number" name="slabs[0][max_qty]" class="form-control" placeholder="1 (empty = no limit)" style="flex:1;">
+                                <input type="number" name="slabs[0][max_qty]" class="form-control" placeholder="empty = no limit" style="flex:1;">
                                 <input type="number" name="slabs[0][price]" class="form-control" placeholder="133000" step="0.01" style="flex:1;">
                                 <button type="button" class="dyn-remove" onclick="this.parentElement.remove()">&times;</button>
                             </div>
@@ -293,28 +280,24 @@
                 </div>
                 <div class="modal-body" style="padding:1.25rem; max-height:70vh; overflow-y:auto;">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-12">
+                        <div class="col-md-8">
                             <label class="form-label">Kit Name *</label>
                             <input type="text" name="kit_name" id="editKitName" class="form-control" required>
                         </div>
-                    </div>
-                    <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Base Price (1 Kit) *</label>
                             <input type="text" name="base_price" id="editKitPrice" class="form-control" required>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Stock Quantity *</label>
-                            <input type="number" name="quantity" id="editKitQty" class="form-control" required min="0">
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" id="editKitDesc" class="form-control" rows="2"></textarea>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Image</label>
                             <input type="file" name="image" class="form-control" accept="image/*">
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea name="description" id="editKitDesc" class="form-control" rows="2"></textarea>
                     </div>
                     <div class="mb-3">
                         <label class="form-check-label" style="font-size:0.82rem;">
@@ -325,13 +308,13 @@
                     <!-- Kit Items -->
                     <div class="dyn-section">
                         <div class="dyn-section-title">
-                            <span>Kit Items (Materials List)</span>
+                            <span>Kit Items (Select Products)</span>
                             <button type="button" class="dyn-add" onclick="addItemRow('edit')">+ Add Item</button>
                         </div>
                         <div class="dyn-row" style="margin-bottom:4px;">
                             <small style="flex:1;color:var(--muted);font-size:0.7rem;font-weight:600;">Category</small>
-                            <small style="flex:1;color:var(--muted);font-size:0.7rem;font-weight:600;">Item Name</small>
-                            <small style="flex:0.5;color:var(--muted);font-size:0.7rem;font-weight:600;">Qty</small>
+                            <small style="flex:1;color:var(--muted);font-size:0.7rem;font-weight:600;">Product</small>
+                            <small style="flex:0.4;color:var(--muted);font-size:0.7rem;font-weight:600;">Qty per Kit</small>
                             <span style="width:28px;"></span>
                         </div>
                         <div id="editItemsContainer"></div>
@@ -366,39 +349,49 @@
 <script>
 let addItemIdx = 1, editItemIdx = 0, addSlabIdx = 1, editSlabIdx = 0;
 
-const categoryOptions = `<option value="">Select Category</option>@foreach($categories as $cat)<option value="{{ $cat->category_name }}">{{ $cat->category_name }}</option>@endforeach`;
+const categoryOptions = `<option value="">Select Category</option>@foreach($categories as $cat)<option value="{{ $cat->id }}">{{ $cat->category_name }}</option>@endforeach`;
 
-function toggleCatField(cb) {
-    const wrap = cb.closest('.dyn-row-wrap');
-    const catDiv = wrap.querySelector('.cat-field');
-    const old = catDiv.querySelector('select, input');
-    const name = old.name;
-    const val = old.value;
-    if (cb.checked) {
-        catDiv.innerHTML = `<input type="text" name="${name}" class="form-control" placeholder="Custom category" value="${val}">`;
-    } else {
-        let sel = `<select name="${name}" class="form-select">${categoryOptions}</select>`;
-        catDiv.innerHTML = sel;
-        catDiv.querySelector('select').value = val;
+function loadProducts(catSelect, prefix, idx) {
+    const catId = catSelect.value;
+    const row = catSelect.closest('.dyn-row');
+    const prodSelect = row.querySelector('.kit-prod-select');
+    prodSelect.innerHTML = '<option value="">Loading...</option>';
+    prodSelect.disabled = true;
+
+    if (!catId) {
+        prodSelect.innerHTML = '<option value="">Select Product</option>';
+        return;
     }
+
+    fetch(`{{ route("getProducts") }}?category_id=${catId}`)
+        .then(r => r.json())
+        .then(products => {
+            let opts = '<option value="">Select Product</option>';
+            products.forEach(p => {
+                if (p.is_kit) return;
+                const stock = p.quantity ?? 0;
+                opts += `<option value="${p.id}" data-stock="${stock}">${p.item_name} (Stock: ${stock})</option>`;
+            });
+            prodSelect.innerHTML = opts;
+            prodSelect.disabled = false;
+        });
 }
 
 function addItemRow(prefix) {
     const idx = prefix === 'add' ? addItemIdx++ : editItemIdx++;
     const container = document.getElementById(prefix + 'ItemsContainer');
-    const wrap = document.createElement('div');
-    wrap.className = 'dyn-row-wrap';
-    wrap.innerHTML = `
-        <div class="dyn-row">
-            <div style="flex:1;" class="cat-field">
-                <select name="items[${idx}][category_label]" class="form-select">${categoryOptions}</select>
-            </div>
-            <input type="text" name="items[${idx}][item_name]" class="form-control" placeholder="e.g. 4 Sq.mm AC Cable" style="flex:1;">
-            <input type="text" name="items[${idx}][quantity_label]" class="form-control" placeholder="e.g. 100" style="flex:0.5;">
-            <button type="button" class="dyn-remove" onclick="this.closest('.dyn-row-wrap').remove()">&times;</button>
-        </div>
-        <label class="cat-toggle"><input type="checkbox" onchange="toggleCatField(this)"> Custom category</label>`;
-    container.appendChild(wrap);
+    const row = document.createElement('div');
+    row.className = 'dyn-row';
+    row.innerHTML = `
+        <select name="items[${idx}][category_id]" class="form-select kit-cat-select" onchange="loadProducts(this, '${prefix}', ${idx})" style="flex:1;">
+            ${categoryOptions}
+        </select>
+        <select name="items[${idx}][component_product_id]" class="form-select kit-prod-select" style="flex:1;" disabled>
+            <option value="">Select Product</option>
+        </select>
+        <input type="number" name="items[${idx}][quantity]" class="form-control" placeholder="Qty" min="1" value="1" style="flex:0.4;">
+        <button type="button" class="dyn-remove" onclick="this.closest('.dyn-row').remove()">&times;</button>`;
+    container.appendChild(row);
 }
 
 function addSlabRow(prefix) {
@@ -421,40 +414,47 @@ function openEditKit(id) {
             document.getElementById('editKitForm').action = `/admin/kits/${id}`;
             document.getElementById('editKitName').value = kit.item_name;
             document.getElementById('editKitPrice').value = kit.current_sale_price || '';
-            document.getElementById('editKitQty').value = kit.quantity || 0;
             document.getElementById('editKitDesc').value = kit.description || '';
             document.getElementById('editKitFeatured').checked = kit.is_featured == 1;
 
             const itemsC = document.getElementById('editItemsContainer');
             itemsC.innerHTML = '';
             editItemIdx = 0;
-            (kit.kit_items || []).forEach((item, i) => {
+            const itemPromises = (kit.kit_items || []).map((item, i) => {
                 editItemIdx = i + 1;
-                const catVal = item.category_label || '';
-                const wrap = document.createElement('div');
-                wrap.className = 'dyn-row-wrap';
-                let isCustom = true;
-                let tempDiv = document.createElement('div');
-                tempDiv.innerHTML = `<select>${categoryOptions}</select>`;
-                let sel = tempDiv.querySelector('select');
-                for (let o of sel.options) { if (o.value === catVal) { isCustom = false; break; } }
-                if (catVal === '') isCustom = false;
-                let catHTML;
-                if (isCustom) {
-                    catHTML = `<input type="text" name="items[${i}][category_label]" class="form-control" value="${catVal}">`;
-                } else {
-                    let opts = categoryOptions.replace(`value="${catVal}"`, `value="${catVal}" selected`);
-                    catHTML = `<select name="items[${i}][category_label]" class="form-select">${opts}</select>`;
+                const catId = item.category_id || '';
+                const prodId = item.component_product_id || '';
+                const qty = item.quantity || 1;
+                const prodName = item.component_product ? item.component_product.item_name : item.item_name;
+
+                const row = document.createElement('div');
+                row.className = 'dyn-row';
+                let catOpts = categoryOptions.replace(`value="${catId}"`, `value="${catId}" selected`);
+                row.innerHTML = `
+                    <select name="items[${i}][category_id]" class="form-select kit-cat-select" onchange="loadProducts(this, 'edit', ${i})" style="flex:1;">
+                        ${catOpts}
+                    </select>
+                    <select name="items[${i}][component_product_id]" class="form-select kit-prod-select" style="flex:1;">
+                        <option value="${prodId}" selected>${prodName}</option>
+                    </select>
+                    <input type="number" name="items[${i}][quantity]" class="form-control" value="${qty}" min="1" style="flex:0.4;">
+                    <button type="button" class="dyn-remove" onclick="this.closest('.dyn-row').remove()">&times;</button>`;
+                itemsC.appendChild(row);
+
+                if (catId) {
+                    return fetch(`{{ route("getProducts") }}?category_id=${catId}`)
+                        .then(r => r.json())
+                        .then(products => {
+                            const sel = row.querySelector('.kit-prod-select');
+                            let opts = '<option value="">Select Product</option>';
+                            products.forEach(p => {
+                                if (p.is_kit) return;
+                                const selected = p.id == prodId ? ' selected' : '';
+                                opts += `<option value="${p.id}" data-stock="${p.quantity ?? 0}"${selected}>${p.item_name} (Stock: ${p.quantity ?? 0})</option>`;
+                            });
+                            sel.innerHTML = opts;
+                        });
                 }
-                wrap.innerHTML = `
-                    <div class="dyn-row">
-                        <div style="flex:1;" class="cat-field">${catHTML}</div>
-                        <input type="text" name="items[${i}][item_name]" class="form-control" value="${item.item_name || ''}" style="flex:1;">
-                        <input type="text" name="items[${i}][quantity_label]" class="form-control" value="${item.quantity_label || ''}" style="flex:0.5;">
-                        <button type="button" class="dyn-remove" onclick="this.closest('.dyn-row-wrap').remove()">&times;</button>
-                    </div>
-                    <label class="cat-toggle"><input type="checkbox" onchange="toggleCatField(this)" ${isCustom ? 'checked' : ''}> Custom category</label>`;
-                itemsC.appendChild(wrap);
             });
 
             const slabsC = document.getElementById('editSlabsContainer');

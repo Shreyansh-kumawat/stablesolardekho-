@@ -87,6 +87,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/password/send-otp', [UserController::class, 'sendPasswordOtp'])->name('user.password.sendOtp');
     Route::post('/password/verify-otp', [UserController::class, 'verifyPasswordOtp'])->name('user.password.verifyOtp');
     Route::post('/password/change', [UserController::class, 'changePassword'])->name('user.password.change');
+    Route::post('/kit/order', [KitController::class, 'orderKit'])->name('kit.order');
 });
 
 Route::middleware('auth')->group(function () {

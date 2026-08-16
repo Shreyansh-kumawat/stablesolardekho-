@@ -43,14 +43,22 @@
     .kd-stock.out { background: rgba(220,38,38,0.12); color: #ef4444; }
     .kd-kit-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(249,115,22,0.1); color: var(--orange); font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 6px; border: 1px solid rgba(249,115,22,0.2); margin-top: 6px; width: fit-content; }
 
-    .kd-cta { margin-top: 16px; }
-    .kd-cta-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; background: var(--orange); color: #fff; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; text-decoration: none; transition: background 0.15s; width: fit-content; }
-    .kd-cta-btn:hover { background: #ea580c; color: #fff; }
+    .kd-order-section { margin-top: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .kd-qty-wrap { display: flex; align-items: center; gap: 0; }
+    .kd-qty-btn { width: 36px; height: 36px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .kd-qty-btn:first-child { border-radius: 8px 0 0 8px; }
+    .kd-qty-btn:last-child { border-radius: 0 8px 8px 0; }
+    .kd-qty-input { width: 50px; height: 36px; border: 1px solid var(--border); border-left: 0; border-right: 0; background: var(--card); color: var(--text); text-align: center; font-size: 0.9rem; font-weight: 700; }
+    .kd-qty-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .kd-order-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; background: var(--orange); color: #fff; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+    .kd-order-btn:hover { background: #ea580c; }
+    .kd-order-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .kd-max-info { font-size: 0.75rem; color: var(--muted); }
+    .kd-order-msg { font-size: 0.82rem; margin-top: 8px; }
 
     .kd-section { margin-bottom: 2rem; }
     .kd-section-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
 
-    /* BOM Table */
     .kd-bom { width: 100%; border-collapse: collapse; }
     .kd-bom-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
     .kd-bom thead { background: rgba(249,115,22,0.08); }
@@ -59,7 +67,6 @@
     .kd-bom-cat { font-weight: 700; color: var(--orange); background: rgba(249,115,22,0.04); }
     .kd-bom-cat td { padding: 6px 14px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; border-top: 2px solid var(--border); }
 
-    /* Slab Pricing */
     .kd-slab { width: 100%; border-collapse: collapse; }
     .kd-slab-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; max-width: 500px; }
     .kd-slab thead { background: rgba(249,115,22,0.08); }
@@ -68,7 +75,6 @@
     .kd-slab-qty { font-weight: 700; }
     .kd-slab-price { font-weight: 700; color: var(--orange); }
 
-    /* Related */
     .kd-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
     .kd-rel-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; text-decoration: none; transition: border-color 0.15s; }
     .kd-rel-card:hover { border-color: var(--orange); }
@@ -126,15 +132,29 @@
                     <span class="kd-price-note">onwards (bulk discounts available)</span>
                 @endif
             </div>
-            <span class="kd-stock {{ $kit->quantity > 0 ? 'in' : 'out' }}">
-                {{ $kit->quantity > 0 ? $kit->quantity . ' kits in stock' : 'Out of stock' }}
+            <span class="kd-stock {{ $kit->max_kits > 0 ? 'in' : 'out' }}">
+                {{ $kit->max_kits > 0 ? $kit->max_kits . ' kits available' : 'Out of stock' }}
             </span>
-            <div class="kd-cta">
-                <a href="https://wa.me/919876543210?text=I'm interested in {{ urlencode($kit->item_name) }}" target="_blank" class="kd-cta-btn">
-                    <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492l4.632-1.467A11.932 11.932 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818c-2.168 0-4.19-.582-5.938-1.598l-.424-.254-2.752.872.87-2.685-.278-.44A9.778 9.778 0 012.182 12c0-5.414 4.404-9.818 9.818-9.818S21.818 6.586 21.818 12s-4.404 9.818-9.818 9.818z"/></svg>
-                    Enquire on WhatsApp
-                </a>
+
+            @auth
+            <div class="kd-order-section">
+                <div class="kd-qty-wrap">
+                    <button type="button" class="kd-qty-btn" onclick="kitQtyChange(-1)">−</button>
+                    <input type="number" id="kitQty" class="kd-qty-input" value="1" min="1" max="{{ $kit->max_kits }}">
+                    <button type="button" class="kd-qty-btn" onclick="kitQtyChange(1)">+</button>
+                </div>
+                <button class="kd-order-btn" id="kitOrderBtn" onclick="orderKit()" {{ $kit->max_kits <= 0 ? 'disabled' : '' }}>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
+                    Order Now
+                </button>
+                <span class="kd-max-info">Max: {{ $kit->max_kits }} kits</span>
             </div>
+            <div class="kd-order-msg" id="kitOrderMsg"></div>
+            @else
+            <div class="kd-order-section">
+                <a href="{{ route('login') }}" class="kd-order-btn">Login to Order</a>
+            </div>
+            @endauth
         </div>
     </div>
 
@@ -150,22 +170,26 @@
                     <tr>
                         <th style="width:40%;">Category</th>
                         <th style="width:40%;">Item</th>
-                        <th style="width:20%;">Qty</th>
+                        <th style="width:20%;">Qty per Kit</th>
                     </tr>
                 </thead>
                 <tbody>
                     @php $lastCat = ''; @endphp
                     @foreach($kit->kitItems as $item)
-                        @if($item->category_label !== $lastCat)
-                            @php $lastCat = $item->category_label; @endphp
+                        @php
+                            $catName = $item->componentProduct?->category?->category_name ?? $item->category_label;
+                            $itemName = $item->componentProduct?->item_name ?? $item->item_name;
+                        @endphp
+                        @if($catName !== $lastCat)
+                            @php $lastCat = $catName; @endphp
                             <tr class="kd-bom-cat">
-                                <td colspan="3">{{ $item->category_label }}</td>
+                                <td colspan="3">{{ $catName }}</td>
                             </tr>
                         @endif
                         <tr>
                             <td></td>
-                            <td>{{ $item->item_name }}</td>
-                            <td style="font-weight:600;">{{ $item->quantity_label }}</td>
+                            <td>{{ $itemName }}</td>
+                            <td style="font-weight:600;">{{ $item->quantity }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -231,4 +255,69 @@
     </div>
     @endif
 </div>
+@endsection
+
+@section("js")
+<script>
+const maxKits = {{ $kit->max_kits }};
+const slabPrices = @json($kit->kitSlabPrices);
+
+function kitQtyChange(delta) {
+    const input = document.getElementById('kitQty');
+    let val = parseInt(input.value) || 1;
+    val += delta;
+    if (val < 1) val = 1;
+    if (val > maxKits) val = maxKits;
+    input.value = val;
+}
+
+document.getElementById('kitQty')?.addEventListener('input', function() {
+    let val = parseInt(this.value) || 1;
+    if (val < 1) this.value = 1;
+    if (val > maxKits) this.value = maxKits;
+});
+
+function orderKit() {
+    const qty = parseInt(document.getElementById('kitQty').value) || 1;
+    const btn = document.getElementById('kitOrderBtn');
+    const msg = document.getElementById('kitOrderMsg');
+
+    if (qty < 1 || qty > maxKits) {
+        msg.innerHTML = '<span style="color:#ef4444;">Invalid quantity</span>';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Placing Order...';
+
+    fetch('{{ route("kit.order") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            kit_id: {{ $kit->id }},
+            quantity: qty
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            msg.innerHTML = '<span style="color:#22c55e;">' + data.message + '</span>';
+            setTimeout(() => { window.location.href = data.redirect || '/'; }, 1500);
+        } else {
+            msg.innerHTML = '<span style="color:#ef4444;">' + (data.error || 'Order failed') + '</span>';
+        }
+    })
+    .catch(() => {
+        msg.innerHTML = '<span style="color:#ef4444;">Something went wrong</span>';
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.textContent = 'Order Now';
+    });
+}
+</script>
 @endsection

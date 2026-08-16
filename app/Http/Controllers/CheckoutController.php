@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CpOrder;
 use App\Models\CustomerOrder;
 use App\Models\CustomerOrderItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class CheckoutController extends Controller
@@ -89,8 +91,43 @@ class CheckoutController extends Controller
             $total += ($item['product']->current_sale_price ?? 0) * $item['quantity'];
         }
 
+        $user = Auth::user();
+        $isCp = $user->role_id == 4 && $user->cp_id;
+
         DB::beginTransaction();
         try {
+            if ($isCp) {
+                $products = [];
+                foreach ($items as $item) {
+                    $products[] = [
+                        'product_id' => $item['product']->id,
+                        'quantity' => $item['quantity'],
+                        'price' => $item['product']->current_sale_price ?? 0,
+                    ];
+                }
+                $data = [
+                    'cp_id' => $user->cp_id,
+                    'order_id' => 'ORDER' . time() . rand(1000, 9999),
+                    'products' => json_encode($products),
+                    'order_notes' => $request->notes ?? '',
+                    'status' => 'pending',
+                    'order_date' => now()->format('Y-m-d'),
+                    'payment_status' => 'verification_pending',
+                ];
+                if (Schema::hasColumn('cp_orders', 'grand_total')) {
+                    $data['grand_total'] = $total;
+                }
+                CpOrder::create($data);
+
+                DB::commit();
+
+                if ($request->mode === 'cart') {
+                    session()->forget('cart');
+                }
+
+                return redirect()->route('orderReportCp')->with('success', 'Order placed as CP order.');
+            }
+
             $order = CustomerOrder::create([
                 'order_number'   => CustomerOrder::generateOrderNumber(),
                 'user_id'        => Auth::id(),
@@ -122,7 +159,7 @@ class CheckoutController extends Controller
 
             DB::commit();
 
-            Auth::user()->update([
+            $user->update([
                 'address'  => $request->address,
                 'state'    => $request->state,
                 'district' => $request->district,
