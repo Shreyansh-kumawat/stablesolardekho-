@@ -260,6 +260,11 @@ class KitController extends Controller
                 'status' => 'pending',
                 'name' => $user->name,
                 'phone' => $user->phone ?? '',
+                'address' => $user->address ?? '',
+                'city' => $user->city ?? '',
+                'district' => $user->district ?? '',
+                'state' => $user->state ?? '',
+                'pincode' => $user->pincode ?? '',
                 'notes' => 'Kit Order: ' . $kit->item_name . ' x' . $qty,
             ]);
 
