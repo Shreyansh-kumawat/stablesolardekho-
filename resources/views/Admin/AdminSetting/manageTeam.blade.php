@@ -317,8 +317,11 @@
                                             data-photo="{{ $teamMember->profile_photo }}">
                                             <i class="fas fa-edit me-1"></i> Edit
                                         </button>
-                                        
-
+                                        <form action="{{ route('deleteTeamMember', $teamMember->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this team member?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash me-1"></i> Delete</button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

@@ -81,6 +81,16 @@ class AdminSettingController extends Controller
         return redirect()->route('manageTeam')->with('success', 'Team member updated successfully.');
     }
 
+    public function deleteTeamMember($id)
+    {
+        $member = SolarTeam::findOrFail($id);
+        if ($member->profile_photo) {
+            Storage::disk('public')->delete($member->profile_photo);
+        }
+        $member->delete();
+        return redirect()->route('manageTeam')->with('success', 'Team member deleted successfully.');
+    }
+
     public function newInstallationStory()
     {
         return view('Admin.AdminSetting.newInstallationStory');
