@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\ChannelPartner;
 use App\Models\CpMaterialLedger;
+use App\Models\Product;
+use App\Models\ProductInventoryTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -27,8 +29,9 @@ class CpMaterialLedgerController extends Controller
         }
 
         $entries = $query->orderByDesc('entry_date')->orderByDesc('id')->get();
+        $products = Product::with('inventory')->orderBy('item_name')->get();
 
-        return view('Admin.materialLedger.index', compact('entries', 'cps'));
+        return view('Admin.materialLedger.index', compact('entries', 'cps', 'products'));
     }
 
     public function adminStore(Request $request)
@@ -55,7 +58,51 @@ class CpMaterialLedgerController extends Controller
 
         CpMaterialLedger::create($data);
 
-        return redirect()->back()->with('success', 'Material entry added successfully.');
+        $product = Product::where('item_name', $request->material_name)->first();
+        if ($product) {
+            $warehouseInv = \App\Models\ProductInventory::where('product_id', $product->id)->first();
+            if ($warehouseInv && $warehouseInv->available_qty >= $request->quantity) {
+                $warehouseInv->available_qty -= $request->quantity;
+                $warehouseInv->save();
+            }
+
+            $prefix = 'TRAN';
+            $datePart = date('Ymd');
+            $randomPart = strtoupper(substr(uniqid(), -4));
+            $txnId = $prefix . $datePart . $randomPart;
+
+            ProductInventoryTransaction::create([
+                'product_id' => $product->id,
+                'transaction_type' => 'OUT',
+                'quantity' => $request->quantity,
+                'unit_price' => $request->rate,
+                'performed_by' => Auth::id(),
+                'txn_id' => $txnId,
+                'txn_done_from' => $request->cp_id,
+                'invoice_number' => $request->invoice_number,
+                'remarks' => 'Material Ledger entry: ' . $request->material_name,
+            ]);
+
+            $cpInv = \App\Models\CpProductInventory::firstOrCreate(
+                ['cp_id' => $request->cp_id, 'product_id' => $product->id],
+                ['available_qty' => 0]
+            );
+            $cpInv->available_qty += $request->quantity;
+            $cpInv->save();
+
+            \App\Models\CpProductInventoryTransaction::create([
+                'cp_id' => $request->cp_id,
+                'product_id' => $product->id,
+                'transaction_type' => 'IN',
+                'quantity' => $request->quantity,
+                'unit_price' => $request->rate,
+                'performed_by' => Auth::id(),
+                'txn_id' => $txnId,
+                'remarks' => 'From Material Ledger entry',
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Material entry added successfully.' . ($product ? ' Inventory updated.' : ''));
     }
 
     public function adminUpdate(Request $request, $id)

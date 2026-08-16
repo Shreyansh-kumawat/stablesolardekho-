@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ChannelPartner;
 use App\Models\ChannelPartnerRole;
+use App\Models\CpMaterialLedger;
 use App\Models\CpOrder;
 use App\Models\CpProductInventory;
 use App\Models\CpProductInventoryTransaction;
@@ -60,14 +61,30 @@ class CpInventoryController extends Controller
         $inv->available_qty -= $request->quantity;
         $inv->save();
 
+        $product = Product::find($inv->product_id);
+        $sellingPrice = $product->current_sale_price ?? 0;
+
         CpProductInventoryTransaction::create([
             'cp_id' => Auth::user()->cp_id,
             'product_id' => $inv->product_id,
             'transaction_type' => 'OUT',
             'quantity' => $request->quantity,
+            'unit_price' => $sellingPrice,
             'performed_by' => Auth::id(),
             'txn_id' => $this->getTxnId(),
             'remarks' => $request->remarks ?? 'Stock used by CP',
+        ]);
+
+        CpMaterialLedger::create([
+            'cp_id' => Auth::user()->cp_id,
+            'material_name' => $product->item_name ?? 'Unknown Item',
+            'quantity' => -$request->quantity,
+            'unit' => $product->uom ?? 'Piece',
+            'rate' => $sellingPrice,
+            'total_amount' => -($request->quantity * $sellingPrice),
+            'entry_date' => now()->format('Y-m-d'),
+            'added_by' => Auth::id(),
+            'remarks' => 'Stock used: ' . ($request->remarks ?? ''),
         ]);
 
         return redirect()->route('cpInventory')->with('success', 'Stock reduced successfully.');
@@ -153,6 +170,22 @@ class CpInventoryController extends Controller
                 $request->serial_numbers ?? [],
                 $request->all()
             );
+
+            $product = Product::find($request->product_id);
+            if ($product && $request->sold_to) {
+                $sellingPrice = $product->current_sale_price ?? 0;
+                CpMaterialLedger::create([
+                    'cp_id' => $request->sold_to,
+                    'material_name' => $product->item_name,
+                    'quantity' => $request->quantity,
+                    'unit' => $product->uom ?? 'Piece',
+                    'rate' => $sellingPrice,
+                    'total_amount' => $request->quantity * $sellingPrice,
+                    'entry_date' => now()->format('Y-m-d'),
+                    'added_by' => Auth::id(),
+                    'remarks' => 'Stock transferred from warehouse (auto)',
+                ]);
+            }
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
@@ -257,15 +290,29 @@ class CpInventoryController extends Controller
 
         if ($diff != 0) {
             $product = isset($product) ? $product : Product::find($inv->product_id);
+            $unitPrice = $product->current_sale_price ?? 0;
+
             CpProductInventoryTransaction::create([
                 'cp_id' => $inv->cp_id,
                 'product_id' => $inv->product_id,
                 'transaction_type' => $diff > 0 ? 'IN' : 'OUT',
                 'quantity' => abs($diff),
-                'unit_price' => $product->current_sale_price ?? 0,
+                'unit_price' => $unitPrice,
                 'performed_by' => Auth::id(),
                 'txn_id' => $this->getTxnId(),
                 'remarks' => 'Stock adjusted by Admin',
+            ]);
+
+            CpMaterialLedger::create([
+                'cp_id' => $inv->cp_id,
+                'material_name' => $product->item_name ?? 'Unknown Item',
+                'quantity' => $diff,
+                'unit' => $product->uom ?? 'Piece',
+                'rate' => $unitPrice,
+                'total_amount' => $diff * $unitPrice,
+                'entry_date' => now()->format('Y-m-d'),
+                'added_by' => Auth::id(),
+                'remarks' => $diff > 0 ? 'Stock increased by Admin (auto)' : 'Stock decreased by Admin (auto)',
             ]);
         }
 
@@ -320,6 +367,18 @@ class CpInventoryController extends Controller
             'performed_by' => Auth::id(),
             'txn_id' => $txnId,
             'remarks' => 'Stock added by Admin',
+        ]);
+
+        CpMaterialLedger::create([
+            'cp_id' => $cpId,
+            'material_name' => $product->item_name,
+            'quantity' => $request->quantity,
+            'unit' => $product->uom ?? 'Piece',
+            'rate' => $sellingPrice,
+            'total_amount' => $request->quantity * $sellingPrice,
+            'entry_date' => now()->format('Y-m-d'),
+            'added_by' => Auth::id(),
+            'remarks' => 'Stock allocated to CP (auto)',
         ]);
 
         return redirect()->back()->with('success', "Stock added successfully. ({$request->quantity} x {$product->item_name} @ ₹{$sellingPrice})");

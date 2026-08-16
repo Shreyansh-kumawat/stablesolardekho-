@@ -136,6 +136,7 @@
                         <th>Rate</th>
                         <th>Total</th>
                         <th>Invoice</th>
+                        <th>Remarks</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -146,9 +147,21 @@
                         <td style="white-space:nowrap;">{{ \Carbon\Carbon::parse($entry->entry_date)->format('d M Y') }}</td>
                         <td><span class="ml-cp-name">{{ $entry->channelPartner->cp_name ?? '-' }}</span></td>
                         <td>{{ $entry->material_name }}</td>
-                        <td>{{ $entry->quantity }} {{ $entry->unit }}</td>
+                        <td>
+                            @if($entry->quantity < 0)
+                                <span style="color:#dc2626; font-weight:600;">{{ $entry->quantity }} {{ $entry->unit }}</span>
+                            @else
+                                {{ $entry->quantity }} {{ $entry->unit }}
+                            @endif
+                        </td>
                         <td>{{ number_format($entry->rate, 2) }}</td>
-                        <td><span class="ml-amount">{{ number_format($entry->total_amount, 2) }}</span></td>
+                        <td>
+                            @if($entry->total_amount < 0)
+                                <span style="color:#dc2626; font-weight:700;">{{ number_format($entry->total_amount, 2) }}</span>
+                            @else
+                                <span class="ml-amount">{{ number_format($entry->total_amount, 2) }}</span>
+                            @endif
+                        </td>
                         <td>
                             @if($entry->invoice_file)
                                 <a href="{{ url('serve/' . $entry->invoice_file) }}" target="_blank" class="ml-invoice-link">
@@ -161,6 +174,7 @@
                                 <span style="color:#94a3b8;">-</span>
                             @endif
                         </td>
+                        <td style="font-size:0.75rem; color:#64748b; max-width:150px;">{{ $entry->remarks ?: '-' }}</td>
                         <td style="white-space:nowrap;">
                             <button class="ml-btn ml-btn-primary ml-btn-sm edit-entry-btn"
                                 data-id="{{ $entry->id }}"
@@ -184,7 +198,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="ml-empty">
+                        <td colspan="10" class="ml-empty">
                             <svg width="32" height="32" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24" style="display:block;margin:0 auto 8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
                             No entries found. Click "Add Entry" to get started.
                         </td>
@@ -217,8 +231,20 @@
                         </select>
                     </div>
                     <div>
+                        <label class="form-label">Select Product <span style="color:#94a3b8; font-weight:400;">(auto-fills details)</span></label>
+                        <select class="form-select" id="addProductSelect" onchange="fillFromProduct()">
+                            <option value="">-- Or type manually below --</option>
+                            @foreach($products as $prod)
+                            @php $whStock = $prod->inventory ? $prod->inventory->available_qty : 0; @endphp
+                            <option value="{{ $prod->id }}" data-name="{{ $prod->item_name }}" data-uom="{{ $prod->uom ?? 'Piece' }}" data-price="{{ $prod->current_sale_price ?? 0 }}" data-stock="{{ $whStock }}">
+                                {{ $prod->item_name }} ({{ $prod->item_code }}) — Stock: {{ $whStock }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
                         <label class="form-label">Material Name <span style="color:#e74c3c;">*</span></label>
-                        <input type="text" class="form-control" name="material_name" required placeholder="e.g. Solar Panel 545W" maxlength="255">
+                        <input type="text" class="form-control" name="material_name" id="addMaterialName" required placeholder="e.g. Solar Panel 545W" maxlength="255">
                     </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
                         <div>
@@ -227,7 +253,7 @@
                         </div>
                         <div>
                             <label class="form-label">Unit</label>
-                            <select class="form-select" name="unit">
+                            <select class="form-select" name="unit" id="addUnit">
                                 <option>Piece</option><option>Kilogram</option><option>Meter</option><option>Liter</option><option>Box</option><option>Set</option><option>KW</option><option>Watt</option>
                             </select>
                         </div>
@@ -345,6 +371,18 @@ $(document).ready(function() {
         $(totalEl).val((q * r).toFixed(2));
     }
     $('#addQty, #addRate').on('input', function() { calcTotal('#addQty', '#addRate', '#addTotal'); });
+
+    window.fillFromProduct = function() {
+        var sel = document.getElementById('addProductSelect');
+        var opt = sel.options[sel.selectedIndex];
+        if (!opt.value) return;
+        document.getElementById('addMaterialName').value = opt.dataset.name || '';
+        document.getElementById('addUnit').value = opt.dataset.uom || 'Piece';
+        document.getElementById('addRate').value = opt.dataset.price || '0';
+        var stock = parseInt(opt.dataset.stock) || 0;
+        document.getElementById('addQty').setAttribute('max', stock);
+        calcTotal('#addQty', '#addRate', '#addTotal');
+    };
     $('#editQty, #editRate').on('input', function() { calcTotal('#editQty', '#editRate', '#editTotal'); });
 
     $(document).on('click', '.edit-entry-btn', function() {

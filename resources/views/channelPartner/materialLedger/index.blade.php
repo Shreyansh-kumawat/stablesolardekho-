@@ -99,9 +99,21 @@
                         <td>{{ $loop->iteration }}</td>
                         <td style="white-space:nowrap;">{{ \Carbon\Carbon::parse($entry->entry_date)->format('d M Y') }}</td>
                         <td>{{ $entry->material_name }}</td>
-                        <td>{{ $entry->quantity }} {{ $entry->unit }}</td>
+                        <td>
+                            @if($entry->quantity < 0)
+                                <span style="color:#dc2626; font-weight:600;">{{ $entry->quantity }} {{ $entry->unit }}</span>
+                            @else
+                                {{ $entry->quantity }} {{ $entry->unit }}
+                            @endif
+                        </td>
                         <td>{{ number_format($entry->rate, 2) }}</td>
-                        <td><span class="ml-amount">{{ number_format($entry->total_amount, 2) }}</span></td>
+                        <td>
+                            @if($entry->total_amount < 0)
+                                <span style="color:#dc2626; font-weight:700;">{{ number_format($entry->total_amount, 2) }}</span>
+                            @else
+                                <span class="ml-amount">{{ number_format($entry->total_amount, 2) }}</span>
+                            @endif
+                        </td>
                         <td>
                             @if($entry->invoice_file)
                                 <a href="{{ url('serve/' . $entry->invoice_file) }}" target="_blank" class="ml-invoice-link">
