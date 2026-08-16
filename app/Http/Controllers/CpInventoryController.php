@@ -283,6 +283,26 @@ class CpInventoryController extends Controller
                 'txn_done_from' => $inv->cp_id,
                 'remarks' => 'Stock adjusted for CP: ' . ChannelPartner::find($inv->cp_id)?->cp_name,
             ]);
+        } elseif ($diff < 0) {
+            $warehouseInv = \App\Models\ProductInventory::where('product_id', $inv->product_id)->first();
+            if ($warehouseInv) {
+                $warehouseInv->available_qty += abs($diff);
+                $warehouseInv->save();
+            }
+
+            $product = Product::find($inv->product_id);
+            $sellingPrice = $product->current_sale_price ?? 0;
+
+            ProductInventoryTransaction::create([
+                'product_id' => $inv->product_id,
+                'transaction_type' => 'IN',
+                'quantity' => abs($diff),
+                'unit_price' => $sellingPrice,
+                'performed_by' => Auth::id(),
+                'txn_id' => $this->getTxnId(),
+                'txn_done_from' => $inv->cp_id,
+                'remarks' => 'Stock returned from CP: ' . ChannelPartner::find($inv->cp_id)?->cp_name,
+            ]);
         }
 
         $inv->available_qty = $newQty;

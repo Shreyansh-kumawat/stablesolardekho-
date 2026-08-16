@@ -59,50 +59,60 @@ class CpMaterialLedgerController extends Controller
         CpMaterialLedger::create($data);
 
         $product = Product::where('item_name', $request->material_name)->first();
+        $inventoryUpdated = false;
         if ($product) {
             $warehouseInv = \App\Models\ProductInventory::where('product_id', $product->id)->first();
-            if ($warehouseInv && $warehouseInv->available_qty >= $request->quantity) {
+            $warehouseStock = $warehouseInv ? $warehouseInv->available_qty : 0;
+
+            if ($warehouseStock >= $request->quantity) {
                 $warehouseInv->available_qty -= $request->quantity;
                 $warehouseInv->save();
+
+                $prefix = 'TRAN';
+                $datePart = date('Ymd');
+                $randomPart = strtoupper(substr(uniqid(), -4));
+                $txnId = $prefix . $datePart . $randomPart;
+
+                ProductInventoryTransaction::create([
+                    'product_id' => $product->id,
+                    'transaction_type' => 'OUT',
+                    'quantity' => $request->quantity,
+                    'unit_price' => $request->rate,
+                    'performed_by' => Auth::id(),
+                    'txn_id' => $txnId,
+                    'txn_done_from' => $request->cp_id,
+                    'invoice_number' => $request->invoice_number,
+                    'remarks' => 'Material Ledger entry: ' . $request->material_name,
+                ]);
+
+                $cpInv = \App\Models\CpProductInventory::firstOrCreate(
+                    ['cp_id' => $request->cp_id, 'product_id' => $product->id],
+                    ['available_qty' => 0]
+                );
+                $cpInv->available_qty += $request->quantity;
+                $cpInv->save();
+
+                \App\Models\CpProductInventoryTransaction::create([
+                    'cp_id' => $request->cp_id,
+                    'product_id' => $product->id,
+                    'transaction_type' => 'IN',
+                    'quantity' => $request->quantity,
+                    'unit_price' => $request->rate,
+                    'performed_by' => Auth::id(),
+                    'txn_id' => $txnId,
+                    'remarks' => 'From Material Ledger entry',
+                ]);
+                $inventoryUpdated = true;
             }
-
-            $prefix = 'TRAN';
-            $datePart = date('Ymd');
-            $randomPart = strtoupper(substr(uniqid(), -4));
-            $txnId = $prefix . $datePart . $randomPart;
-
-            ProductInventoryTransaction::create([
-                'product_id' => $product->id,
-                'transaction_type' => 'OUT',
-                'quantity' => $request->quantity,
-                'unit_price' => $request->rate,
-                'performed_by' => Auth::id(),
-                'txn_id' => $txnId,
-                'txn_done_from' => $request->cp_id,
-                'invoice_number' => $request->invoice_number,
-                'remarks' => 'Material Ledger entry: ' . $request->material_name,
-            ]);
-
-            $cpInv = \App\Models\CpProductInventory::firstOrCreate(
-                ['cp_id' => $request->cp_id, 'product_id' => $product->id],
-                ['available_qty' => 0]
-            );
-            $cpInv->available_qty += $request->quantity;
-            $cpInv->save();
-
-            \App\Models\CpProductInventoryTransaction::create([
-                'cp_id' => $request->cp_id,
-                'product_id' => $product->id,
-                'transaction_type' => 'IN',
-                'quantity' => $request->quantity,
-                'unit_price' => $request->rate,
-                'performed_by' => Auth::id(),
-                'txn_id' => $txnId,
-                'remarks' => 'From Material Ledger entry',
-            ]);
         }
 
-        return redirect()->back()->with('success', 'Material entry added successfully.' . ($product ? ' Inventory updated.' : ''));
+        $msg = 'Material entry added successfully.';
+        if ($product && $inventoryUpdated) {
+            $msg .= ' Inventory updated.';
+        } elseif ($product && !$inventoryUpdated) {
+            $msg .= ' (Warehouse stock insufficient — inventory not updated.)';
+        }
+        return redirect()->back()->with('success', $msg);
     }
 
     public function adminUpdate(Request $request, $id)
