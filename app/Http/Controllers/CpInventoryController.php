@@ -9,6 +9,7 @@ use App\Models\CpProductInventory;
 use App\Models\CpProductInventoryTransaction;
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\ProductInventoryTransaction;
 use App\Services\wareHouseInventoryService;
 use App\Services\WarehouseToCpInventoryService;
 use Illuminate\Http\Request;
@@ -213,7 +214,7 @@ class CpInventoryController extends Controller
             ->orderBy('products.item_name')
             ->get();
 
-        $products = Product::orderBy('item_name')->get();
+        $products = Product::with('inventory')->orderBy('item_name')->get();
 
         return view('Admin.inventorySetting.cpInventoryDetail', compact('cp', 'inventory', 'products'));
     }
@@ -227,15 +228,41 @@ class CpInventoryController extends Controller
         $newQty = $request->available_qty;
         $diff = $newQty - $oldQty;
 
+        if ($diff > 0) {
+            $warehouseInv = \App\Models\ProductInventory::where('product_id', $inv->product_id)->first();
+            $warehouseStock = $warehouseInv ? $warehouseInv->available_qty : 0;
+            if ($diff > $warehouseStock) {
+                return redirect()->back()->with('error', "Not enough warehouse stock. Available: {$warehouseStock}, Increase requested: {$diff}");
+            }
+            $warehouseInv->available_qty -= $diff;
+            $warehouseInv->save();
+
+            $product = Product::find($inv->product_id);
+            $sellingPrice = $product->current_sale_price ?? 0;
+
+            ProductInventoryTransaction::create([
+                'product_id' => $inv->product_id,
+                'transaction_type' => 'OUT',
+                'quantity' => $diff,
+                'unit_price' => $sellingPrice,
+                'performed_by' => Auth::id(),
+                'txn_id' => $this->getTxnId(),
+                'txn_done_from' => $inv->cp_id,
+                'remarks' => 'Stock adjusted for CP: ' . ChannelPartner::find($inv->cp_id)?->cp_name,
+            ]);
+        }
+
         $inv->available_qty = $newQty;
         $inv->save();
 
         if ($diff != 0) {
+            $product = isset($product) ? $product : Product::find($inv->product_id);
             CpProductInventoryTransaction::create([
                 'cp_id' => $inv->cp_id,
                 'product_id' => $inv->product_id,
                 'transaction_type' => $diff > 0 ? 'IN' : 'OUT',
                 'quantity' => abs($diff),
+                'unit_price' => $product->current_sale_price ?? 0,
                 'performed_by' => Auth::id(),
                 'txn_id' => $this->getTxnId(),
                 'remarks' => 'Stock adjusted by Admin',
@@ -252,8 +279,33 @@ class CpInventoryController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
+        $product = Product::findOrFail($request->product_id);
+        $warehouseInv = \App\Models\ProductInventory::where('product_id', $product->id)->first();
+        $warehouseStock = $warehouseInv ? $warehouseInv->available_qty : 0;
+
+        if ($request->quantity > $warehouseStock) {
+            return redirect()->back()->with('error', "Not enough warehouse stock. Available: {$warehouseStock}, Requested: {$request->quantity}");
+        }
+
+        $warehouseInv->available_qty -= $request->quantity;
+        $warehouseInv->save();
+
+        $txnId = $this->getTxnId();
+        $sellingPrice = $product->current_sale_price ?? 0;
+
+        ProductInventoryTransaction::create([
+            'product_id' => $product->id,
+            'transaction_type' => 'OUT',
+            'quantity' => $request->quantity,
+            'unit_price' => $sellingPrice,
+            'performed_by' => Auth::id(),
+            'txn_id' => $txnId,
+            'txn_done_from' => $cpId,
+            'remarks' => 'Stock allocated to CP: ' . ChannelPartner::find($cpId)?->cp_name,
+        ]);
+
         $inv = CpProductInventory::firstOrCreate(
-            ['cp_id' => $cpId, 'product_id' => $request->product_id],
+            ['cp_id' => $cpId, 'product_id' => $product->id],
             ['available_qty' => 0]
         );
         $inv->available_qty += $request->quantity;
@@ -261,15 +313,16 @@ class CpInventoryController extends Controller
 
         CpProductInventoryTransaction::create([
             'cp_id' => $cpId,
-            'product_id' => $request->product_id,
+            'product_id' => $product->id,
             'transaction_type' => 'IN',
             'quantity' => $request->quantity,
+            'unit_price' => $sellingPrice,
             'performed_by' => Auth::id(),
-            'txn_id' => $this->getTxnId(),
+            'txn_id' => $txnId,
             'remarks' => 'Stock added by Admin',
         ]);
 
-        return redirect()->back()->with('success', 'Stock added successfully.');
+        return redirect()->back()->with('success', "Stock added successfully. ({$request->quantity} x {$product->item_name} @ ₹{$sellingPrice})");
     }
 
     public function adminCpEntries()

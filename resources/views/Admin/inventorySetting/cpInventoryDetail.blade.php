@@ -108,14 +108,21 @@
         <form method="POST" action="{{ route('adminCpAddStock', $cp->id) }}">
             @csrf
             <label>Product</label>
-            <select name="product_id" required>
+            <select name="product_id" id="addStockProduct" required onchange="updateStockHint()">
                 <option value="">Select Product</option>
                 @foreach($products as $product)
-                <option value="{{ $product->id }}">{{ $product->item_name }} ({{ $product->item_code }})</option>
+                @php $whStock = $product->inventory ? $product->inventory->available_qty : 0; @endphp
+                <option value="{{ $product->id }}" data-stock="{{ $whStock }}" data-price="{{ $product->current_sale_price ?? 0 }}">
+                    {{ $product->item_name }} ({{ $product->item_code }})
+                </option>
                 @endforeach
             </select>
+            <div id="stockHintBox" style="display:none; margin:-0.5rem 0 0.75rem; padding:8px 10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; font-size:.78rem;">
+                <span style="color:#059669; font-weight:600;">Warehouse Stock: <span id="stockHintQty">0</span></span>
+                <span style="color:#64748b; margin-left:8px;">| Price: ₹<span id="stockHintPrice">0</span></span>
+            </div>
             <label>Quantity</label>
-            <input type="number" name="quantity" min="1" required placeholder="Enter quantity">
+            <input type="number" name="quantity" id="addStockQty" min="1" required placeholder="Enter quantity">
             <div class="cpd-modal-actions">
                 <button type="button" class="cpd-btn cpd-btn-cancel" onclick="document.getElementById('addStockModal').classList.remove('active')">Cancel</button>
                 <button type="submit" class="cpd-btn cpd-btn-primary">Add Stock</button>
@@ -147,6 +154,20 @@ function openEditModal(invId, itemName, currentQty) {
     document.getElementById('editQtyInput').value = currentQty;
     document.getElementById('editStockForm').action = '{{ url("admin/cp-inventory") }}/' + invId + '/admin-update-stock';
     document.getElementById('editStockModal').classList.add('active');
+}
+
+function updateStockHint() {
+    var sel = document.getElementById('addStockProduct');
+    var opt = sel.options[sel.selectedIndex];
+    var box = document.getElementById('stockHintBox');
+    var qtyInput = document.getElementById('addStockQty');
+    if (!opt.value) { box.style.display = 'none'; qtyInput.removeAttribute('max'); return; }
+    var stock = parseInt(opt.dataset.stock) || 0;
+    var price = opt.dataset.price || '0';
+    document.getElementById('stockHintQty').textContent = stock;
+    document.getElementById('stockHintPrice').textContent = price;
+    qtyInput.setAttribute('max', stock);
+    box.style.display = 'block';
 }
 </script>
 @endsection
