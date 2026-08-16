@@ -207,87 +207,121 @@ class KitController extends Controller
                 return response()->json(['error' => 'Only ' . $maxKits . ' kits available'], 422);
             }
 
-            $slabPrice = $kit->current_sale_price;
-            foreach ($kit->kitSlabPrices()->orderBy('min_qty')->get() as $slab) {
-                if ($qty >= $slab->min_qty && (!$slab->max_qty || $qty <= $slab->max_qty)) {
-                    $slabPrice = $slab->price;
-                }
-            }
-            $totalAmount = $slabPrice * $qty;
-
             $user = Auth::user();
             $isCp = $user->role_id == 4 && $user->cp_id;
 
-            $products = [];
-            foreach ($kit->kitItems as $item) {
-                if (!$item->component_product_id || $item->quantity <= 0) continue;
-                $products[] = [
-                    'product_id' => $item->component_product_id,
-                    'quantity' => $item->quantity * $qty,
-                    'price' => $item->componentProduct->current_sale_price ?? 0,
-                ];
-            }
-
             if ($isCp) {
-                $txnId = 'ORDER' . time() . rand(1000, 9999);
-                $data = [
-                    'cp_id' => $user->cp_id,
-                    'order_id' => $txnId,
-                    'products' => json_encode($products),
-                    'order_notes' => 'Kit Order: ' . $kit->item_name . ' x' . $qty,
-                    'status' => 'pending',
-                    'order_date' => now()->format('Y-m-d'),
-                    'payment_status' => 'pending',
-                ];
-                if (Schema::hasColumn('cp_orders', 'grand_total')) {
-                    $data['grand_total'] = $totalAmount;
-                }
-                $cpOrder = CpOrder::create($data);
+                session(['pending_kit_order' => [
+                    'kit_id' => $kit->id,
+                    'kit_name' => $kit->item_name,
+                    'quantity' => $qty,
+                ]]);
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Kit order placed! Redirecting to payment...',
-                    'redirect' => route('cpOrderPayment', $cpOrder->id),
-                ]);
-            }
-
-            $order = CustomerOrder::create([
-                'order_number' => CustomerOrder::generateOrderNumber(),
-                'user_id' => $user->id,
-                'total_amount' => $totalAmount,
-                'payment_method' => 'online',
-                'payment_status' => 'pending',
-                'status' => 'pending',
-                'name' => $user->name,
-                'phone' => $user->phone ?? '',
-                'address' => $user->address ?? '',
-                'city' => $user->city ?? '',
-                'district' => $user->district ?? '',
-                'state' => $user->state ?? '',
-                'pincode' => $user->pincode ?? '',
-                'notes' => 'Kit Order: ' . $kit->item_name . ' x' . $qty,
-            ]);
-
-            foreach ($products as $prod) {
-                $p = Product::find($prod['product_id']);
-                CustomerOrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $prod['product_id'],
-                    'product_name' => $p->item_name ?? 'Product',
-                    'price' => $prod['price'],
-                    'quantity' => $prod['quantity'],
-                    'subtotal' => $prod['price'] * $prod['quantity'],
+                    'message' => 'Redirecting to payment...',
+                    'redirect' => route('kit.payment', $kit->id) . '?qty=' . $qty,
                 ]);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Kit order placed! Redirecting to payment...',
-                'redirect' => route('user.order.payment', $order->id),
+                'message' => 'Redirecting to checkout...',
+                'redirect' => route('checkout') . '?product_id=' . $kit->id . '&qty=' . $qty,
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+
+    public function kitPaymentPage(Request $request, $kitId)
+    {
+        $user = Auth::user();
+        if ($user->role_id != 4 || !$user->cp_id) {
+            return redirect('/');
+        }
+
+        $kit = Product::where('is_kit', true)
+            ->with(['kitItems.componentProduct', 'kitSlabPrices'])
+            ->findOrFail($kitId);
+
+        $qty = (int) ($request->qty ?: 1);
+        $maxKits = $this->calculateMaxKits($kit);
+        if ($qty > $maxKits) $qty = $maxKits;
+        if ($qty < 1) $qty = 1;
+
+        $slabPrice = $kit->current_sale_price;
+        foreach ($kit->kitSlabPrices()->orderBy('min_qty')->get() as $slab) {
+            if ($qty >= $slab->min_qty && (!$slab->max_qty || $qty <= $slab->max_qty)) {
+                $slabPrice = $slab->price;
+            }
+        }
+        $totalAmount = $slabPrice * $qty;
+
+        return view('channelPartner.orders.kitPayment', compact('kit', 'qty', 'totalAmount', 'slabPrice'));
+    }
+
+    public function submitKitPayment(Request $request, $kitId)
+    {
+        $request->validate([
+            'quantity' => 'required|integer|min:1',
+            'payment_screenshot' => 'required|image|max:5120',
+            'payment_reference' => 'nullable|string|max:255',
+        ]);
+
+        $user = Auth::user();
+        if ($user->role_id != 4 || !$user->cp_id) {
+            return redirect('/');
+        }
+
+        $kit = Product::where('is_kit', true)
+            ->with('kitItems.componentProduct')
+            ->findOrFail($kitId);
+
+        $qty = (int) $request->quantity;
+        $maxKits = $this->calculateMaxKits($kit);
+
+        if ($qty > $maxKits) {
+            return back()->with('error', 'Only ' . $maxKits . ' kits available.');
+        }
+
+        $slabPrice = $kit->current_sale_price;
+        foreach ($kit->kitSlabPrices()->orderBy('min_qty')->get() as $slab) {
+            if ($qty >= $slab->min_qty && (!$slab->max_qty || $qty <= $slab->max_qty)) {
+                $slabPrice = $slab->price;
+            }
+        }
+        $totalAmount = $slabPrice * $qty;
+
+        $products = [];
+        foreach ($kit->kitItems as $item) {
+            if (!$item->component_product_id || $item->quantity <= 0) continue;
+            $products[] = [
+                'product_id' => $item->component_product_id,
+                'quantity' => $item->quantity * $qty,
+                'price' => $item->componentProduct->current_sale_price ?? 0,
+            ];
+        }
+
+        $path = $request->file('payment_screenshot')->store('cp-payment-screenshots', 'public');
+
+        $data = [
+            'cp_id' => $user->cp_id,
+            'order_id' => 'ORDER' . time() . rand(1000, 9999),
+            'products' => json_encode($products),
+            'order_notes' => 'Kit Order: ' . $kit->item_name . ' x' . $qty,
+            'status' => 'pending',
+            'order_date' => now()->format('Y-m-d'),
+            'payment_status' => 'verification_pending',
+            'payment_screenshot' => $path,
+            'payment_reference' => $request->payment_reference,
+        ];
+        if (Schema::hasColumn('cp_orders', 'grand_total')) {
+            $data['grand_total'] = $totalAmount;
+        }
+        CpOrder::create($data);
+
+        return redirect()->route('orderReportCp')->with('success', 'Kit order placed with payment receipt. Our team will verify it shortly.');
     }
 
     private function saveKitItems(int $productId, array $items): void

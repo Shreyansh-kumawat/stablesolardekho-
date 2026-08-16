@@ -306,7 +306,8 @@ function orderKit() {
     .then(({ok, data}) => {
         if (ok && data.success) {
             msg.innerHTML = '<span style="color:#22c55e;">' + data.message + '</span>';
-            setTimeout(() => { window.location.href = data.redirect || '/'; }, 1500);
+            window.location.href = data.redirect || '/';
+            return;
         } else {
             msg.innerHTML = '<span style="color:#ef4444;">' + (data.error || data.message || 'Order failed') + '</span>';
         }

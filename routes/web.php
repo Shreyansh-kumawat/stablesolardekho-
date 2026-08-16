@@ -88,6 +88,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/password/verify-otp', [UserController::class, 'verifyPasswordOtp'])->name('user.password.verifyOtp');
     Route::post('/password/change', [UserController::class, 'changePassword'])->name('user.password.change');
     Route::post('/kit/order', [KitController::class, 'orderKit'])->name('kit.order');
+    Route::get('/kit/{id}/payment', [KitController::class, 'kitPaymentPage'])->name('kit.payment');
+    Route::post('/kit/{id}/payment', [KitController::class, 'submitKitPayment'])->name('kit.payment.submit');
 });
 
 Route::middleware('auth')->group(function () {
