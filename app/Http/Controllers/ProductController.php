@@ -63,7 +63,7 @@ class ProductController extends Controller
         $products = $query->paginate(12)->appends($request->query());
 
         $kits = Schema::hasColumn('products', 'is_kit')
-            ? Product::where('is_kit', true)->where('is_active', true)->inStock()->with('kitSlabPrices')->latest()->get()
+            ? Product::where('is_kit', true)->where('is_active', true)->with('kitSlabPrices')->latest()->get()
             : collect();
 
         return view('shop.index', compact('products', 'categories', 'activeCategory', 'kits'));
