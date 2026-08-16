@@ -302,17 +302,17 @@ function orderKit() {
             quantity: qty
         })
     })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
+    .then(r => r.json().then(data => ({ok: r.ok, data})))
+    .then(({ok, data}) => {
+        if (ok && data.success) {
             msg.innerHTML = '<span style="color:#22c55e;">' + data.message + '</span>';
             setTimeout(() => { window.location.href = data.redirect || '/'; }, 1500);
         } else {
-            msg.innerHTML = '<span style="color:#ef4444;">' + (data.error || 'Order failed') + '</span>';
+            msg.innerHTML = '<span style="color:#ef4444;">' + (data.error || data.message || 'Order failed') + '</span>';
         }
     })
-    .catch(() => {
-        msg.innerHTML = '<span style="color:#ef4444;">Something went wrong</span>';
+    .catch(e => {
+        msg.innerHTML = '<span style="color:#ef4444;">Error: ' + e.message + '</span>';
     })
     .finally(() => {
         btn.disabled = false;
