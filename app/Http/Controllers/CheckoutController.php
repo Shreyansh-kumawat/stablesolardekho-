@@ -112,12 +112,12 @@ class CheckoutController extends Controller
                     'order_notes' => $request->notes ?? '',
                     'status' => 'pending',
                     'order_date' => now()->format('Y-m-d'),
-                    'payment_status' => 'verification_pending',
+                    'payment_status' => 'pending',
                 ];
                 if (Schema::hasColumn('cp_orders', 'grand_total')) {
                     $data['grand_total'] = $total;
                 }
-                CpOrder::create($data);
+                $cpOrder = CpOrder::create($data);
 
                 DB::commit();
 
@@ -125,7 +125,7 @@ class CheckoutController extends Controller
                     session()->forget('cart');
                 }
 
-                return redirect()->route('orderReportCp')->with('success', 'Order placed as CP order.');
+                return redirect()->route('cpOrderPayment', $cpOrder->id);
             }
 
             $order = CustomerOrder::create([

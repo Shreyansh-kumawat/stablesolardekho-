@@ -140,6 +140,8 @@
                         <td data-label="Payment">
                             @if($order->payment_status === 'verification_pending')
                                 <span class="cpo-pill cpo-pill-blue">Receipt Uploaded</span>
+                            @elseif($order->payment_status === 'pending')
+                                <span class="cpo-pill cpo-pill-yellow">No Receipt</span>
                             @elseif($order->payment_status === 'paid')
                                 <span class="cpo-pill cpo-pill-green">Verified</span>
                             @elseif($order->payment_status === 'failed')

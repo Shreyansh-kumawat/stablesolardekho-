@@ -237,17 +237,17 @@ class KitController extends Controller
                     'order_notes' => 'Kit Order: ' . $kit->item_name . ' x' . $qty,
                     'status' => 'pending',
                     'order_date' => now()->format('Y-m-d'),
-                    'payment_status' => 'verification_pending',
+                    'payment_status' => 'pending',
                 ];
                 if (Schema::hasColumn('cp_orders', 'grand_total')) {
                     $data['grand_total'] = $totalAmount;
                 }
-                CpOrder::create($data);
+                $cpOrder = CpOrder::create($data);
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Kit order placed! Redirecting to your orders...',
-                    'redirect' => route('orderReportCp'),
+                    'message' => 'Kit order placed! Redirecting to payment...',
+                    'redirect' => route('cpOrderPayment', $cpOrder->id),
                 ]);
             }
 
