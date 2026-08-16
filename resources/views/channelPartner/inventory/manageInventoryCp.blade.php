@@ -65,6 +65,14 @@
     .inv-empty h3 { font-size: 1rem; font-weight: 700; color: #374151; margin: 0 0 4px; }
     .inv-empty p { font-size: 0.82rem; color: #9ca3af; margin: 0; }
 
+    .searchable-select { position: relative; }
+    .searchable-select input.ss-input { width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: .85rem; margin-bottom: 0; }
+    .searchable-select input.ss-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+    .ss-dropdown { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+    .ss-dropdown.open { display: block; }
+    .ss-option { padding: 8px 12px; cursor: pointer; font-size: .83rem; color: #374151; border-bottom: 1px solid #f5f5f5; }
+    .ss-option:hover { background: #eef3ff; }
+    .ss-option.hidden { display: none; }
     @media(max-width:640px) {
         .inv-grid { grid-template-columns: 1fr; }
         .inv-wrap { padding: 12px; }
@@ -208,12 +216,20 @@
         <form method="POST" action="{{ route('cpReorder') }}">
             @csrf
             <label>Product</label>
-            <select name="product_id" required>
-                <option value="">Select Product</option>
-                @foreach($products as $product)
-                <option value="{{ $product->id }}">{{ $product->item_name }} ({{ $product->item_code }})</option>
-                @endforeach
-            </select>
+            <div class="searchable-select">
+                <input type="text" class="ss-input" placeholder="Search product..." autocomplete="off" onclick="ssToggle(this, true)" oninput="ssFilter(this)">
+                <select name="product_id" required style="display:none;">
+                    <option value="">Select Product</option>
+                    @foreach($products as $product)
+                    <option value="{{ $product->id }}">{{ $product->item_name }} ({{ $product->item_code }})</option>
+                    @endforeach
+                </select>
+                <div class="ss-dropdown">
+                    @foreach($products as $product)
+                    <div class="ss-option" data-value="{{ $product->id }}" data-text="{{ $product->item_name }} ({{ $product->item_code }})" onclick="ssPick(this)">{{ $product->item_name }} <span style="color:#9ca3af;font-size:.78rem;">{{ $product->item_code }}</span></div>
+                    @endforeach
+                </div>
+            </div>
             <label>Quantity</label>
             <input type="number" name="quantity" min="1" required placeholder="Enter quantity">
             <div class="inv-modal-actions">
@@ -231,5 +247,21 @@ function toggleForm(id) {
     var form = document.getElementById(id);
     if (form) form.classList.toggle('active');
 }
+function ssToggle(input, show) { input.closest('.searchable-select').querySelector('.ss-dropdown').classList.toggle('open', show); }
+function ssFilter(input) {
+    var dd = input.closest('.searchable-select').querySelector('.ss-dropdown');
+    dd.classList.add('open');
+    var q = input.value.toLowerCase();
+    dd.querySelectorAll('.ss-option').forEach(function(o) { o.classList.toggle('hidden', q.length > 0 && o.getAttribute('data-text').toLowerCase().indexOf(q) === -1); });
+}
+function ssPick(opt) {
+    var wrap = opt.closest('.searchable-select');
+    var sel = wrap.querySelector('select');
+    sel.value = opt.getAttribute('data-value');
+    wrap.querySelector('.ss-input').value = opt.getAttribute('data-text');
+    wrap.querySelector('.ss-dropdown').classList.remove('open');
+    sel.dispatchEvent(new Event('change'));
+}
+document.addEventListener('click', function(e) { document.querySelectorAll('.ss-dropdown.open').forEach(function(dd) { if (!dd.parentElement.contains(e.target)) dd.classList.remove('open'); }); });
 </script>
 @endsection

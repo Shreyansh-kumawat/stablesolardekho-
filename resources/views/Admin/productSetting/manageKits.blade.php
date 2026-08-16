@@ -60,6 +60,14 @@
 
     .kit-empty { text-align: center; padding: 3rem; background: var(--white); border: 1px solid var(--border); border-radius: 12px; color: var(--muted); }
 
+    .searchable-select { position: relative; }
+    .searchable-select input.ss-input { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 0.45rem 0.8rem; font-size: 0.84rem; color: var(--text); }
+    .searchable-select input.ss-input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(249,115,22,0.12); outline: none; }
+    .ss-dropdown { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; max-height: 180px; overflow-y: auto; z-index: 1060; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+    .ss-dropdown.open { display: block; }
+    .ss-option { padding: 7px 10px; cursor: pointer; font-size: .82rem; color: #374151; border-bottom: 1px solid #f5f5f5; }
+    .ss-option:hover { background: #fff7ed; }
+    .ss-option.hidden { display: none; }
     @media (max-width: 768px) {
         .kit-grid { grid-template-columns: 1fr; }
         .kit-stats { grid-template-columns: repeat(2, 1fr); }
@@ -221,15 +229,27 @@
                         </div>
                         <div id="addItemsContainer">
                             <div class="dyn-row">
-                                <select name="items[0][category_id]" class="form-select kit-cat-select" onchange="loadProducts(this, 'add', 0)" style="flex:1;">
-                                    <option value="">Select Category</option>
-                                    @foreach($categories as $cat)
-                                        <option value="{{ $cat->id }}">{{ $cat->category_name }}</option>
-                                    @endforeach
-                                </select>
-                                <select name="items[0][component_product_id]" class="form-select kit-prod-select" onchange="updateQtyMax(this.closest('.dyn-row'))" style="flex:1;" disabled>
-                                    <option value="">Select Product</option>
-                                </select>
+                                <div style="flex:1;" class="searchable-select">
+                                    <input type="text" class="ss-input" placeholder="Search category..." autocomplete="off" onclick="ssToggle(this,true)" oninput="ssFilter(this)">
+                                    <select name="items[0][category_id]" class="form-select kit-cat-select" onchange="loadProducts(this, 'add', 0)" style="display:none;">
+                                        <option value="">Select Category</option>
+                                        @foreach($categories as $cat)
+                                            <option value="{{ $cat->id }}">{{ $cat->category_name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <div class="ss-dropdown">
+                                        @foreach($categories as $cat)
+                                        <div class="ss-option" data-value="{{ $cat->id }}" data-text="{{ $cat->category_name }}" onclick="ssPick(this)">{{ $cat->category_name }}</div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                <div style="flex:1;" class="searchable-select">
+                                    <input type="text" class="ss-input ss-prod-input" placeholder="Select category first..." autocomplete="off" disabled onclick="ssToggle(this,true)" oninput="ssFilter(this)">
+                                    <select name="items[0][component_product_id]" class="form-select kit-prod-select" onchange="updateQtyMax(this.closest('.dyn-row'))" style="display:none;" disabled>
+                                        <option value="">Select Product</option>
+                                    </select>
+                                    <div class="ss-dropdown ss-prod-dropdown"></div>
+                                </div>
                                 <div style="flex:0.4;display:flex;flex-direction:column;gap:2px;">
                                     <input type="number" name="items[0][quantity]" class="form-control kit-qty-input" placeholder="Qty" min="1" value="1">
                                     <small class="kit-stock-hint" style="color:var(--muted);font-size:0.65rem;"></small>
@@ -353,16 +373,40 @@
 let addItemIdx = 1, editItemIdx = 0, addSlabIdx = 1, editSlabIdx = 0;
 
 const categoryOptions = `<option value="">Select Category</option>@foreach($categories as $cat)<option value="{{ $cat->id }}">{{ $cat->category_name }}</option>@endforeach`;
+const categoryDropdownHtml = `@foreach($categories as $cat)<div class="ss-option" data-value="{{ $cat->id }}" data-text="{{ $cat->category_name }}" onclick="ssPick(this)">{{ $cat->category_name }}</div>@endforeach`;
+const catNameMap = { @foreach($categories as $cat){{ $cat->id }}: "{{ addslashes($cat->category_name) }}", @endforeach };
+
+function ssToggle(input, show) { input.closest('.searchable-select').querySelector('.ss-dropdown').classList.toggle('open', show); }
+function ssFilter(input) {
+    var dd = input.closest('.searchable-select').querySelector('.ss-dropdown');
+    dd.classList.add('open');
+    var q = input.value.toLowerCase();
+    dd.querySelectorAll('.ss-option').forEach(function(o) { o.classList.toggle('hidden', q.length > 0 && o.getAttribute('data-text').toLowerCase().indexOf(q) === -1); });
+}
+function ssPick(opt) {
+    var wrap = opt.closest('.searchable-select');
+    var sel = wrap.querySelector('select');
+    sel.value = opt.getAttribute('data-value');
+    wrap.querySelector('.ss-input').value = opt.getAttribute('data-text');
+    wrap.querySelector('.ss-dropdown').classList.remove('open');
+    sel.dispatchEvent(new Event('change'));
+}
+document.addEventListener('click', function(e) { document.querySelectorAll('.ss-dropdown.open').forEach(function(dd) { if (!dd.parentElement.contains(e.target)) dd.classList.remove('open'); }); });
 
 function loadProducts(catSelect, prefix, idx) {
     const catId = catSelect.value;
     const row = catSelect.closest('.dyn-row');
     const prodSelect = row.querySelector('.kit-prod-select');
+    const prodInput = row.querySelector('.ss-prod-input');
+    const prodDropdown = row.querySelector('.ss-prod-dropdown');
     prodSelect.innerHTML = '<option value="">Loading...</option>';
     prodSelect.disabled = true;
+    if (prodInput) { prodInput.value = ''; prodInput.disabled = true; prodInput.placeholder = 'Loading...'; }
+    if (prodDropdown) prodDropdown.innerHTML = '';
 
     if (!catId) {
         prodSelect.innerHTML = '<option value="">Select Product</option>';
+        if (prodInput) { prodInput.placeholder = 'Select category first...'; }
         updateQtyMax(row);
         return;
     }
@@ -371,14 +415,18 @@ function loadProducts(catSelect, prefix, idx) {
         .then(r => r.json())
         .then(products => {
             let opts = '<option value="">Select Product</option>';
+            let ddHtml = '';
             products.forEach(p => {
                 if (p.is_kit) return;
                 const stock = p.quantity ?? 0;
                 opts += `<option value="${p.id}" data-stock="${stock}">${p.item_name} (Stock: ${stock})</option>`;
+                ddHtml += `<div class="ss-option" data-value="${p.id}" data-text="${p.item_name} (Stock: ${stock})" onclick="ssPick(this)">${p.item_name} <span style="color:#94a3b8;font-size:.72rem;">Stock: ${stock}</span></div>`;
             });
             prodSelect.innerHTML = opts;
             prodSelect.disabled = false;
             prodSelect.onchange = () => updateQtyMax(row);
+            if (prodInput) { prodInput.disabled = false; prodInput.placeholder = 'Search product...'; }
+            if (prodDropdown) prodDropdown.innerHTML = ddHtml;
             updateQtyMax(row);
         });
 }
@@ -406,12 +454,20 @@ function addItemRow(prefix) {
     const row = document.createElement('div');
     row.className = 'dyn-row';
     row.innerHTML = `
-        <select name="items[${idx}][category_id]" class="form-select kit-cat-select" onchange="loadProducts(this, '${prefix}', ${idx})" style="flex:1;">
-            ${categoryOptions}
-        </select>
-        <select name="items[${idx}][component_product_id]" class="form-select kit-prod-select" onchange="updateQtyMax(this.closest('.dyn-row'))" style="flex:1;" disabled>
-            <option value="">Select Product</option>
-        </select>
+        <div style="flex:1;" class="searchable-select">
+            <input type="text" class="ss-input" placeholder="Search category..." autocomplete="off" onclick="ssToggle(this,true)" oninput="ssFilter(this)">
+            <select name="items[${idx}][category_id]" class="form-select kit-cat-select" onchange="loadProducts(this, '${prefix}', ${idx})" style="display:none;">
+                ${categoryOptions}
+            </select>
+            <div class="ss-dropdown">${categoryDropdownHtml}</div>
+        </div>
+        <div style="flex:1;" class="searchable-select">
+            <input type="text" class="ss-input ss-prod-input" placeholder="Select category first..." autocomplete="off" disabled onclick="ssToggle(this,true)" oninput="ssFilter(this)">
+            <select name="items[${idx}][component_product_id]" class="form-select kit-prod-select" onchange="updateQtyMax(this.closest('.dyn-row'))" style="display:none;" disabled>
+                <option value="">Select Product</option>
+            </select>
+            <div class="ss-dropdown ss-prod-dropdown"></div>
+        </div>
         <div style="flex:0.4;display:flex;flex-direction:column;gap:2px;">
             <input type="number" name="items[${idx}][quantity]" class="form-control kit-qty-input" placeholder="Qty" min="1" value="1">
             <small class="kit-stock-hint" style="color:var(--muted);font-size:0.65rem;"></small>
@@ -456,13 +512,23 @@ function openEditKit(id) {
                 const row = document.createElement('div');
                 row.className = 'dyn-row';
                 let catOpts = categoryOptions.replace(`value="${catId}"`, `value="${catId}" selected`);
+                const catDisplayName = catNameMap[catId] || '';
+
                 row.innerHTML = `
-                    <select name="items[${i}][category_id]" class="form-select kit-cat-select" onchange="loadProducts(this, 'edit', ${i})" style="flex:1;">
-                        ${catOpts}
-                    </select>
-                    <select name="items[${i}][component_product_id]" class="form-select kit-prod-select" style="flex:1;">
-                        <option value="${prodId}" selected>${prodName}</option>
-                    </select>
+                    <div style="flex:1;" class="searchable-select">
+                        <input type="text" class="ss-input" value="${catDisplayName}" placeholder="Search category..." autocomplete="off" onclick="ssToggle(this,true)" oninput="ssFilter(this)">
+                        <select name="items[${i}][category_id]" class="form-select kit-cat-select" onchange="loadProducts(this, 'edit', ${i})" style="display:none;">
+                            ${catOpts}
+                        </select>
+                        <div class="ss-dropdown">${categoryDropdownHtml}</div>
+                    </div>
+                    <div style="flex:1;" class="searchable-select">
+                        <input type="text" class="ss-input ss-prod-input" value="${prodName || ''}" placeholder="Search product..." autocomplete="off" onclick="ssToggle(this,true)" oninput="ssFilter(this)">
+                        <select name="items[${i}][component_product_id]" class="form-select kit-prod-select" style="display:none;">
+                            <option value="${prodId}" selected>${prodName}</option>
+                        </select>
+                        <div class="ss-dropdown ss-prod-dropdown"></div>
+                    </div>
                     <div style="flex:0.4;display:flex;flex-direction:column;gap:2px;">
                         <input type="number" name="items[${i}][quantity]" class="form-control kit-qty-input" value="${qty}" min="1">
                         <small class="kit-stock-hint" style="color:var(--muted);font-size:0.65rem;"></small>
@@ -475,14 +541,20 @@ function openEditKit(id) {
                         .then(r => r.json())
                         .then(products => {
                             const sel = row.querySelector('.kit-prod-select');
+                            const prodInput = row.querySelector('.ss-prod-input');
+                            const prodDd = row.querySelector('.ss-prod-dropdown');
                             let opts = '<option value="">Select Product</option>';
+                            let ddHtml = '';
                             products.forEach(p => {
                                 if (p.is_kit) return;
                                 const selected = p.id == prodId ? ' selected' : '';
-                                opts += `<option value="${p.id}" data-stock="${p.quantity ?? 0}"${selected}>${p.item_name} (Stock: ${p.quantity ?? 0})</option>`;
+                                const stock = p.quantity ?? 0;
+                                opts += `<option value="${p.id}" data-stock="${stock}"${selected}>${p.item_name} (Stock: ${stock})</option>`;
+                                ddHtml += `<div class="ss-option" data-value="${p.id}" data-text="${p.item_name} (Stock: ${stock})" onclick="ssPick(this)">${p.item_name} <span style="color:#94a3b8;font-size:.72rem;">Stock: ${stock}</span></div>`;
                             });
                             sel.innerHTML = opts;
                             sel.onchange = () => updateQtyMax(row);
+                            if (prodDd) prodDd.innerHTML = ddHtml;
                             updateQtyMax(row);
                         });
                 }

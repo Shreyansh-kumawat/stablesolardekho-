@@ -36,6 +36,14 @@
     .cpd-modal input, .cpd-modal select { width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: .85rem; margin-bottom: .75rem; }
     .cpd-modal input:focus, .cpd-modal select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
     .cpd-modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: .5rem; }
+    .searchable-select { position: relative; }
+    .searchable-select input.ss-input { width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: .85rem; margin-bottom: .75rem; }
+    .searchable-select input.ss-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+    .ss-dropdown { display: none; position: absolute; top: calc(100% - .75rem); left: 0; right: 0; background: #fff; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+    .ss-dropdown.open { display: block; }
+    .ss-option { padding: 8px 12px; cursor: pointer; font-size: .83rem; color: #374151; border-bottom: 1px solid #f5f5f5; }
+    .ss-option:hover { background: #eef3ff; }
+    .ss-option.hidden { display: none; }
 </style>
 @endsection
 
@@ -108,15 +116,26 @@
         <form method="POST" action="{{ route('adminCpAddStock', $cp->id) }}">
             @csrf
             <label>Product</label>
-            <select name="product_id" id="addStockProduct" required onchange="updateStockHint()">
-                <option value="">Select Product</option>
-                @foreach($products as $product)
-                @php $whStock = $product->inventory ? $product->inventory->available_qty : 0; @endphp
-                <option value="{{ $product->id }}" data-stock="{{ $whStock }}" data-price="{{ $product->current_sale_price ?? 0 }}">
-                    {{ $product->item_name }} ({{ $product->item_code }})
-                </option>
-                @endforeach
-            </select>
+            <div class="searchable-select">
+                <input type="text" class="ss-input" placeholder="Search product..." autocomplete="off" onclick="ssToggle(this, true)" oninput="ssFilter(this)">
+                <select name="product_id" id="addStockProduct" required onchange="updateStockHint()" style="display:none;">
+                    <option value="">Select Product</option>
+                    @foreach($products as $product)
+                    @php $whStock = $product->inventory ? $product->inventory->available_qty : 0; @endphp
+                    <option value="{{ $product->id }}" data-stock="{{ $whStock }}" data-price="{{ $product->current_sale_price ?? 0 }}">
+                        {{ $product->item_name }} ({{ $product->item_code }})
+                    </option>
+                    @endforeach
+                </select>
+                <div class="ss-dropdown">
+                    @foreach($products as $product)
+                    @php $whStock = $product->inventory ? $product->inventory->available_qty : 0; @endphp
+                    <div class="ss-option" data-value="{{ $product->id }}" data-text="{{ $product->item_name }} ({{ $product->item_code }})" onclick="ssPick(this)">
+                        <strong>{{ $product->item_name }}</strong> <span style="color:#9ca3af;font-size:.75rem;">{{ $product->item_code }} — Stock: {{ $whStock }}</span>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
             <div id="stockHintBox" style="display:none; margin:-0.5rem 0 0.75rem; padding:8px 10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; font-size:.78rem;">
                 <span style="color:#059669; font-weight:600;">Warehouse Stock: <span id="stockHintQty">0</span></span>
                 <span style="color:#64748b; margin-left:8px;">| Price: ₹<span id="stockHintPrice">0</span></span>
@@ -155,6 +174,23 @@ function openEditModal(invId, itemName, currentQty) {
     document.getElementById('editStockForm').action = '{{ url("admin/cp-inventory") }}/' + invId + '/admin-update-stock';
     document.getElementById('editStockModal').classList.add('active');
 }
+
+function ssToggle(input, show) { input.closest('.searchable-select').querySelector('.ss-dropdown').classList.toggle('open', show); }
+function ssFilter(input) {
+    var dd = input.closest('.searchable-select').querySelector('.ss-dropdown');
+    dd.classList.add('open');
+    var q = input.value.toLowerCase();
+    dd.querySelectorAll('.ss-option').forEach(function(o) { o.classList.toggle('hidden', q.length > 0 && o.getAttribute('data-text').toLowerCase().indexOf(q) === -1); });
+}
+function ssPick(opt) {
+    var wrap = opt.closest('.searchable-select');
+    var sel = wrap.querySelector('select');
+    sel.value = opt.getAttribute('data-value');
+    wrap.querySelector('.ss-input').value = opt.getAttribute('data-text');
+    wrap.querySelector('.ss-dropdown').classList.remove('open');
+    sel.dispatchEvent(new Event('change'));
+}
+document.addEventListener('click', function(e) { document.querySelectorAll('.ss-dropdown.open').forEach(function(dd) { if (!dd.parentElement.contains(e.target)) dd.classList.remove('open'); }); });
 
 function updateStockHint() {
     var sel = document.getElementById('addStockProduct');

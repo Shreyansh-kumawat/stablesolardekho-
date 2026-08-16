@@ -48,6 +48,14 @@
     .form-control, .form-select { border: 1px solid var(--border); border-radius: 8px; padding: 0.45rem 0.8rem; font-size: 0.84rem; color: var(--text); }
     .form-control:focus, .form-select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.12); outline: none; }
 
+    .searchable-select { position: relative; }
+    .searchable-select input.ss-input { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 0.45rem 0.8rem; font-size: 0.84rem; color: var(--text); }
+    .searchable-select input.ss-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.12); outline: none; }
+    .ss-dropdown { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; z-index: 1060; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+    .ss-dropdown.open { display: block; }
+    .ss-option { padding: 8px 12px; cursor: pointer; font-size: .83rem; color: #374151; border-bottom: 1px solid #f5f5f5; }
+    .ss-option:hover { background: #eef3ff; }
+    .ss-option.hidden { display: none; }
     @media (max-width: 768px) {
         .ml-table-wrap { overflow-x: auto; }
         .ml-stats { grid-template-columns: repeat(2, 1fr); }
@@ -232,15 +240,26 @@
                     </div>
                     <div>
                         <label class="form-label">Select Product <span style="color:#94a3b8; font-weight:400;">(auto-fills details)</span></label>
-                        <select class="form-select" id="addProductSelect" onchange="fillFromProduct()">
-                            <option value="">-- Or type manually below --</option>
-                            @foreach($products as $prod)
-                            @php $whStock = $prod->inventory ? $prod->inventory->available_qty : 0; @endphp
-                            <option value="{{ $prod->id }}" data-name="{{ $prod->item_name }}" data-uom="{{ $prod->uom ?? 'Piece' }}" data-price="{{ $prod->current_sale_price ?? 0 }}" data-stock="{{ $whStock }}">
-                                {{ $prod->item_name }} ({{ $prod->item_code }}) — Stock: {{ $whStock }}
-                            </option>
-                            @endforeach
-                        </select>
+                        <div class="searchable-select">
+                            <input type="text" class="ss-input" placeholder="Search product by name or code..." autocomplete="off" onclick="ssToggle(this, true)" oninput="ssFilter(this)">
+                            <select class="form-select" id="addProductSelect" onchange="fillFromProduct()" style="display:none;">
+                                <option value="">-- Or type manually below --</option>
+                                @foreach($products as $prod)
+                                @php $whStock = $prod->inventory ? $prod->inventory->available_qty : 0; @endphp
+                                <option value="{{ $prod->id }}" data-name="{{ $prod->item_name }}" data-uom="{{ $prod->uom ?? 'Piece' }}" data-price="{{ $prod->current_sale_price ?? 0 }}" data-stock="{{ $whStock }}">
+                                    {{ $prod->item_name }} ({{ $prod->item_code }}) — Stock: {{ $whStock }}
+                                </option>
+                                @endforeach
+                            </select>
+                            <div class="ss-dropdown">
+                                @foreach($products as $prod)
+                                @php $whStock = $prod->inventory ? $prod->inventory->available_qty : 0; @endphp
+                                <div class="ss-option" data-value="{{ $prod->id }}" data-text="{{ $prod->item_name }} ({{ $prod->item_code }})" onclick="ssPick(this)">
+                                    <strong>{{ $prod->item_name }}</strong> <span style="color:#94a3b8;font-size:.75rem;">{{ $prod->item_code }} — Stock: {{ $whStock }}</span>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label class="form-label">Material Name <span style="color:#e74c3c;">*</span></label>
@@ -371,6 +390,23 @@ $(document).ready(function() {
         $(totalEl).val((q * r).toFixed(2));
     }
     $('#addQty, #addRate').on('input', function() { calcTotal('#addQty', '#addRate', '#addTotal'); });
+
+    function ssToggle(input, show) { input.closest('.searchable-select').querySelector('.ss-dropdown').classList.toggle('open', show); }
+    function ssFilter(input) {
+        var dd = input.closest('.searchable-select').querySelector('.ss-dropdown');
+        dd.classList.add('open');
+        var q = input.value.toLowerCase();
+        dd.querySelectorAll('.ss-option').forEach(function(o) { o.classList.toggle('hidden', q.length > 0 && o.getAttribute('data-text').toLowerCase().indexOf(q) === -1); });
+    }
+    function ssPick(opt) {
+        var wrap = opt.closest('.searchable-select');
+        var sel = wrap.querySelector('select');
+        sel.value = opt.getAttribute('data-value');
+        wrap.querySelector('.ss-input').value = opt.getAttribute('data-text');
+        wrap.querySelector('.ss-dropdown').classList.remove('open');
+        sel.dispatchEvent(new Event('change'));
+    }
+    $(document).on('click', function(e) { $('.ss-dropdown.open').each(function() { if (!$(this).parent()[0].contains(e.target)) $(this).removeClass('open'); }); });
 
     window.fillFromProduct = function() {
         var sel = document.getElementById('addProductSelect');
