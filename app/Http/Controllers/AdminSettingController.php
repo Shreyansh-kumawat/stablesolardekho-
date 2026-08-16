@@ -66,13 +66,12 @@ class AdminSettingController extends Controller
         $teamMember->address = $request->input('address');
         $teamMember->state = $request->input('state_id');
         $teamMember->district = $request->input('district_id');
+        $teamMember->status = $request->input('status', $teamMember->status);
 
         if ($request->hasFile('profile_photo')) {
-            // Delete old photo if exists
             if ($teamMember->profile_photo) {
                 Storage::disk('public')->delete($teamMember->profile_photo);
             }
-            // Store new photo
             $photoPath = $request->file('profile_photo')->store('profilePhotos', 'public');
             $teamMember->profile_photo = $photoPath;
         }
@@ -138,6 +137,7 @@ class AdminSettingController extends Controller
         $story->system_size_kw = $request->input('system_size_kw');
         $story->installation_date = $request->input('installation_date');
         $story->videos = $request->input('video_url');
+        $story->active_status = $request->input('active_status', $story->active_status);
         if($request->hasFile('images')) {
             $photos = [];
             foreach ($request->file('images') as $image) {

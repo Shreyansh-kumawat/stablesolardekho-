@@ -345,13 +345,8 @@
                                 </td>
                                 <td>
                                     <div class="d-flex gap-2">
-                                        <button type="button" class="btn btn-primary btn-sm edit-team-btn"
-                                            data-id="{{ $story->id }}" data-name="{{ $story->installation_type }}"
-                                            data-mobile="{{ $story->location }}" data-address="{{ $story->system_size_kw }}"
-                                            data-district-id="{{ $story->district }}" data-state-id="{{ $story->state }}"
-                                            data-position="{{ $story->position }}" data-status="{{ $story->status }}"
-                                            data-featured="{{ $story->is_featured ?? 0 }}"
-                                            data-photo="{{ $story->profile_photo }}">
+                                        <button type="button" class="btn btn-primary btn-sm edit-story-btn"
+                                            data-id="{{ $story->id }}">
                                             <i class="fas fa-edit me-1"></i> Edit
                                         </button>
 
@@ -456,38 +451,28 @@
                 window.location.href = "{{ route('newInstallationStory') }}";
             });
 
-            // Edit Story Button
-            $(document).on('click', '.edit-team-btn', function(e) {
+            $(document).on('click', '.edit-story-btn', function(e) {
                 e.preventDefault();
                 const storyId = $(this).data('id');
-                console.log('Editing story ID:', storyId);
-                
-                // Fetch story data via AJAX
+
                 $.ajax({
                     url: `/admin/get-story/${storyId}`,
                     type: 'GET',
                     success: function(data) {
-                        console.log('Data received:', data);
                         $('#storyId').val(data.id);
-                        $('#editTitle').val(data.title || '');
                         $('#editInstallationType').val(data.installation_type || '');
                         $('#editSystemSize').val(data.system_size_kw || '');
                         $('#editInstallationDate').val(data.installation_date || '');
                         $('#editLocation').val(data.location || '');
-                        $('#editCustomerName').val(data.customer_name || '');
-                        $('#editDescription').val(data.description || '');
                         $('#editVideoUrl').val(data.videos || '');
-                        $('#editActiveStatus').val(data.active_status || 0);
-                        
-                        // Update form action
+                        $('#editActiveStatus').val(data.active_status ?? 0);
+
                         $('#editStoryForm').attr('action', `/admin/update-story/${data.id}`);
-                        
-                        // Show modal
+
                         const modal = new bootstrap.Modal(document.getElementById('editStoryModal'));
                         modal.show();
                     },
                     error: function(xhr) {
-                        console.error('Error:', xhr);
                         alert('Error loading story data');
                     }
                 });
