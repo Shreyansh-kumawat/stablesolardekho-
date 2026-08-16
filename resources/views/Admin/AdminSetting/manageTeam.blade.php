@@ -392,12 +392,7 @@
 
                             <div class="col-md-6">
                                 <label class="form-label">District</label>
-                                <select name="district_id" class="form-select" required>
-                                    <option value="">Select District</option>
-                                    @foreach(($districts ?? []) as $district)
-                                        <option value="{{ $district }}">{{ $district }}</option>
-                                    @endforeach
-                                </select>
+                                <input type="text" name="district_id" class="form-control" placeholder="Enter district">
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label">Address</label>
@@ -482,12 +477,7 @@
 
                             <div class="col-md-6">
                                 <label class="form-label">District</label>
-                                <select name="district_id" id="edit_district_id" class="form-select" required>
-                                    <option value="">Select District</option>
-                                    @foreach(($districts ?? []) as $district)
-                                        <option value="{{ $district }}">{{ $district }}</option>
-                                    @endforeach
-                                </select>
+                                <input type="text" name="district_id" id="edit_district_id" class="form-control" placeholder="Enter district">
                             </div>
                         </div>
                     </div>
@@ -554,7 +544,7 @@
                 showPreview(this, '#edit_photo_preview');
             });
 
-            $('.edit-team-btn').on('click', function () {
+            $(document).on('click', '.edit-team-btn', function () {
                 const btn = $(this);
 
                 $('#edit_id').val(btn.data('id'));
