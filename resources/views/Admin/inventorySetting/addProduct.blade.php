@@ -41,6 +41,11 @@
     .prod-img-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--bdr); }
     .spec-pills { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
     .spec-pill { background: #eef3ff; color: var(--blue); font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: 6px; }
+    .qty-adj-btn { width: 38px; height: 38px; border-radius: 8px; border: none; font-size: 1.2rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s; }
+    .qty-minus { background: #fee2e2; color: #dc2626; }
+    .qty-minus:hover { background: #fecaca; }
+    .qty-plus { background: #d1fae5; color: #059669; }
+    .qty-plus:hover { background: #a7f3d0; }
     .searchable-select { position: relative; }
     .search-dropdown { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid var(--bdr); border-top: none; border-radius: 0 0 8px 8px; max-height: 220px; overflow-y: auto; z-index: 100; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
     .search-dropdown.open { display: block; }
@@ -162,8 +167,14 @@
                 <p class="sec-label">Update Stock</p>
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="form-label">New Quantity <span class="req">*</span></label>
-                        <input type="number" min="0" class="form-control" name="quantity" id="epQuantity" required>
+                        <label class="form-label">Current Quantity</label>
+                        <input type="number" class="form-control" id="epQuantity" name="quantity" min="0" required style="font-weight:700; font-size:1rem;">
+                        <div style="display:flex; align-items:center; gap:6px; margin-top:8px;">
+                            <button type="button" class="qty-adj-btn qty-minus" onclick="adjustQty(-1)">−</button>
+                            <input type="number" min="0" class="form-control" id="epAdjustQty" placeholder="Enter qty" style="flex:1; text-align:center; font-weight:600;">
+                            <button type="button" class="qty-adj-btn qty-plus" onclick="adjustQty(1)">+</button>
+                        </div>
+                        <div id="epQtyHint" style="display:none; margin-top:6px; font-size:.78rem; font-weight:600; padding:4px 8px; border-radius:6px;"></div>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Supplier Name</label>
@@ -421,6 +432,9 @@ function onProductSelect() {
             const currentStock = p.inventory ? p.inventory.available_qty : (p.quantity || 0);
             document.getElementById('epCurrentStock').textContent = currentStock;
             document.getElementById('epQuantity').value = currentStock;
+            epOriginalQty = currentStock;
+            document.getElementById('epAdjustQty').value = '';
+            document.getElementById('epQtyHint').style.display = 'none';
 
             document.getElementById('epFeatured').textContent = p.is_featured == 1 ? 'Yes' : 'No';
 
@@ -500,6 +514,31 @@ document.getElementById('galleryInput').addEventListener('change', function() {
     p.innerHTML = '';
     Array.from(this.files).slice(0, 8).forEach(f => { const img = document.createElement('img'); img.src = URL.createObjectURL(f); p.appendChild(img); });
 });
+
+var epOriginalQty = 0;
+function adjustQty(dir) {
+    var adj = parseInt(document.getElementById('epAdjustQty').value) || 0;
+    if (adj <= 0) return;
+    var current = parseInt(document.getElementById('epQuantity').value) || 0;
+    var newVal = current + (dir * adj);
+    if (newVal < 0) newVal = 0;
+    document.getElementById('epQuantity').value = newVal;
+    document.getElementById('epAdjustQty').value = '';
+    var hint = document.getElementById('epQtyHint');
+    var diff = newVal - epOriginalQty;
+    if (diff !== 0) {
+        hint.style.display = '';
+        if (diff > 0) {
+            hint.style.background = '#d1fae5'; hint.style.color = '#059669';
+            hint.textContent = '▲ +' + diff + ' from original (' + epOriginalQty + ')';
+        } else {
+            hint.style.background = '#fee2e2'; hint.style.color = '#dc2626';
+            hint.textContent = '▼ ' + diff + ' from original (' + epOriginalQty + ')';
+        }
+    } else {
+        hint.style.display = 'none';
+    }
+}
 
 function toggleDropdown(dropdownId, show) {
     document.getElementById(dropdownId).classList.toggle('open', show);
