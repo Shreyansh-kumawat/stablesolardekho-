@@ -65,7 +65,7 @@
             </div>
             <div class="info-item">
                 <label>Order Date</label>
-                <span>{{ $order->order_date ? $order->order_date->format('d M Y') : 'N/A' }}</span>
+                <span>{{ $order->order_date ? \Carbon\Carbon::parse($order->order_date)->format('d M Y') : 'N/A' }}</span>
             </div>
             <div class="info-item">
                 <label>Status</label>
