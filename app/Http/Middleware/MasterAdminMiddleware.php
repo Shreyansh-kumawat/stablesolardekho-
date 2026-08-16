@@ -81,10 +81,10 @@ class MasterAdminMiddleware
         'list_all_orders' => ['cp_orders', 'CP Orders'],
 
         // Material Ledger
-        'adminMaterialLedger' => ['cp_orders', 'CP Orders'],
-        'adminMaterialLedgerStore' => ['cp_orders.manage', 'manage CP Orders'],
-        'adminMaterialLedgerUpdate' => ['cp_orders.manage', 'manage CP Orders'],
-        'adminMaterialLedgerDelete' => ['cp_orders.manage', 'manage CP Orders'],
+        'adminMaterialLedger' => ['material_ledger', 'Material Ledger'],
+        'adminMaterialLedgerStore' => ['material_ledger.manage', 'manage Material Ledger'],
+        'adminMaterialLedgerUpdate' => ['material_ledger.manage', 'manage Material Ledger'],
+        'adminMaterialLedgerDelete' => ['material_ledger.manage', 'manage Material Ledger'],
 
         // Solar Kits
         'adminKits' => ['products', 'Products'],
@@ -95,29 +95,29 @@ class MasterAdminMiddleware
         'adminKitData' => ['products', 'Products'],
 
         // CP Documents
-        'adminDocuments' => ['cp_orders', 'CP Orders'],
-        'adminDocumentStore' => ['cp_orders.manage', 'manage CP Orders'],
-        'adminDocumentDelete' => ['cp_orders.manage', 'manage CP Orders'],
+        'adminDocuments' => ['cp_documents', 'CP Documents'],
+        'adminDocumentStore' => ['cp_documents.manage', 'manage CP Documents'],
+        'adminDocumentDelete' => ['cp_documents.manage', 'manage CP Documents'],
 
         // CP Payments
-        'adminPayments' => ['cp_orders', 'CP Orders'],
-        'adminPaymentStore' => ['cp_orders.manage', 'manage CP Orders'],
-        'adminPaymentVerify' => ['cp_orders.manage', 'manage CP Orders'],
-        'adminPaymentDelete' => ['cp_orders.manage', 'manage CP Orders'],
-        'adminPaymentOrders' => ['cp_orders', 'CP Orders'],
+        'adminPayments' => ['cp_payments', 'Payment Tracking'],
+        'adminPaymentStore' => ['cp_payments.manage', 'manage Payment Tracking'],
+        'adminPaymentVerify' => ['cp_payments.manage', 'manage Payment Tracking'],
+        'adminPaymentDelete' => ['cp_payments.manage', 'manage Payment Tracking'],
+        'adminPaymentOrders' => ['cp_payments', 'Payment Tracking'],
 
         // Export
-        'adminExport' => ['__master_only__', 'Export Data'],
-        'exportCpOrders' => ['__master_only__', 'Export Data'],
-        'exportCustomerOrders' => ['__master_only__', 'Export Data'],
-        'exportInventory' => ['__master_only__', 'Export Data'],
-        'exportMaterialLedger' => ['__master_only__', 'Export Data'],
-        'exportPayments' => ['__master_only__', 'Export Data'],
-        'exportChannelPartners' => ['__master_only__', 'Export Data'],
+        'adminExport' => ['finance.export', 'Export Data'],
+        'exportCpOrders' => ['finance.export', 'Export Data'],
+        'exportCustomerOrders' => ['finance.export', 'Export Data'],
+        'exportInventory' => ['finance.export', 'Export Data'],
+        'exportMaterialLedger' => ['finance.export', 'Export Data'],
+        'exportPayments' => ['finance.export', 'Export Data'],
+        'exportChannelPartners' => ['finance.export', 'Export Data'],
 
         // Financial Dashboard
-        'adminFinancialDashboard' => ['__master_only__', 'Financial Dashboard'],
-        'adminProfitLoss' => ['__master_only__', 'Profit & Loss'],
+        'adminFinancialDashboard' => ['finance.dashboard', 'Financial Dashboard'],
+        'adminProfitLoss' => ['finance.profit_loss', 'Profit & Loss'],
 
         // Secondary Admin management (master only)
         'manageSecondaryAdmins' => ['__master_only__', 'Secondary Admins'],
@@ -139,23 +139,34 @@ class MasterAdminMiddleware
         'manageCpPermissions' => ['__master_only__', 'CP Permissions'],
         'updateCpPermissions' => ['__master_only__', 'CP Permissions'],
 
-        // Inventory (master only)
-        'addNewInventory' => ['__master_only__', 'Inventory'],
-        'storeNewInventory' => ['__master_only__', 'Inventory'],
-        'manageInventory' => ['__master_only__', 'Inventory'],
-        'transferInventory' => ['__master_only__', 'Inventory'],
-        'storeTransferInventory' => ['__master_only__', 'Inventory'],
-        'invTxnsAdmin' => ['__master_only__', 'Inventory'],
+        // Inventory
+        'inventoryAddProduct' => ['inventory', 'Inventory'],
+        'addNewInventory' => ['inventory.manage', 'manage Inventory'],
+        'storeNewInventory' => ['inventory.manage', 'manage Inventory'],
+        'manageInventory' => ['inventory', 'Inventory'],
+        'inventoryEntries' => ['inventory', 'Inventory'],
+        'inventoryUpdateRemarks' => ['inventory.manage', 'manage Inventory'],
+        'transferInventory' => ['inventory.manage', 'manage Inventory'],
+        'storeTransferInventory' => ['inventory.manage', 'manage Inventory'],
+        'invTxnsAdmin' => ['inventory', 'Inventory'],
 
-        // Admin settings (master only)
-        'manageTeam' => ['__master_only__', 'Admin Settings'],
-        'storeTeam' => ['__master_only__', 'Admin Settings'],
-        'updateTeam' => ['__master_only__', 'Admin Settings'],
-        'newInstallationStory' => ['__master_only__', 'Admin Settings'],
-        'storeStory' => ['__master_only__', 'Admin Settings'],
-        'listStories' => ['__master_only__', 'Admin Settings'],
-        'getStory' => ['__master_only__', 'Admin Settings'],
-        'updateStory' => ['__master_only__', 'Admin Settings'],
+        // Form Leads
+        'admin.formLeads' => ['form_leads', 'Form Leads'],
+        'admin.formLead.delete' => ['form_leads.manage', 'manage Form Leads'],
+
+        // Solar Team
+        'manageTeam' => ['admin_settings.team', 'Solar Team'],
+        'storeTeam' => ['admin_settings.team', 'Solar Team'],
+        'updateTeam' => ['admin_settings.team', 'Solar Team'],
+        'deleteTeamMember' => ['admin_settings.team', 'Solar Team'],
+
+        // Installation Stories
+        'newInstallationStory' => ['admin_settings.stories', 'Installation Stories'],
+        'storeStory' => ['admin_settings.stories', 'Installation Stories'],
+        'listStories' => ['admin_settings.stories', 'Installation Stories'],
+        'getStory' => ['admin_settings.stories', 'Installation Stories'],
+        'updateStory' => ['admin_settings.stories', 'Installation Stories'],
+        'deleteStory' => ['admin_settings.stories', 'Installation Stories'],
 
         // Fund management (master only)
         'transferFundToCp' => ['__master_only__', 'Fund Management'],

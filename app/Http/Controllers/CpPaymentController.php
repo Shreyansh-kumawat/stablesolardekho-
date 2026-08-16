@@ -39,6 +39,7 @@ class CpPaymentController extends Controller
             'rejected' => $payments->where('status', 'rejected')->sum('amount'),
         ];
 
+        try { \App\Models\AdminLastSeen::markSeen(auth()->id(), 'cp_payments'); } catch (\Exception $e) {}
         return view('Admin.payments.index', compact('payments', 'cps', 'stats'));
     }
 

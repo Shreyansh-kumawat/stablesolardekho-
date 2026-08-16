@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
         Schema::defaultStringLength(191);
 
         View::composer('layouts.partials.menuEcommercePartials', function ($view) {
-            $badges = ['orders' => 0, 'referrals' => 0, 'users' => 0, 'cp_interest' => 0, 'cp_orders' => 0];
+            $badges = ['orders' => 0, 'referrals' => 0, 'users' => 0, 'cp_interest' => 0, 'cp_orders' => 0, 'cp_documents' => 0, 'cp_payments' => 0, 'form_leads' => 0];
             try {
                 $user = auth()->user();
                 if ($user && in_array($user->role_id, [1, 2])) {
@@ -62,6 +62,24 @@ class AppServiceProvider extends ServiceProvider
                         $q = \App\Models\CpOrder::query();
                         if (isset($seen['cp_orders'])) $q->where('created_at', '>', $seen['cp_orders']);
                         $badges['cp_orders'] = $q->count();
+                    }
+
+                    if ($user->hasAdminPermission('cp_documents')) {
+                        $q = \App\Models\CpDocument::query();
+                        if (isset($seen['cp_documents'])) $q->where('created_at', '>', $seen['cp_documents']);
+                        $badges['cp_documents'] = $q->count();
+                    }
+
+                    if ($user->hasAdminPermission('cp_payments')) {
+                        $q = \App\Models\CpPayment::query();
+                        if (isset($seen['cp_payments'])) $q->where('created_at', '>', $seen['cp_payments']);
+                        $badges['cp_payments'] = $q->count();
+                    }
+
+                    if ($user->hasAdminPermission('form_leads')) {
+                        $q = \App\Models\SolarLead::query();
+                        if (isset($seen['form_leads'])) $q->where('created_at', '>', $seen['form_leads']);
+                        $badges['form_leads'] = $q->count();
                     }
                 }
             } catch (\Exception $e) {}

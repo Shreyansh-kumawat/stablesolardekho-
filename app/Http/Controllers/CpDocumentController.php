@@ -42,6 +42,7 @@ class CpDocumentController extends Controller
         $docTypes = self::DOC_TYPES;
         $compulsoryTypes = self::COMPULSORY_TYPES;
 
+        try { \App\Models\AdminLastSeen::markSeen(auth()->id(), 'cp_documents'); } catch (\Exception $e) {}
         return view('Admin.documents.index', compact('documents', 'cps', 'docTypes', 'compulsoryTypes'));
     }
 

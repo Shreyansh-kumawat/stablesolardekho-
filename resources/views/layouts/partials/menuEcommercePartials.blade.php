@@ -72,7 +72,7 @@
     @endif
 
     {{-- Add Stock (New + Edit Product) --}}
-    @if(Auth::user()->hasAdminPermission('products'))
+    @if(Auth::user()->hasAdminPermission('inventory'))
     <li>
         <a href="{{ route('inventoryAddProduct') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('inventoryAddProduct') ? 'ec-active' : '' }}">
@@ -85,7 +85,7 @@
     @endif
 
     {{-- Inventory List --}}
-    @if(Auth::user()->hasAdminPermission('products'))
+    @if(Auth::user()->hasAdminPermission('inventory'))
     <li>
         <a href="{{ route('manageInventory') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('manageInventory') ? 'ec-active' : '' }}">
@@ -98,7 +98,7 @@
     @endif
 
     {{-- Inventory Entries --}}
-    @if(Auth::user()->hasAdminPermission('products'))
+    @if(Auth::user()->hasAdminPermission('inventory'))
     <li>
         <a href="{{ route('inventoryEntries') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('inventoryEntries') ? 'ec-active' : '' }}">
@@ -249,7 +249,7 @@
     @endif
 
     {{-- CP Documents --}}
-    @if(Auth::user()->hasAdminPermission('cp_orders'))
+    @if(Auth::user()->hasAdminPermission('cp_documents'))
     <li>
         <a href="{{ route('adminDocuments') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('adminDocuments') ? 'ec-active' : '' }}">
@@ -257,12 +257,15 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
             </svg>
             <span>CP Documents</span>
+            @if(isset($sidebarBadges['cp_documents']) && $sidebarBadges['cp_documents'] > 0)
+                <span style="background:#ef4444;color:#fff;font-size:.65rem;font-weight:700;min-width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-left:auto;padding:0 5px;">{{ $sidebarBadges['cp_documents'] }}</span>
+            @endif
         </a>
     </li>
     @endif
 
     {{-- Material Ledger --}}
-    @if(Auth::user()->hasAdminPermission('cp_orders'))
+    @if(Auth::user()->hasAdminPermission('material_ledger'))
     <li>
         <a href="{{ route('adminMaterialLedger') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('adminMaterialLedger') ? 'ec-active' : '' }}">
@@ -275,7 +278,7 @@
     @endif
 
     {{-- Payment Tracking --}}
-    @if(Auth::user()->hasAdminPermission('cp_orders'))
+    @if(Auth::user()->hasAdminPermission('cp_payments'))
     <li>
         <a href="{{ route('adminPayments') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('adminPayments') ? 'ec-active' : '' }}">
@@ -283,12 +286,15 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
             </svg>
             <span>Payment Tracking</span>
+            @if(isset($sidebarBadges['cp_payments']) && $sidebarBadges['cp_payments'] > 0)
+                <span style="background:#ef4444;color:#fff;font-size:.65rem;font-weight:700;min-width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-left:auto;padding:0 5px;">{{ $sidebarBadges['cp_payments'] }}</span>
+            @endif
         </a>
     </li>
     @endif
 
     {{-- Export Data --}}
-    @if(Auth::user()->role_id == 1)
+    @if(Auth::user()->hasAdminPermission('finance.export'))
     <li>
         <a href="{{ route('adminExport') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('adminExport') ? 'ec-active' : '' }}">
@@ -301,7 +307,7 @@
     @endif
 
     {{-- Financial Dashboard --}}
-    @if(Auth::user()->role_id == 1)
+    @if(Auth::user()->hasAdminPermission('finance.dashboard'))
     <li>
         <a href="{{ route('adminFinancialDashboard') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('adminFinancialDashboard') ? 'ec-active' : '' }}">
@@ -314,7 +320,7 @@
     @endif
 
     {{-- Profit & Loss --}}
-    @if(Auth::user()->role_id == 1)
+    @if(Auth::user()->hasAdminPermission('finance.profit_loss'))
     <li>
         <a href="{{ route('adminProfitLoss') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('adminProfitLoss') ? 'ec-active' : '' }}">
@@ -327,6 +333,7 @@
     @endif
 
     {{-- Form Leads --}}
+    @if(Auth::user()->hasAdminPermission('form_leads'))
     <li>
         <a href="{{ route('admin.formLeads') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('admin.formLeads') ? 'ec-active' : '' }}">
@@ -334,10 +341,15 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
             </svg>
             <span>Form Leads</span>
+            @if(isset($sidebarBadges['form_leads']) && $sidebarBadges['form_leads'] > 0)
+                <span style="background:#ef4444;color:#fff;font-size:.65rem;font-weight:700;min-width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-left:auto;padding:0 5px;">{{ $sidebarBadges['form_leads'] }}</span>
+            @endif
         </a>
     </li>
+    @endif
 
     {{-- Solar Team --}}
+    @if(Auth::user()->hasAdminPermission('admin_settings.team'))
     <li>
         <a href="{{ route('manageTeam') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('manageTeam') ? 'ec-active' : '' }}">
@@ -348,8 +360,10 @@
             <span>Solar Team</span>
         </a>
     </li>
+    @endif
 
     {{-- Installation Stories --}}
+    @if(Auth::user()->hasAdminPermission('admin_settings.stories'))
     <li>
         <a href="{{ route('newInstallationStory') }}"
             class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('newInstallationStory') ? 'ec-active' : '' }}">
@@ -368,6 +382,7 @@
             <span>List Stories</span>
         </a>
     </li>
+    @endif
 
     {{-- View Shop --}}
     <li>

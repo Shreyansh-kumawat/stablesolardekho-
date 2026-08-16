@@ -41,6 +41,7 @@ class LeadController extends Controller
     public function formLeads()
     {
         $leads = SolarLead::latest()->get();
+        try { \App\Models\AdminLastSeen::markSeen(auth()->id(), 'form_leads'); } catch (\Exception $e) {}
         return view('Admin.leads.formLeads', compact('leads'));
     }
 
