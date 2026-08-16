@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CpMaterialLedger;
 use App\Models\CpOrder;
 use App\Models\CustomerOrder;
 use App\Models\Product;
@@ -353,6 +354,18 @@ class OrderController extends Controller
                     'unit_price' => $salePrice,
                     'performed_by' => auth()->id(),
                     'txn_id' => 'INV' . date('Ymd') . strtoupper(substr(uniqid(), -4)),
+                    'remarks' => 'CP Order #' . $order->order_id . ' delivered',
+                ]);
+
+                CpMaterialLedger::create([
+                    'cp_id' => $order->cp_id,
+                    'material_name' => $prod ? $prod->item_name : 'Product #' . $productId,
+                    'quantity' => $qty,
+                    'unit' => $prod ? ($prod->uom ?? 'Piece') : 'Piece',
+                    'rate' => $salePrice,
+                    'total_amount' => $salePrice * $qty,
+                    'entry_date' => now()->format('Y-m-d'),
+                    'added_by' => auth()->id(),
                     'remarks' => 'CP Order #' . $order->order_id . ' delivered',
                 ]);
 
