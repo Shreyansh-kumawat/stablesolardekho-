@@ -58,6 +58,11 @@ Route::get('ourTeam', [UserController::class, 'ourTeam'])->name('ourTeam');
 Route::post('QueryContactUs', [UserController::class, 'QueryContactUs'])->name('QueryContactUs');
 Route::get('allInstallationPhotos', [UserController::class, 'allInstallationPhotos'])->name('allInstallationPhotos');
 
+// Policy Pages
+Route::view('privacy-policy', 'publicPages.privacyPolicy')->name('privacy.policy');
+Route::view('terms-of-service', 'publicPages.termsOfService')->name('terms.of.service');
+Route::view('refund-policy', 'publicPages.refundPolicy')->name('refund.policy');
+
 // Public referral form
 Route::get('/refer/{code}', [ReferralController::class, 'showReferralForm'])->name('referral.form');
 Route::post('/refer/{code}', [ReferralController::class, 'submitReferralForm'])->name('referral.submit');

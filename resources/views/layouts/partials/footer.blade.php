@@ -117,9 +117,9 @@
         <div style="border-top:1px solid rgba(255,255,255,0.07); padding-top:1.5rem; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:1rem; font-size:0.78rem;">
             <p style="margin:0; color:#64748b;">&copy; {{ date('Y') }} Stable Solar Energy Pvt. Ltd. All rights reserved.</p>
             <div style="display:flex; gap:1.5rem; flex-wrap:wrap;">
-                <a href="#" style="color:#64748b; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#64748b'">Privacy Policy</a>
-                <a href="#" style="color:#64748b; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#64748b'">Terms of Service</a>
-                <a href="#" style="color:#64748b; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#64748b'">Refund Policy</a>
+                <a href="{{ route('privacy.policy') }}" style="color:#64748b; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#64748b'">Privacy Policy</a>
+                <a href="{{ route('terms.of.service') }}" style="color:#64748b; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#64748b'">Terms of Service</a>
+                <a href="{{ route('refund.policy') }}" style="color:#64748b; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#64748b'">Refund Policy</a>
             </div>
         </div>
 
