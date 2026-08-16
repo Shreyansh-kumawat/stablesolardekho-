@@ -227,10 +227,13 @@
                                         <option value="{{ $cat->id }}">{{ $cat->category_name }}</option>
                                     @endforeach
                                 </select>
-                                <select name="items[0][component_product_id]" class="form-select kit-prod-select" style="flex:1;" disabled>
+                                <select name="items[0][component_product_id]" class="form-select kit-prod-select" onchange="updateQtyMax(this.closest('.dyn-row'))" style="flex:1;" disabled>
                                     <option value="">Select Product</option>
                                 </select>
-                                <input type="number" name="items[0][quantity]" class="form-control" placeholder="Qty" min="1" value="1" style="flex:0.4;">
+                                <div style="flex:0.4;display:flex;flex-direction:column;gap:2px;">
+                                    <input type="number" name="items[0][quantity]" class="form-control kit-qty-input" placeholder="Qty" min="1" value="1">
+                                    <small class="kit-stock-hint" style="color:var(--muted);font-size:0.65rem;"></small>
+                                </div>
                                 <button type="button" class="dyn-remove" onclick="this.closest('.dyn-row').remove()">&times;</button>
                             </div>
                         </div>
@@ -360,6 +363,7 @@ function loadProducts(catSelect, prefix, idx) {
 
     if (!catId) {
         prodSelect.innerHTML = '<option value="">Select Product</option>';
+        updateQtyMax(row);
         return;
     }
 
@@ -374,7 +378,26 @@ function loadProducts(catSelect, prefix, idx) {
             });
             prodSelect.innerHTML = opts;
             prodSelect.disabled = false;
+            prodSelect.onchange = () => updateQtyMax(row);
+            updateQtyMax(row);
         });
+}
+
+function updateQtyMax(row) {
+    const prodSelect = row.querySelector('.kit-prod-select');
+    const qtyInput = row.querySelector('.kit-qty-input');
+    const hint = row.querySelector('.kit-stock-hint');
+    if (!qtyInput) return;
+    const selected = prodSelect?.selectedOptions[0];
+    const stock = selected ? parseInt(selected.dataset.stock || 0) : 0;
+    if (selected && selected.value) {
+        qtyInput.max = stock;
+        if (parseInt(qtyInput.value) > stock) qtyInput.value = stock > 0 ? stock : 1;
+        if (hint) hint.textContent = stock + ' left';
+    } else {
+        qtyInput.removeAttribute('max');
+        if (hint) hint.textContent = '';
+    }
 }
 
 function addItemRow(prefix) {
@@ -386,10 +409,13 @@ function addItemRow(prefix) {
         <select name="items[${idx}][category_id]" class="form-select kit-cat-select" onchange="loadProducts(this, '${prefix}', ${idx})" style="flex:1;">
             ${categoryOptions}
         </select>
-        <select name="items[${idx}][component_product_id]" class="form-select kit-prod-select" style="flex:1;" disabled>
+        <select name="items[${idx}][component_product_id]" class="form-select kit-prod-select" onchange="updateQtyMax(this.closest('.dyn-row'))" style="flex:1;" disabled>
             <option value="">Select Product</option>
         </select>
-        <input type="number" name="items[${idx}][quantity]" class="form-control" placeholder="Qty" min="1" value="1" style="flex:0.4;">
+        <div style="flex:0.4;display:flex;flex-direction:column;gap:2px;">
+            <input type="number" name="items[${idx}][quantity]" class="form-control kit-qty-input" placeholder="Qty" min="1" value="1">
+            <small class="kit-stock-hint" style="color:var(--muted);font-size:0.65rem;"></small>
+        </div>
         <button type="button" class="dyn-remove" onclick="this.closest('.dyn-row').remove()">&times;</button>`;
     container.appendChild(row);
 }
@@ -437,7 +463,10 @@ function openEditKit(id) {
                     <select name="items[${i}][component_product_id]" class="form-select kit-prod-select" style="flex:1;">
                         <option value="${prodId}" selected>${prodName}</option>
                     </select>
-                    <input type="number" name="items[${i}][quantity]" class="form-control" value="${qty}" min="1" style="flex:0.4;">
+                    <div style="flex:0.4;display:flex;flex-direction:column;gap:2px;">
+                        <input type="number" name="items[${i}][quantity]" class="form-control kit-qty-input" value="${qty}" min="1">
+                        <small class="kit-stock-hint" style="color:var(--muted);font-size:0.65rem;"></small>
+                    </div>
                     <button type="button" class="dyn-remove" onclick="this.closest('.dyn-row').remove()">&times;</button>`;
                 itemsC.appendChild(row);
 
@@ -453,6 +482,8 @@ function openEditKit(id) {
                                 opts += `<option value="${p.id}" data-stock="${p.quantity ?? 0}"${selected}>${p.item_name} (Stock: ${p.quantity ?? 0})</option>`;
                             });
                             sel.innerHTML = opts;
+                            sel.onchange = () => updateQtyMax(row);
+                            updateQtyMax(row);
                         });
                 }
             });
