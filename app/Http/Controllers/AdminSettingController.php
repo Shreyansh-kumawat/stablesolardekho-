@@ -165,4 +165,17 @@ class AdminSettingController extends Controller
         $listStories = InstallationStory::all();
         return view('Admin.AdminSetting.listStories', compact('listStories'));
     }
+
+    public function deleteStory($id)
+    {
+        $story = InstallationStory::findOrFail($id);
+        $photos = json_decode($story->photos, true);
+        if (is_array($photos)) {
+            foreach ($photos as $photo) {
+                Storage::disk('public')->delete($photo);
+            }
+        }
+        $story->delete();
+        return redirect()->route('listStories')->with('success', 'Story deleted successfully.');
+    }
 }

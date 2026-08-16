@@ -349,7 +349,11 @@
                                             data-id="{{ $story->id }}">
                                             <i class="fas fa-edit me-1"></i> Edit
                                         </button>
-
+                                        <form action="{{ route('deleteStory', $story->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this story?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash me-1"></i> Delete</button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

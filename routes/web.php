@@ -234,6 +234,7 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::get('/list-stories', [AdminSettingController::class, 'listStories'])->name('listStories');
     Route::get('/get-story/{id}', [AdminSettingController::class, 'show'])->name('getStory');
     Route::put('/update-story/{id}', [AdminSettingController::class, 'update'])->name('updateStory');
+    Route::delete('/delete-story/{id}', [AdminSettingController::class, 'deleteStory'])->name('deleteStory');
 
     Route::get('/transfer-fund-cp', [WalletController::class, 'transferFundToCp'])->name('transferFundToCp');
     Route::post('/', [WalletController::class, 'storeFundTransfer'])->name('storeFundTransfer');
