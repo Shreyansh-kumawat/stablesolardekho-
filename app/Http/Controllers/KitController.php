@@ -255,7 +255,7 @@ class KitController extends Controller
                 'order_number' => CustomerOrder::generateOrderNumber(),
                 'user_id' => $user->id,
                 'total_amount' => $totalAmount,
-                'payment_method' => 'pending',
+                'payment_method' => 'online',
                 'payment_status' => 'pending',
                 'status' => 'pending',
                 'name' => $user->name,
