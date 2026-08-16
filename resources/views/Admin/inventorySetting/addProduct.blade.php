@@ -41,6 +41,12 @@
     .prod-img-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--bdr); }
     .spec-pills { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
     .spec-pill { background: #eef3ff; color: var(--blue); font-size: .75rem; font-weight: 600; padding: .25rem .6rem; border-radius: 6px; }
+    .searchable-select { position: relative; }
+    .search-dropdown { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid var(--bdr); border-top: none; border-radius: 0 0 8px 8px; max-height: 220px; overflow-y: auto; z-index: 100; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+    .search-dropdown.open { display: block; }
+    .search-option { padding: 8px 12px; cursor: pointer; font-size: .85rem; color: var(--txt); border-bottom: 1px solid #f5f5f5; }
+    .search-option:hover { background: #eef3ff; }
+    .search-option.hidden { display: none; }
     @media(max-width:768px) { .sec-card { padding: 1rem; } .pg-head { flex-direction: column; align-items: flex-start; } .prod-summary { grid-template-columns: 1fr 1fr; } }
 </style>
 @endsection
@@ -82,12 +88,22 @@
             </div>
             <div class="col-md-6" id="productSelectorWrap" style="display:none;">
                 <label class="form-label">Choose Product</label>
-                <select class="form-select" id="productSelector" onchange="onProductSelect()">
-                    <option value="">-- Select a product --</option>
-                    @foreach($products as $p)
-                    <option value="{{ $p->id }}">{{ $p->item_name }} ({{ $p->item_code ?? 'N/A' }})</option>
-                    @endforeach
-                </select>
+                <div class="searchable-select" id="productSearchWrap">
+                    <input type="text" class="form-control" id="productSearchInput" placeholder="Search product by name or code..." autocomplete="off" onclick="toggleDropdown('productDropdown', true)" oninput="filterDropdown('productDropdown', this.value, 'productSelector')">
+                    <select class="form-select" id="productSelector" onchange="onProductSelect()" style="display:none;">
+                        <option value="">-- Select a product --</option>
+                        @foreach($products as $p)
+                        <option value="{{ $p->id }}">{{ $p->item_name }} ({{ $p->item_code ?? 'N/A' }})</option>
+                        @endforeach
+                    </select>
+                    <div class="search-dropdown" id="productDropdown">
+                        @foreach($products as $p)
+                        <div class="search-option" data-value="{{ $p->id }}" data-text="{{ $p->item_name }} ({{ $p->item_code ?? 'N/A' }})" onclick="selectOption('productSelector', '{{ $p->id }}', '{{ addslashes($p->item_name) }} ({{ $p->item_code ?? 'N/A' }})', 'productSearchInput', 'productDropdown'); onProductSelect();">
+                            <strong>{{ $p->item_name }}</strong> <span style="color:var(--txt2); font-size:.78rem;">{{ $p->item_code ?? '' }}</span>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -185,12 +201,22 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">Category <span class="req">*</span></label>
-                        <select name="category_id" id="categorySelect" class="form-select" required>
-                            <option value="">Select Category</option>
-                            @foreach($categories as $cat)
-                            <option value="{{ $cat->id }}">{{ $cat->category_name }}</option>
-                            @endforeach
-                        </select>
+                        <div class="searchable-select">
+                            <input type="text" class="form-control" id="categorySearchInput" placeholder="Search category..." autocomplete="off" onclick="toggleDropdown('categoryDropdown', true)" oninput="filterDropdown('categoryDropdown', this.value, 'categorySelect')">
+                            <select name="category_id" id="categorySelect" class="form-select" required style="display:none;">
+                                <option value="">Select Category</option>
+                                @foreach($categories as $cat)
+                                <option value="{{ $cat->id }}">{{ $cat->category_name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="search-dropdown" id="categoryDropdown">
+                                @foreach($categories as $cat)
+                                <div class="search-option" data-value="{{ $cat->id }}" data-text="{{ $cat->category_name }}" onclick="selectOption('categorySelect', '{{ $cat->id }}', '{{ addslashes($cat->category_name) }}', 'categorySearchInput', 'categoryDropdown'); document.getElementById('categorySelect').dispatchEvent(new Event('change'));">
+                                    {{ $cat->category_name }}
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Sub Category</label>
@@ -349,6 +375,7 @@ function setMode(mode) {
     if (mode === 'new') {
         document.getElementById('existingProductSection').style.display = 'none';
         document.getElementById('productSelector').value = '';
+        document.getElementById('productSearchInput').value = '';
         document.getElementById('existingProductInfo').style.display = 'none';
         document.getElementById('pageTitle').textContent = 'Add Stock';
         document.getElementById('pageDesc').textContent = 'Add a new product or add stock to existing product';
@@ -472,6 +499,30 @@ document.getElementById('galleryInput').addEventListener('change', function() {
     const p = document.getElementById('galleryPreview');
     p.innerHTML = '';
     Array.from(this.files).slice(0, 8).forEach(f => { const img = document.createElement('img'); img.src = URL.createObjectURL(f); p.appendChild(img); });
+});
+
+function toggleDropdown(dropdownId, show) {
+    document.getElementById(dropdownId).classList.toggle('open', show);
+}
+function filterDropdown(dropdownId, query, selectId) {
+    var dd = document.getElementById(dropdownId);
+    dd.classList.add('open');
+    var q = query.toLowerCase();
+    dd.querySelectorAll('.search-option').forEach(function(opt) {
+        var text = opt.getAttribute('data-text').toLowerCase();
+        opt.classList.toggle('hidden', q.length > 0 && text.indexOf(q) === -1);
+    });
+}
+function selectOption(selectId, value, text, inputId, dropdownId) {
+    var sel = document.getElementById(selectId);
+    sel.value = value;
+    document.getElementById(inputId).value = text;
+    document.getElementById(dropdownId).classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+    document.querySelectorAll('.search-dropdown.open').forEach(function(dd) {
+        if (!dd.parentElement.contains(e.target)) dd.classList.remove('open');
+    });
 });
 </script>
 @endsection
