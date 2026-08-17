@@ -85,6 +85,7 @@ class CpInventoryController extends Controller
             'entry_date' => now()->format('Y-m-d'),
             'added_by' => Auth::id(),
             'remarks' => 'Stock used: ' . ($request->remarks ?? ''),
+            'source' => 'stock_used',
         ]);
 
         return redirect()->route('cpInventory')->with('success', 'Stock reduced successfully.');
@@ -184,6 +185,7 @@ class CpInventoryController extends Controller
                     'entry_date' => now()->format('Y-m-d'),
                     'added_by' => Auth::id(),
                     'remarks' => 'Stock transferred from warehouse (auto)',
+                    'source' => 'warehouse_transfer',
                 ]);
             }
         } catch (\Exception $e) {
@@ -333,6 +335,7 @@ class CpInventoryController extends Controller
                 'entry_date' => now()->format('Y-m-d'),
                 'added_by' => Auth::id(),
                 'remarks' => $diff > 0 ? 'Stock increased by Admin (auto)' : 'Stock decreased by Admin (auto)',
+                'source' => 'admin_adjusted',
             ]);
         }
 
@@ -399,6 +402,7 @@ class CpInventoryController extends Controller
             'entry_date' => now()->format('Y-m-d'),
             'added_by' => Auth::id(),
             'remarks' => 'Stock allocated to CP (auto)',
+            'source' => 'admin_allocated',
         ]);
 
         return redirect()->back()->with('success', "Stock added successfully. ({$request->quantity} x {$product->item_name} @ ₹{$sellingPrice})");

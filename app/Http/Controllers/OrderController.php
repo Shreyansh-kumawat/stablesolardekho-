@@ -367,6 +367,7 @@ class OrderController extends Controller
                     'entry_date' => now()->format('Y-m-d'),
                     'added_by' => auth()->id(),
                     'remarks' => 'CP Order #' . $order->order_id . ' delivered',
+                    'source' => 'order_delivery',
                 ]);
 
                 $orderGrandTotal += $salePrice * $qty;

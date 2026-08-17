@@ -11,7 +11,7 @@ class CpMaterialLedger extends Model
     protected $fillable = [
         'cp_id', 'material_name', 'quantity', 'unit', 'rate',
         'total_amount', 'entry_date', 'invoice_number', 'invoice_file',
-        'added_by', 'remarks',
+        'added_by', 'remarks', 'source',
     ];
 
     public function channelPartner()

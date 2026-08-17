@@ -28,7 +28,7 @@ class FinancialController extends Controller
         $cpOrders = CpOrder::query();
         $custOrders = CustomerOrder::query();
         $payments = CpPayment::query();
-        $materials = CpMaterialLedger::query();
+        $materials = CpMaterialLedger::where('source', '!=', 'order_delivery');
 
         if ($dateFilter) {
             $cpOrders->whereBetween('order_date', $dateFilter);
@@ -91,7 +91,7 @@ class FinancialController extends Controller
         $dateFilter = $this->getDateRange($period, $request);
 
         $custRevenue = CustomerOrder::query();
-        $materialExpenses = CpMaterialLedger::query();
+        $materialExpenses = CpMaterialLedger::where('source', '!=', 'order_delivery');
         $walletCredits = CpWalletTransaction::where('transaction_type', 'credit');
 
         if ($dateFilter) {
