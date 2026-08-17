@@ -273,6 +273,7 @@
                             <input class="form-check-input" type="checkbox" name="is_featured" value="1" id="isFeatured">
                             <label class="form-check-label" for="isFeatured" style="font-size:.85rem;">Mark as Featured</label>
                         </div>
+                        
                     </div>
                     <div class="col-12">
                         <label class="form-label">Description</label>
