@@ -87,7 +87,6 @@ class wareHouseInventoryService
             ]);
         } 
         }else {
-            $inventory->decrement('available_qty', $qty);
             CpProductInventoryTransaction::create([
                 'product_id' => $productId,
                 'transaction_type' => 'OUT',
