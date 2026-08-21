@@ -36,7 +36,7 @@
             <div class="ref-grid">
                 {{-- Left: Image + Trust Points --}}
                 <div>
-                    <img src="{{ asset('stable/images/indipendence.jpeg') }}" alt="Independence Day Offer" style="width:100%;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.12);margin-bottom:24px;">
+                    <img src="{{ asset('stable/images/offer.jpeg') }}" alt="Solar Consultation Offer" style="width:100%;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.12);margin-bottom:24px;">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
                         @foreach([
                             ['icon'=>'M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z','title'=>'Guaranteed Savings','desc'=>'Save up to 90% on electricity bills with solar energy'],
@@ -137,22 +137,6 @@
                                 <option value="10kW" {{ old('system_size')=='10kW'?'selected':'' }}>10 kW</option>
                                 <option value="10kW+" {{ old('system_size')=='10kW+'?'selected':'' }}>10 kW+</option>
                             </select>
-                        </div>
-
-                        {{-- Independence Day Offer --}}
-                        <div style="background:linear-gradient(135deg,#fff7ed 0%,#fed7aa 100%);border:1px solid #fdba74;border-radius:10px;padding:14px;margin-bottom:16px;">
-                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                                <span style="font-size:1.1rem;">🇮🇳</span>
-                                <span style="font-weight:800;color:#c2410c;font-size:0.82rem;">15 August Special Offer!</span>
-                            </div>
-                            <p style="font-size:0.76rem;color:#7c2d12;line-height:1.5;margin:0 0 10px;">Take a selfie with the Tiranga on your rooftop and get <b>5% or &#8377;5,000 discount</b> on solar installation!</p>
-                            <label style="display:block;color:#9a3412;font-size:0.72rem;font-weight:600;margin-bottom:5px;">Upload Your Tiranga Selfie (Optional)</label>
-                            <input type="file" name="selfie_image" id="refSelfieInput" accept="image/*" style="display:none;">
-                            <div onclick="document.getElementById('refSelfieInput').click()" style="cursor:pointer;border:2px dashed #fdba74;border-radius:10px;padding:16px;text-align:center;background:#fffbf5;transition:border-color .15s;" onmouseover="this.style.borderColor='#ea580c'" onmouseout="this.style.borderColor='#fdba74'">
-                                <svg width="28" height="28" fill="none" stroke="#ea580c" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom:6px;"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"/></svg>
-                                <p id="refSelfieFileName" style="font-size:0.78rem;color:#9a3412;margin:0;font-weight:600;">Click to upload selfie</p>
-                            </div>
-                            <script>document.getElementById('refSelfieInput').addEventListener('change',function(){document.getElementById('refSelfieFileName').textContent=this.files[0]?this.files[0].name:'Click to upload selfie';});</script>
                         </div>
 
                         <button type="submit"
