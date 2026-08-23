@@ -253,7 +253,7 @@
       <hr class="pd-divider">
 
       @auth
-      @php $stock = $product->quantity ?? 0; @endphp
+      @php $stock = $product->inventory->available_qty ?? 0; @endphp
       @if($stock > 0)
       <div class="pd-qty-row">
           <span class="pd-qty-label">Quantity</span>

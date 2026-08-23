@@ -180,7 +180,7 @@ class ProductController extends Controller
 
     public function showProduct($slug)
     {
-        $product = Product::with('category')->where('slug', $slug)->firstOrFail();
+        $product = Product::with(['category', 'inventory'])->where('slug', $slug)->firstOrFail();
         return view('shop.product', compact('product'));
     }
 
@@ -270,7 +270,7 @@ class ProductController extends Controller
     public function manageProducts()
     {
         abort_unless(auth()->user()->hasAdminPermission('products'), 403);
-        $product_list = Product::with(['category', 'subCategory']);
+        $product_list = Product::with(['category', 'subCategory', 'inventory']);
         if (Schema::hasColumn('products', 'is_kit')) $product_list->where('is_kit', false);
         $product_list = $product_list->latest()->get();
         $categories = ProductCategory::all();
