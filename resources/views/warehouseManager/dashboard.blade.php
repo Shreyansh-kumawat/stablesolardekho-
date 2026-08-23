@@ -8,9 +8,10 @@
         .page-header { background: #ffffff; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color); }
         .page-header h1 { font-weight: 600; margin: 0; font-size: 1.25rem; }
         .page-header p { color: var(--text-secondary); margin: 0.35rem 0 0 0; font-size: 0.9rem; }
-        .stat-card { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 1.25rem; }
-        .stat-card .label { color: var(--text-secondary); font-size: 0.78rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
-        .stat-card .value { font-size: 1.75rem; font-weight: 700; margin-top: 0.35rem; color: var(--primary-blue); }
+        .stat-strip { display: flex; gap: 12px; flex-wrap: wrap; }
+        .stat-item { flex: 1; min-width: 140px; background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 8px; }
+        .stat-item .stat-num { font-size: 1.1rem; font-weight: 700; white-space: nowrap; }
+        .stat-item .stat-label { font-size: 0.78rem; color: var(--text-secondary); }
         .card { border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); }
         .card-header { background: #fff; border-bottom: 1px solid var(--border-color); font-weight: 600; font-size: 0.95rem; padding: 0.9rem 1.15rem; }
         .table thead th { background: #f8f9fa; font-weight: 600; font-size: 0.78rem; text-transform: uppercase; }
@@ -27,56 +28,50 @@
     </div>
 
     <div class="container-fluid">
-        <div class="row g-3 mb-4">
-            <div class="col-md-3"><div class="stat-card"><div class="label">Products in Stock</div><div class="value">{{ $totalProducts }}</div></div></div>
-            <div class="col-md-3"><div class="stat-card"><div class="label">Total Units</div><div class="value">{{ $totalUnits }}</div></div></div>
-            <div class="col-md-3"><div class="stat-card"><div class="label">Total Received (IN)</div><div class="value" style="color:#2b8a3e;">{{ $totalIn }}</div></div></div>
-            <div class="col-md-3"><div class="stat-card"><div class="label">Total Dispatched (OUT)</div><div class="value" style="color:#c92a2a;">{{ $totalOut }}</div></div></div>
+        @if($lowStock->count())
+        <div class="card mb-3">
+            <div class="card-header" style="color:#e67700;"><i class="fas fa-exclamation-triangle me-1"></i> Low Stock Alerts (5 or less)</div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>Product</th><th class="text-end">Available</th></tr></thead>
+                    <tbody>
+                        @foreach($lowStock as $item)
+                        <tr>
+                            <td>{{ $item->product->item_name ?? '-' }}</td>
+                            <td class="text-end" style="color:#c92a2a;font-weight:600;">{{ $item->available_qty }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+
+        <div class="stat-strip mb-3">
+            <div class="stat-item"><span class="stat-num" style="color:var(--primary-blue);">{{ $totalProducts }}</span> <span class="stat-label">Products in Stock</span></div>
+            <div class="stat-item"><span class="stat-num" style="color:#e67700;">{{ $totalUnits }}</span> <span class="stat-label">Total Units</span></div>
+            <div class="stat-item"><span class="stat-num" style="color:#2b8a3e;">{{ $totalIn }}</span> <span class="stat-label">Received (IN)</span></div>
+            <div class="stat-item"><span class="stat-num" style="color:#c92a2a;">{{ $totalOut }}</span> <span class="stat-label">Dispatched (OUT)</span></div>
         </div>
 
-        <div class="row g-3">
-            <div class="col-md-7">
-                <div class="card">
-                    <div class="card-header">Recent Transactions</div>
-                    <div class="table-responsive">
-                        <table class="table mb-0">
-                            <thead><tr><th>Date</th><th>Product</th><th>Type</th><th>Qty</th></tr></thead>
-                            <tbody>
-                                @forelse($recentTxns as $t)
-                                <tr>
-                                    <td>{{ $t->created_at->format('d M, H:i') }}</td>
-                                    <td>{{ $t->product->item_name ?? '-' }}</td>
-                                    <td><span class="badge-{{ strtolower($t->transaction_type) }}">{{ $t->transaction_type }}</span></td>
-                                    <td>{{ $t->quantity }}</td>
-                                </tr>
-                                @empty
-                                <tr><td colspan="4" class="text-center text-muted py-4">No transactions yet</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-5">
-                <div class="card">
-                    <div class="card-header">Low Stock Alert (&le; 5)</div>
-                    <div class="table-responsive">
-                        <table class="table mb-0">
-                            <thead><tr><th>Product</th><th class="text-end">Available</th></tr></thead>
-                            <tbody>
-                                @forelse($lowStock as $item)
-                                <tr>
-                                    <td>{{ $item->product->item_name ?? '-' }}</td>
-                                    <td class="text-end" style="color:#c92a2a;font-weight:600;">{{ $item->available_qty }}</td>
-                                </tr>
-                                @empty
-                                <tr><td colspan="2" class="text-center text-muted py-4">All stock levels healthy</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        <div class="card">
+            <div class="card-header">Recent Transactions</div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>Date</th><th>Product</th><th>Type</th><th>Qty</th></tr></thead>
+                    <tbody>
+                        @forelse($recentTxns as $t)
+                        <tr>
+                            <td>{{ $t->created_at->format('d M, H:i') }}</td>
+                            <td>{{ $t->product->item_name ?? '-' }}</td>
+                            <td><span class="badge-{{ strtolower($t->transaction_type) }}">{{ $t->transaction_type }}</span></td>
+                            <td>{{ $t->quantity }}</td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="4" class="text-center text-muted py-4">No transactions yet</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

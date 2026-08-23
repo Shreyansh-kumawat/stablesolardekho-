@@ -10,9 +10,10 @@
         .card { border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); box-shadow: 0 1px 3px rgba(0,0,0,0.04); margin-bottom: 1rem; }
         .card-body { padding: 1.5rem; }
         .card-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 1rem; color: var(--text-primary); }
-        .stat-card { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 1.25rem; text-align: center; }
-        .stat-card .stat-num { font-size: 1.5rem; font-weight: 700; }
-        .stat-card .stat-label { font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px; }
+        .stat-strip { display: flex; gap: 12px; flex-wrap: wrap; }
+        .stat-item { flex: 1; min-width: 160px; background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 8px; }
+        .stat-item .stat-num { font-size: 1.1rem; font-weight: 700; white-space: nowrap; }
+        .stat-item .stat-label { font-size: 0.78rem; color: var(--text-secondary); }
         .table thead th { background: #f8f9fa; color: var(--text-primary); font-weight: 600; border-bottom: 1px solid var(--border-color); padding: 0.75rem; font-size: 0.8rem; text-transform: uppercase; }
         .table tbody td { padding: 0.7rem 0.75rem; vertical-align: middle; border-color: var(--border-color); font-size: 0.85rem; }
         .table tbody tr:hover { background-color: var(--hover-bg); }
@@ -47,33 +48,6 @@
     </div>
 
     <div class="container-fluid">
-        <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="stat-num" style="color:var(--primary-blue);">{{ $totalWarehouses }}</div>
-                    <div class="stat-label">Active Warehouses</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="stat-num" style="color:#e67700;">{{ $grandTotalStock }}</div>
-                    <div class="stat-label">Total Stock (All WH)</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="stat-num" style="color:#2b8a3e;">Rs {{ number_format($grandTotalIn, 2) }}</div>
-                    <div class="stat-label">Total IN Value</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="stat-num" style="color:#c92a2a;">Rs {{ number_format($grandTotalOut, 2) }}</div>
-                    <div class="stat-label">Total OUT Value</div>
-                </div>
-            </div>
-        </div>
-
         @if($lowStockItems->count())
         <div class="card">
             <div class="card-body">
@@ -88,6 +62,13 @@
             </div>
         </div>
         @endif
+
+        <div class="stat-strip mb-3">
+            <div class="stat-item"><span class="stat-num" style="color:var(--primary-blue);">{{ $totalWarehouses }}</span> <span class="stat-label">Active Warehouses</span></div>
+            <div class="stat-item"><span class="stat-num" style="color:#e67700;">{{ $grandTotalStock }}</span> <span class="stat-label">Total Stock</span></div>
+            <div class="stat-item"><span class="stat-num" style="color:#2b8a3e;">Rs {{ number_format($grandTotalIn, 2) }}</span> <span class="stat-label">Total IN Value</span></div>
+            <div class="stat-item"><span class="stat-num" style="color:#c92a2a;">Rs {{ number_format($grandTotalOut, 2) }}</span> <span class="stat-label">Total OUT Value</span></div>
+        </div>
 
         <div class="card">
             <div class="card-body">
