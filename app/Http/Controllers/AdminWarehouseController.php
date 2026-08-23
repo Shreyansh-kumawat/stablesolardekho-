@@ -107,8 +107,7 @@ class AdminWarehouseController extends Controller
     public function managers($id)
     {
         $warehouse = Warehouse::with('managers')->findOrFail($id);
-        $users = User::where('role_id', '!=', 3)
-            ->where('role_id', '!=', 4)
+        $users = User::where('role_id', '!=', 4)
             ->orderBy('name')
             ->get();
 
