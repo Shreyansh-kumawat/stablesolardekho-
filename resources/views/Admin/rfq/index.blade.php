@@ -97,7 +97,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($rfqs as $i => $rfq)
+                            @foreach($rfqs as $i => $rfq)
                             <tr>
                                 <td>{{ $rfq->id }}</td>
                                 <td style="white-space:nowrap;">{{ $rfq->created_at->format('d M Y') }}</td>
@@ -124,11 +124,7 @@
                                     </a>
                                 </td>
                             </tr>
-                            @empty
-                            <tr>
-                                <td colspan="9" class="text-center text-muted py-4">No RFQ requests found.</td>
-                            </tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
