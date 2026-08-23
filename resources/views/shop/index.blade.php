@@ -425,6 +425,93 @@
     </div>
 </div>
 
+{{-- Request for Quote Section --}}
+<div class="rfq-section" id="requestQuote">
+    <div class="rfq-inner">
+        <div class="rfq-header">
+            <h2>Can't Find What You Need?</h2>
+            <p>Submit a request and we'll get back to you with the best quote for any solar product.</p>
+        </div>
+
+        @if(session('rfq_success'))
+        <div style="background:rgba(43,138,62,0.15);border:1px solid rgba(43,138,62,0.3);border-radius:10px;padding:14px 18px;margin-bottom:20px;color:#2b8a3e;font-size:0.88rem;font-weight:600;">
+            {{ session('rfq_success') }}
+        </div>
+        @endif
+
+        <form action="{{ route('rfq.store') }}" method="POST" class="rfq-form">
+            @csrf
+            <div class="rfq-grid">
+                <div class="rfq-field">
+                    <label>Your Name <span style="color:#f87171;">*</span></label>
+                    <input type="text" name="name" required value="{{ Auth::check() ? Auth::user()->name : old('name') }}" placeholder="Full name">
+                    @error('name') <span class="rfq-err">{{ $message }}</span> @enderror
+                </div>
+                <div class="rfq-field">
+                    <label>Phone <span style="color:#f87171;">*</span></label>
+                    <input type="tel" name="phone" required value="{{ Auth::check() ? Auth::user()->phone : old('phone') }}" placeholder="10-digit mobile" maxlength="15">
+                    @error('phone') <span class="rfq-err">{{ $message }}</span> @enderror
+                </div>
+                <div class="rfq-field">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ Auth::check() ? Auth::user()->email : old('email') }}" placeholder="your@email.com">
+                </div>
+                <div class="rfq-field">
+                    <label>City</label>
+                    <input type="text" name="city" value="{{ old('city') }}" placeholder="Your city">
+                </div>
+            </div>
+            <div class="rfq-field" style="margin-top:12px;">
+                <label>What item do you need? <span style="color:#f87171;">*</span></label>
+                <textarea name="item_description" required rows="3" placeholder="Describe the product you're looking for (e.g., 545W Mono PERC Solar Panel, 5kW On-Grid Inverter, etc.)">{{ old('item_description') }}</textarea>
+                @error('item_description') <span class="rfq-err">{{ $message }}</span> @enderror
+            </div>
+            <div class="rfq-grid" style="margin-top:12px;">
+                <div class="rfq-field">
+                    <label>Quantity <span style="color:#f87171;">*</span></label>
+                    <input type="number" name="quantity" required min="1" value="{{ old('quantity', 1) }}" placeholder="How many?">
+                </div>
+                <div class="rfq-field">
+                    <label>Preferred Brand</label>
+                    <input type="text" name="preferred_brand" value="{{ old('preferred_brand') }}" placeholder="e.g., Tata, Adani, Havells">
+                </div>
+            </div>
+            <div class="rfq-field" style="margin-top:12px;">
+                <label>Additional Notes</label>
+                <textarea name="additional_notes" rows="2" placeholder="Any specific requirements, delivery timeline, etc.">{{ old('additional_notes') }}</textarea>
+            </div>
+            <div style="margin-top:16px;">
+                <button type="submit" class="rfq-submit-btn">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                    Submit Request
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@endsection
+
+@section('css')
+@parent
+<style>
+    .rfq-section { max-width: 1220px; margin: 0 auto; padding: 48px 20px 72px; }
+    .rfq-inner { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
+    .rfq-header { text-align: center; margin-bottom: 24px; }
+    .rfq-header h2 { font-size: 1.5rem; font-weight: 800; color: #fff; margin: 0 0 6px; }
+    .rfq-header p { color: var(--muted); font-size: 0.9rem; margin: 0; }
+    .rfq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .rfq-field { display: flex; flex-direction: column; }
+    .rfq-field label { font-size: 0.78rem; font-weight: 600; color: #94a3b8; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .rfq-field input, .rfq-field textarea { background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 0.88rem; color: var(--text); outline: none; transition: border-color 0.2s; font-family: inherit; }
+    .rfq-field input:focus, .rfq-field textarea:focus { border-color: var(--orange); }
+    .rfq-field input::placeholder, .rfq-field textarea::placeholder { color: #475569; }
+    .rfq-field textarea { resize: vertical; min-height: 60px; }
+    .rfq-err { color: #f87171; font-size: 0.75rem; margin-top: 2px; }
+    .rfq-submit-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--orange); color: #fff; border: none; border-radius: 8px; padding: 12px 28px; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: background 0.2s; }
+    .rfq-submit-btn:hover { background: #ea580c; }
+    @media(max-width:640px) { .rfq-grid { grid-template-columns: 1fr; } .rfq-inner { padding: 20px; } }
+</style>
 @endsection
 
 @section('js')

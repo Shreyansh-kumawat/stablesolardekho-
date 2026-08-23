@@ -605,6 +605,20 @@ $catGradients = [
 </div>
 
 
+{{-- ───────────────── REQUEST FOR QUOTE CTA ───────────────── --}}
+<div class="wrap sec sr" style="margin-top:40px;">
+    <div style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);border-radius:16px;padding:32px 36px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;border:1px solid rgba(249,115,22,0.15);">
+        <div>
+            <h3 style="color:#fff;font-size:1.2rem;font-weight:800;margin:0 0 6px;">Can't Find What You Need?</h3>
+            <p style="color:#94a3b8;font-size:0.88rem;margin:0;">Submit a product request and get a personalized quote from our team.</p>
+        </div>
+        <a href="{{ route('shop') }}#requestQuote" style="display:inline-flex;align-items:center;gap:8px;background:var(--orange);color:#fff;padding:12px 28px;border-radius:10px;font-weight:700;font-size:0.9rem;text-decoration:none;white-space:nowrap;transition:background 0.2s;">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+            Request a Quote
+        </a>
+    </div>
+</div>
+
 {{-- ───────────────── STATS BAR ───────────────── --}}
 <div class="sec-glow" style="margin-top:56px;"></div>
 <div class="wrap sec sr">

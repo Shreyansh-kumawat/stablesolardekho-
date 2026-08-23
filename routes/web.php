@@ -67,6 +67,9 @@ Route::view('refund-policy', 'publicPages.refundPolicy')->name('refund.policy');
 Route::get('/refer/{code}', [ReferralController::class, 'showReferralForm'])->name('referral.form');
 Route::post('/refer/{code}', [ReferralController::class, 'submitReferralForm'])->name('referral.submit');
 
+// Public RFQ (Request for Quote)
+Route::post('/request-quote', [\App\Http\Controllers\CustomerRfqController::class, 'store'])->name('rfq.store');
+
 // Route::get('/dashboard', function () {
 //     return view('dashboard');
 // })->middleware(['auth', 'verified'])->name('dashboard');
@@ -95,6 +98,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/kit/order', [KitController::class, 'orderKit'])->name('kit.order');
     Route::get('/kit/{id}/payment', [KitController::class, 'kitPaymentPage'])->name('kit.payment');
     Route::post('/kit/{id}/payment', [KitController::class, 'submitKitPayment'])->name('kit.payment.submit');
+    Route::get('/my-requests', [\App\Http\Controllers\CustomerRfqController::class, 'myRequests'])->name('user.rfq.requests');
 });
 
 Route::middleware('auth')->group(function () {
@@ -290,6 +294,37 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::post('/banners/{banner}', [BannerController::class, 'update'])->name('admin.banners.update');
     Route::post('/banners/{banner}/toggle', [BannerController::class, 'toggleStatus'])->name('admin.banners.toggle');
     Route::delete('/banners/{banner}', [BannerController::class, 'destroy'])->name('admin.banners.destroy');
+
+    // Warehouse Management
+    Route::get('/warehouses', [\App\Http\Controllers\AdminWarehouseController::class, 'index'])->name('admin.warehouses.index');
+    Route::get('/warehouses/create', [\App\Http\Controllers\AdminWarehouseController::class, 'create'])->name('admin.warehouses.create');
+    Route::get('/warehouses/transfer', [\App\Http\Controllers\AdminWarehouseController::class, 'transferForm'])->name('admin.warehouses.transfer');
+    Route::post('/warehouses/transfer', [\App\Http\Controllers\AdminWarehouseController::class, 'storeTransfer'])->name('admin.warehouses.storeTransfer');
+    Route::get('/warehouses/master-dashboard', [\App\Http\Controllers\AdminWarehouseController::class, 'masterDashboard'])->name('admin.warehouses.masterDashboard');
+    Route::get('/warehouses/w2w-transfer', [\App\Http\Controllers\AdminWarehouseController::class, 'warehouseTransferForm'])->name('admin.warehouses.w2wTransfer');
+    Route::post('/warehouses/w2w-transfer', [\App\Http\Controllers\AdminWarehouseController::class, 'storeWarehouseTransfer'])->name('admin.warehouses.storeW2wTransfer');
+    Route::get('/warehouses/get-warehouse-product-qty', [\App\Http\Controllers\AdminWarehouseController::class, 'getWarehouseProductQty'])->name('admin.warehouses.getWarehouseProductQty');
+    Route::post('/warehouses', [\App\Http\Controllers\AdminWarehouseController::class, 'store'])->name('admin.warehouses.store');
+    Route::get('/warehouses/{id}/edit', [\App\Http\Controllers\AdminWarehouseController::class, 'edit'])->name('admin.warehouses.edit');
+    Route::put('/warehouses/{id}', [\App\Http\Controllers\AdminWarehouseController::class, 'update'])->name('admin.warehouses.update');
+    Route::post('/warehouses/{id}/toggle-active', [\App\Http\Controllers\AdminWarehouseController::class, 'toggleActive'])->name('admin.warehouses.toggleActive');
+    Route::delete('/warehouses/{id}', [\App\Http\Controllers\AdminWarehouseController::class, 'destroy'])->name('admin.warehouses.destroy');
+    Route::get('/warehouses/{id}/managers', [\App\Http\Controllers\AdminWarehouseController::class, 'managers'])->name('admin.warehouses.managers');
+    Route::post('/warehouses/{id}/managers', [\App\Http\Controllers\AdminWarehouseController::class, 'addManager'])->name('admin.warehouses.addManager');
+    Route::delete('/warehouses/{id}/managers/{userId}', [\App\Http\Controllers\AdminWarehouseController::class, 'removeManager'])->name('admin.warehouses.removeManager');
+    Route::get('/warehouses/{id}/inventory', [\App\Http\Controllers\AdminWarehouseController::class, 'inventory'])->name('admin.warehouses.inventory');
+    Route::get('/warehouses/{id}/transactions', [\App\Http\Controllers\AdminWarehouseController::class, 'transactions'])->name('admin.warehouses.transactions');
+    Route::get('/warehouses/{id}/dashboard', [\App\Http\Controllers\AdminWarehouseController::class, 'dashboard'])->name('admin.warehouses.dashboard');
+    Route::post('/warehouses/{id}/adjust-stock', [\App\Http\Controllers\AdminWarehouseController::class, 'adjustStock'])->name('admin.warehouses.adjustStock');
+    Route::get('/warehouses/{id}/profit-loss', [\App\Http\Controllers\AdminWarehouseController::class, 'profitLoss'])->name('admin.warehouses.profitLoss');
+    Route::get('/warehouses/{id}/export-inventory', [\App\Http\Controllers\AdminWarehouseController::class, 'exportInventory'])->name('admin.warehouses.exportInventory');
+    Route::get('/warehouses/{id}/export-transactions', [\App\Http\Controllers\AdminWarehouseController::class, 'exportTransactions'])->name('admin.warehouses.exportTransactions');
+
+    // RFQ Management
+    Route::get('/rfq', [\App\Http\Controllers\CustomerRfqController::class, 'adminIndex'])->name('admin.rfq.index');
+    Route::get('/rfq/export', [\App\Http\Controllers\CustomerRfqController::class, 'adminExport'])->name('admin.rfq.export');
+    Route::get('/rfq/{id}', [\App\Http\Controllers\CustomerRfqController::class, 'adminShow'])->name('admin.rfq.show');
+    Route::post('/rfq/{id}/process', [\App\Http\Controllers\CustomerRfqController::class, 'adminProcess'])->name('admin.rfq.process');
 });
 
 Route::get('/cp-dashboard', [UserController::class, 'cpDashboard'])->middleware(['auth', ChannelPartnerMiddleware::class])->name('cpDashboard');

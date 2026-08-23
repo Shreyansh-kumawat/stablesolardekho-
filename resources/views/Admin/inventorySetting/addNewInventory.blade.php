@@ -321,6 +321,17 @@
                         </div>
 
                         <div class="col-md-4">
+                            <label class="form-label">Add To</label>
+                            <select id="warehouse_id" name="warehouse_id" class="form-select select2">
+                                <option value="">Main Inventory (Default)</option>
+                                @foreach(($warehouses ?? []) as $wh)
+                                    <option value="{{ $wh->id }}">Warehouse: {{ $wh->name }}{{ $wh->city ? ' ('.$wh->city.')' : '' }}</option>
+                                @endforeach
+                            </select>
+                            <small style="color:#636e72;font-size:0.78rem;">Leave empty to add to main inventory</small>
+                        </div>
+
+                        <div class="col-md-4">
                             <label class="form-label">Supplier</label>
                             <select id="supplier_id" name="supplier_id" class="form-select select2" required>
                                 <option value="">Select Supplier</option>

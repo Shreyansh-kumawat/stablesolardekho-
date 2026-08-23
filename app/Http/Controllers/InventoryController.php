@@ -9,6 +9,10 @@ use App\Models\ProductCategory;
 use App\Models\ProductCustomSpec;
 use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
+use App\Models\ProductSerial;
+use App\Models\Warehouse;
+use App\Models\WarehouseInventory;
+use App\Models\WarehouseInventoryTransaction;
 use App\Services\cpInventoryService;
 use App\Services\InventoryService;
 use Illuminate\Http\Request;
@@ -22,16 +26,82 @@ class InventoryController extends Controller
     {
         $categories = ProductCategory::all();
         $suppliers = ChannelPartner::where('cp_role', '1')->get();
+        $warehouses = Warehouse::where('is_active', true)->orderBy('name')->get();
         return view('Admin.inventorySetting.addNewInventory')
             ->with('categories', $categories)
-            ->with('suppliers', $suppliers);
+            ->with('suppliers', $suppliers)
+            ->with('warehouses', $warehouses);
     }
 
     public function storeNewInventory(Request $request, InventoryService $inventoryService)
     {
         try {
-
             $txn_id = $this->getTxnId();
+            $warehouseId = $request->warehouse_id;
+
+            if ($warehouseId) {
+                DB::beginTransaction();
+                $productId = (int) $request->product_id;
+                $qty = (int) $request->quantity;
+                $serialRequired = $request->is_serialNumber_required == '1';
+                $serialNumbers = $request->serial_numbers ?? [];
+
+                $warehouseInv = WarehouseInventory::firstOrCreate(
+                    ['warehouse_id' => $warehouseId, 'product_id' => $productId],
+                    ['available_qty' => 0]
+                );
+
+                if ($serialRequired) {
+                    if (count($serialNumbers) !== $qty) {
+                        throw new \Exception('Serial count must match quantity');
+                    }
+                    foreach ($serialNumbers as $sn) {
+                        $sn = (is_string($sn) && strtoupper(trim($sn)) === 'NA') ? $inventoryService->randomSerialNumber() : $sn;
+                        $serial = ProductSerial::create([
+                            'product_id' => $productId,
+                            'serial_number' => $sn,
+                            'status' => 'issue_to_warehouse',
+                            'current_location' => 'warehouse',
+                            'issue_to' => $warehouseId,
+                        ]);
+
+                        WarehouseInventoryTransaction::create([
+                            'warehouse_id' => $warehouseId,
+                            'product_id' => $productId,
+                            'serial_id' => $serial->id,
+                            'transaction_type' => 'IN',
+                            'quantity' => 1,
+                            'transfer_type' => 'direct_purchase',
+                            'unit_price' => $request->unit_price,
+                            'invoice_number' => $request->invoice_number,
+                            'invoice_date' => $request->invoice_date,
+                            'performed_by' => Auth::id(),
+                            'txn_id' => $txn_id,
+                            'remarks' => 'Direct purchase to warehouse',
+                        ]);
+                    }
+                } else {
+                    WarehouseInventoryTransaction::create([
+                        'warehouse_id' => $warehouseId,
+                        'product_id' => $productId,
+                        'transaction_type' => 'IN',
+                        'quantity' => $qty,
+                        'transfer_type' => 'direct_purchase',
+                        'unit_price' => $request->unit_price,
+                        'invoice_number' => $request->invoice_number,
+                        'invoice_date' => $request->invoice_date,
+                        'performed_by' => Auth::id(),
+                        'txn_id' => $txn_id,
+                        'remarks' => 'Direct purchase to warehouse',
+                    ]);
+                }
+
+                $warehouseInv->increment('available_qty', $qty);
+                DB::commit();
+
+                return redirect()->back()->with('success', 'Inventory added directly to warehouse successfully');
+            }
+
             $inventoryService->addStock(
                 $request->product_id,
                 $request->quantity,
@@ -42,6 +112,7 @@ class InventoryController extends Controller
 
             return redirect()->back()->with('success', 'Inventory has been added successfully');
         } catch (\Exception $e) {
+            DB::rollBack();
             return redirect()->back()->with('error',  $e->getMessage());
         }
     }

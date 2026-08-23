@@ -41,6 +41,7 @@
             <a href="{{ route('user.orders') }}" class="{{ $activePage === 'orders' ? 'active' : '' }}"><i class="fas fa-shopping-bag"></i> My Orders</a>
             @endif
             <a href="{{ route('user.referrals') }}" class="{{ $activePage === 'referrals' ? 'active' : '' }}"><i class="fas fa-share-alt"></i> My Referrals</a>
+            <a href="{{ route('user.rfq.requests') }}" class="{{ $activePage === 'requests' ? 'active' : '' }}"><i class="fas fa-file-invoice"></i> My Requests</a>
             <a href="{{ route('user.account') }}" class="{{ $activePage === 'account' ? 'active' : '' }}"><i class="fas fa-user-cog"></i> Account</a>
             <a href="{{ route('user.dashboard') }}?section=password" class="{{ $activePage === 'password' ? 'active' : '' }}"><i class="fas fa-lock"></i> Change Password</a>
             <div class="divider"></div>

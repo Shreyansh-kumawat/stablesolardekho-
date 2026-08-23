@@ -1,6 +1,10 @@
 {{-- ===== ECOMMERCE SECTION (Top) ===== --}}
 @include('layouts.partials.menuEcommercePartials')
 
+@include('layouts.partials.menuWarehousePartials')
+
+@include('layouts.partials.menuRfqPartials')
+
 @if(Auth::user()->role_id == 1)
     @include('layouts.partials.menuUserSettingPartials')
 
