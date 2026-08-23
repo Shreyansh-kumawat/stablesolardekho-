@@ -194,9 +194,8 @@ class AdminWarehouseController extends Controller
             $productId = $request->product_id;
             $warehouseId = $request->warehouse_id;
             $qty = (int) $request->quantity;
-            $product = \App\Models\Product::findOrFail($productId);
-            $serialRequired = $product->is_serialNumber_required == '1';
             $serialNumbers = $request->serial_numbers ?? [];
+            $serialRequired = !empty($serialNumbers);
 
             $mainInventory = ProductInventory::where('product_id', $productId)
                 ->lockForUpdate()
