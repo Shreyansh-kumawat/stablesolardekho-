@@ -556,7 +556,7 @@
                             @endif
                             <span class="pcard-chip pcard-chip-qty">
                                 <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                                Qty: {{ $product->inventory->available_qty ?? 0 }}
+                                Qty: {{ ($product->inventory->available_qty ?? 0) + ($product->warehouseInventoriesSum ?? 0) }}
                             </span>
                             <span class="pcard-chip pcard-chip-uom">{{ $product->uom ?? '—' }}</span>
                         </div>

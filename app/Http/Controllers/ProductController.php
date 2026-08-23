@@ -270,7 +270,8 @@ class ProductController extends Controller
     public function manageProducts()
     {
         abort_unless(auth()->user()->hasAdminPermission('products'), 403);
-        $product_list = Product::with(['category', 'subCategory', 'inventory']);
+        $product_list = Product::with(['category', 'subCategory', 'inventory'])
+            ->withSum('warehouseInventories as warehouseInventoriesSum', 'available_qty');
         if (Schema::hasColumn('products', 'is_kit')) $product_list->where('is_kit', false);
         $product_list = $product_list->latest()->get();
         $categories = ProductCategory::all();

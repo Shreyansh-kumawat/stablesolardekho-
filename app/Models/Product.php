@@ -45,12 +45,20 @@ class Product extends Model
 
     public function scopeInStock($query)
     {
-        return $query->whereHas('inventory', fn($q) => $q->where('available_qty', '>', 0));
+        return $query->where(function ($q) {
+            $q->whereHas('inventory', fn($i) => $i->where('available_qty', '>', 0))
+              ->orWhereHas('warehouseInventories', fn($w) => $w->where('available_qty', '>', 0));
+        });
     }
 
     public function inventory()
     {
         return $this->hasOne(ProductInventory::class);
+    }
+
+    public function warehouseInventories()
+    {
+        return $this->hasMany(WarehouseInventory::class);
     }
 
     public function scopeActive($query)

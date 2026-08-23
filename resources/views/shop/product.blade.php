@@ -253,7 +253,11 @@
       <hr class="pd-divider">
 
       @auth
-      @php $stock = $product->inventory->available_qty ?? 0; @endphp
+      @php
+          $mainStock = $product->inventory->available_qty ?? 0;
+          $whStock = \App\Models\WarehouseInventory::where('product_id', $product->id)->sum('available_qty');
+          $stock = $mainStock + $whStock;
+      @endphp
       @if($stock > 0)
       <div class="pd-qty-row">
           <span class="pd-qty-label">Quantity</span>
