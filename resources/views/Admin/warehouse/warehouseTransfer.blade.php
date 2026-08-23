@@ -105,7 +105,7 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Unit Price</label>
-                            <input type="number" step="0.01" min="0" name="unit_price" class="form-control" placeholder="Enter unit price">
+                            <input type="number" step="0.01" min="0" id="unit_price" name="unit_price" class="form-control" placeholder="Auto-filled from product">
                         </div>
 
                         <div class="col-md-4">
@@ -114,7 +114,7 @@
                             <small class="text-muted-custom" id="available_qty_hint"></small>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-8">
                             <label class="form-label">Remarks</label>
                             <input type="text" name="remarks" class="form-control" placeholder="Optional remarks">
                         </div>
@@ -163,13 +163,20 @@
 
                 $.get(productUrl, { sub_category_id: $(this).val() }, function (data) {
                     data.forEach(item => {
-                        $('#product_id').append('<option value="' + item.id + '">' + item.item_name + '</option>');
+                        var price = item.current_sale_price || item.sale_price || 0;
+                        $('#product_id').append('<option value="' + item.id + '" data-price="' + price + '">' + item.item_name + '</option>');
                     });
                     $('#product_id').trigger('change.select2');
                 });
             });
 
-            $('#product_id, #from_warehouse_id').on('change', function () {
+            $('#product_id').on('change', function () {
+                var price = $(this).find('option:selected').data('price') || '';
+                $('#unit_price').val(price);
+                fetchWarehouseQty();
+            });
+
+            $('#from_warehouse_id').on('change', function () {
                 fetchWarehouseQty();
             });
 

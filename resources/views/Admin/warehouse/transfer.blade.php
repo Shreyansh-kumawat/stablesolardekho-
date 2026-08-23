@@ -88,17 +88,7 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Unit Price</label>
-                            <input type="number" step="0.01" min="0" name="unit_price" class="form-control" placeholder="Enter unit price">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Invoice Number</label>
-                            <input type="text" name="invoice_number" class="form-control" placeholder="Invoice number">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Invoice Date</label>
-                            <input type="date" name="invoice_date" class="form-control">
+                            <input type="number" step="0.01" min="0" id="unit_price" name="unit_price" class="form-control" placeholder="Auto-filled from product">
                         </div>
 
                         <div class="col-md-4">
@@ -106,11 +96,7 @@
                             <input type="text" id="uom" class="form-control" readonly>
                         </div>
 
-                        <div class="col-md-4">
-                            <label class="form-label">Serial Required</label>
-                            <input type="text" id="serial_required" class="form-control" readonly>
-                            <input type="hidden" id="serial_required_hidden" name="is_serialNumber_required">
-                        </div>
+                        <input type="hidden" id="serial_required_hidden" name="is_serialNumber_required">
 
                         <div class="col-md-4">
                             <label class="form-label">Quantity *</label>
@@ -172,7 +158,7 @@
                 $.get(productUrl, { sub_category_id: $(this).val() }, function (data) {
                     data.forEach(item => {
                         $('#product_id').append(
-                            `<option value="${item.id}" data-uom="${item.uom || ''}" data-serial="${item.is_serialNumber_required || 0}">${item.item_name}</option>`
+                            `<option value="${item.id}" data-uom="${item.uom || ''}" data-serial="${item.is_serialNumber_required || 0}" data-price="${item.current_sale_price || item.sale_price || 0}">${item.item_name}</option>`
                         );
                     });
                     $('#product_id').trigger('change.select2');
@@ -183,10 +169,11 @@
                 const sel = $(this).find('option:selected');
                 const uom = sel.data('uom') || '';
                 const serialFlag = String(sel.data('serial')) === '1';
+                const price = sel.data('price') || '';
 
                 serialRequired = serialFlag;
                 $('#uom').val(uom);
-                $('#serial_required').val(serialFlag ? 'Yes' : 'No');
+                $('#unit_price').val(price);
                 $('#serial_required_hidden').val(serialFlag ? 1 : 0);
                 $('#quantity').val('');
                 $('#serial_container').empty();
@@ -241,7 +228,7 @@
 
             function resetFields() {
                 $('#uom').val('');
-                $('#serial_required').val('');
+                $('#unit_price').val('');
                 $('#serial_required_hidden').val('');
                 $('#quantity').val('').removeAttr('max');
                 $('#available_qty_hint').text('');
