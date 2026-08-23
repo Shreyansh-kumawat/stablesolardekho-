@@ -478,10 +478,6 @@
                 </div>
                 @endif
             </div>
-            <button type="button" class="btn-save" id="addNewProductBtn" style="padding:0.6rem 1.3rem;font-size:0.88rem;">
-                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                Add New Product
-            </button>
         </div>
     </div>
 
@@ -867,10 +863,7 @@
                                 <label class="form-label">Sale Price (&#8377;)</label>
                                 <input type="text" class="form-control" id="editProductPrice" name="current_sale_price" placeholder="e.g. 20-25 or 50">
                             </div>
-                            <div class="col-4">
-                                <label class="form-label">Quantity <span style="color:#e74c3c;">*</span></label>
-                                <input type="number" min="0" class="form-control" id="editProductQty" name="quantity" placeholder="0" value="0" required>
-                            </div>
+                            <input type="hidden" id="editProductQty" name="quantity" value="0">
                             <div class="col-4">
                                 <label class="form-label">UOM <span style="color:#e74c3c;">*</span></label>
                                 <input type="hidden" name="uom" id="editUomHidden" required>
