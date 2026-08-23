@@ -96,8 +96,6 @@
                             <input type="text" id="uom" class="form-control" readonly>
                         </div>
 
-                        <input type="hidden" id="serial_required_hidden" name="is_serialNumber_required">
-
                         <div class="col-md-4">
                             <label class="form-label">Quantity *</label>
                             <input type="number" min="1" id="quantity" name="quantity" class="form-control" placeholder="Enter quantity" required>
@@ -109,8 +107,6 @@
                             <input type="text" name="remarks" class="form-control" placeholder="Optional remarks">
                         </div>
                     </div>
-
-                    <div class="mt-3" id="serial_container"></div>
 
                     <div class="mt-4 d-flex gap-2">
                         <button type="submit" class="btn btn-primary">Transfer to Warehouse</button>
@@ -131,9 +127,6 @@
             const subCategoryUrl = "{{ route('getSubCategory') }}";
             const productUrl = "{{ route('getProducts') }}";
             const getAvailableQtyUrl = "{{ route('getProductAvailableQty') }}";
-            const getAvailableSerialUrl = "{{ route('getAvailableSerial') }}";
-
-            let serialRequired = false;
             let availableQty = null;
 
             $('#category_id').on('change', function () {
@@ -158,7 +151,7 @@
                 $.get(productUrl, { sub_category_id: $(this).val() }, function (data) {
                     data.forEach(item => {
                         $('#product_id').append(
-                            `<option value="${item.id}" data-uom="${item.uom || ''}" data-serial="${item.is_serialNumber_required || 0}" data-price="${item.current_sale_price || item.sale_price || 0}">${item.item_name}</option>`
+                            `<option value="${item.id}" data-uom="${item.uom || ''}" data-price="${item.current_sale_price || item.sale_price || 0}">${item.item_name}</option>`
                         );
                     });
                     $('#product_id').trigger('change.select2');
@@ -168,15 +161,11 @@
             $('#product_id').on('change', function () {
                 const sel = $(this).find('option:selected');
                 const uom = sel.data('uom') || '';
-                const serialFlag = String(sel.data('serial')) === '1';
                 const price = sel.data('price') || '';
 
-                serialRequired = serialFlag;
                 $('#uom').val(uom);
                 $('#unit_price').val(price);
-                $('#serial_required_hidden').val(serialFlag ? 1 : 0);
                 $('#quantity').val('');
-                $('#serial_container').empty();
 
                 if (!$(this).val()) { resetFields(); return; }
 
@@ -189,7 +178,6 @@
 
             $('#quantity').on('input', function () {
                 const qty = parseInt($(this).val(), 10) || 0;
-                $('#serial_container').empty();
 
                 if (availableQty !== null && qty > availableQty) {
                     this.setCustomValidity('Quantity exceeds available stock.');
@@ -198,42 +186,13 @@
                 }
                 this.setCustomValidity('');
                 $(this).removeClass('is-invalid');
-
-                if (serialRequired && qty > 0) {
-                    const productId = $('#product_id').val();
-                    $.get(getAvailableSerialUrl, { product_id: productId }, function (data) {
-                        const serials = Array.isArray(data?.available_serials) ? data.available_serials : (Array.isArray(data) ? data : []);
-                        let options = '';
-                        serials.forEach(sn => {
-                            const val = sn.serial_number ?? sn;
-                            options += `<option value="${val}">${val}</option>`;
-                        });
-                        $('#serial_container').html(`
-                            <label class="form-label mt-3">Select Serial Numbers</label>
-                            <select id="serial_numbers" name="serial_numbers[]" class="form-select select2" multiple required>${options}</select>
-                        `);
-                        $('#serial_numbers').select2({ width: '100%' });
-                        const firstN = serials.slice(0, qty).map(sn => sn.serial_number ?? sn);
-                        $('#serial_numbers').val(firstN).trigger('change');
-                        $('#serial_numbers').on('change', function () {
-                            const selected = $(this).val() || [];
-                            if (selected.length > qty) {
-                                selected.splice(qty);
-                                $(this).val(selected).trigger('change.select2');
-                            }
-                        });
-                    });
-                }
             });
 
             function resetFields() {
                 $('#uom').val('');
                 $('#unit_price').val('');
-                $('#serial_required_hidden').val('');
                 $('#quantity').val('').removeAttr('max');
                 $('#available_qty_hint').text('');
-                $('#serial_container').empty();
-                serialRequired = false;
                 availableQty = null;
             }
         });
