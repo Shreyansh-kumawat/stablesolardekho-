@@ -22,21 +22,21 @@
 </head>
 <body>
     <div class="card">
-        <h1>Maintenance Mode</h1>
+        <!-- <h1>Maintenance Mode</h1> -->
 
         @if($isOn)
-            <div class="status on">MAINTENANCE IS ON</div>
-            <p class="info">Home, Shop, Products, Categories, Featured, and Kit pages are showing "Under Maintenance" to visitors right now.</p>
+            <div class="status on">&nbsp;</div>
+            <!-- <p class="info">Home, Shop, Products, Categories, Featured, and Kit pages are showing "Under Maintenance" to visitors right now.</p> -->
             <form method="POST" action="{{ route('maintenance.toggle.action') }}">
                 @csrf
-                <button type="submit" class="turn-off">Turn OFF Maintenance</button>
+                <button type="submit" class="turn-off">&nbsp;</button>
             </form>
         @else
-            <div class="status off">WEBSITE IS LIVE</div>
-            <p class="info">All pages are working normally. Click below to put Home, Shop, Products, Categories, Featured, and Kit pages into maintenance mode.</p>
+            <div class="status off">&nbsp;</div>
+            <!-- <p class="info">All pages are working normally. Click below to put Home, Shop, Products, Categories, Featured, and Kit pages into maintenance mode.</p> -->
             <form method="POST" action="{{ route('maintenance.toggle.action') }}">
                 @csrf
-                <button type="submit" class="turn-on">Turn ON Maintenance</button>
+                <button type="submit" class="turn-on">&nbsp;</button>
             </form>
         @endif
     </div>

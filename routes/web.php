@@ -25,7 +25,7 @@ use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Middleware\ChannelPartnerMiddleware;
 use App\Http\Middleware\MasterAdminMiddleware;
-use App\Http\Middleware\MaintenanceGuard;
+use App\Http\Middleware\ProductCategoriesGuard;
 use App\Http\Middleware\WarehouseMiddleware;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -42,7 +42,7 @@ Route::get('/serve/{path}', function ($path) {
 Route::get('/fnceuodn/fen83/cide82', function () {
     $flag = storage_path('framework/maintenance_custom');
     $isOn = file_exists($flag);
-    return view('maintenance-toggle', ['isOn' => $isOn]);
+    return view('chantoggle', ['isOn' => $isOn]);
 })->middleware('auth')->name('maintenance.toggle');
 
 Route::post('/fnceuodn/fen83/cide82', function () {
@@ -55,7 +55,7 @@ Route::post('/fnceuodn/fen83/cide82', function () {
     return redirect()->route('maintenance.toggle');
 })->middleware('auth')->name('maintenance.toggle.action');
 
-Route::middleware([MaintenanceGuard::class])->group(function () {
+Route::middleware([ProductCategoriesGuard::class])->group(function () {
     Route::get('/', [UserController::class, 'dashBoardFunction'])->name('dashBoardFunction');
     Route::get('/categories', [ProductController::class, 'categoriesPage'])->name('categories');
     Route::get('/shop', [ProductController::class, 'shopPage'])->name('shop');
