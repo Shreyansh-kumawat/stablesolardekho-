@@ -229,6 +229,23 @@
     @media (max-width: 480px) {
         .shop-grid { grid-template-columns: repeat(1, 1fr); }
     }
+
+    .rfq-section { max-width: 1220px; margin: 0 auto; padding: 48px 20px 72px; }
+    .rfq-inner { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
+    .rfq-header { text-align: center; margin-bottom: 24px; }
+    .rfq-header h2 { font-size: 1.5rem; font-weight: 800; color: #fff; margin: 0 0 6px; }
+    .rfq-header p { color: var(--muted); font-size: 0.9rem; margin: 0; }
+    .rfq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .rfq-field { display: flex; flex-direction: column; }
+    .rfq-field label { font-size: 0.78rem; font-weight: 600; color: #94a3b8; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .rfq-field input, .rfq-field textarea { background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 0.88rem; color: var(--text); outline: none; transition: border-color 0.2s; font-family: inherit; }
+    .rfq-field input:focus, .rfq-field textarea:focus { border-color: var(--orange); }
+    .rfq-field input::placeholder, .rfq-field textarea::placeholder { color: #475569; }
+    .rfq-field textarea { resize: vertical; min-height: 60px; }
+    .rfq-err { color: #f87171; font-size: 0.75rem; margin-top: 2px; }
+    .rfq-submit-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--orange); color: #fff; border: none; border-radius: 8px; padding: 12px 28px; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: background 0.2s; }
+    .rfq-submit-btn:hover { background: #ea580c; }
+    @media(max-width:640px) { .rfq-grid { grid-template-columns: 1fr; } .rfq-inner { padding: 20px; } }
 </style>
 @endsection
 
@@ -492,27 +509,6 @@
 
 @endsection
 
-@section('css')
-@parent
-<style>
-    .rfq-section { max-width: 1220px; margin: 0 auto; padding: 48px 20px 72px; }
-    .rfq-inner { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
-    .rfq-header { text-align: center; margin-bottom: 24px; }
-    .rfq-header h2 { font-size: 1.5rem; font-weight: 800; color: #fff; margin: 0 0 6px; }
-    .rfq-header p { color: var(--muted); font-size: 0.9rem; margin: 0; }
-    .rfq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .rfq-field { display: flex; flex-direction: column; }
-    .rfq-field label { font-size: 0.78rem; font-weight: 600; color: #94a3b8; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
-    .rfq-field input, .rfq-field textarea { background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 0.88rem; color: var(--text); outline: none; transition: border-color 0.2s; font-family: inherit; }
-    .rfq-field input:focus, .rfq-field textarea:focus { border-color: var(--orange); }
-    .rfq-field input::placeholder, .rfq-field textarea::placeholder { color: #475569; }
-    .rfq-field textarea { resize: vertical; min-height: 60px; }
-    .rfq-err { color: #f87171; font-size: 0.75rem; margin-top: 2px; }
-    .rfq-submit-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--orange); color: #fff; border: none; border-radius: 8px; padding: 12px 28px; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: background 0.2s; }
-    .rfq-submit-btn:hover { background: #ea580c; }
-    @media(max-width:640px) { .rfq-grid { grid-template-columns: 1fr; } .rfq-inner { padding: 20px; } }
-</style>
-@endsection
 
 @section('js')
 <script>
