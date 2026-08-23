@@ -566,8 +566,14 @@
                 </div>
 
                 <nav class="flex-1 space-y-0.5">
+                    @php
+                        $isWhManager = \Illuminate\Support\Facades\DB::table('warehouse_managers')
+                            ->where('user_id', Auth::id())->exists();
+                    @endphp
                     <!-- Dashboard -->
-                    @if(Auth::user()->role_id == 4)
+                    @if($isWhManager && !in_array($roll_id, ['1','2']))
+                        {{-- warehouse-manager-only user: no admin dashboard link --}}
+                    @elseif(Auth::user()->role_id == 4)
                     <a href="{{ url('/') }}" class="cp-nav-link">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -586,7 +592,11 @@
                         <span class="text-xs font-semibold">Dashboard{{ Auth::user()->role_id == 2 ? ' - Secondary Admin' : '' }}</span>
                     </a>
                     @endif
-                  
+
+                    @if ($isWhManager)
+                        @include('layouts.masterPartialsLayout.warehouseManagerMaster')
+                    @endif
+
                     @if (in_array($roll_id, ['1', '2']))
                         @include('layouts.masterPartialsLayout.AdminMaster')
                     @elseif ($roll_id == 4)

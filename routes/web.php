@@ -27,6 +27,8 @@ use App\Http\Middleware\ChannelPartnerMiddleware;
 use App\Http\Middleware\MasterAdminMiddleware;
 use App\Http\Middleware\ProductCategoriesGuard;
 use App\Http\Middleware\WarehouseMiddleware;
+use App\Http\Middleware\WarehouseManagerMiddleware;
+use App\Http\Controllers\WarehouseManagerController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -398,6 +400,17 @@ Route::prefix('channel-partner')->middleware(['auth', ChannelPartnerMiddleware::
         Route::get('/my-manual-entries', [ManualInstallationController::class, 'myManualEntries'])->name(name: 'myManualEntries');
     });
     
+});
+
+Route::prefix('wh-manager')->middleware(['auth', WarehouseManagerMiddleware::class])->group(function () {
+    Route::get('/dashboard', [WarehouseManagerController::class, 'dashboard'])->name('wh.manager.dashboard');
+    Route::get('/inventory', [WarehouseManagerController::class, 'inventory'])->name('wh.manager.inventory');
+    Route::get('/transactions', [WarehouseManagerController::class, 'transactions'])->name('wh.manager.transactions');
+    Route::get('/transfer', [WarehouseManagerController::class, 'transferForm'])->name('wh.manager.transfer');
+    Route::post('/transfer', [WarehouseManagerController::class, 'storeTransfer'])->name('wh.manager.storeTransfer');
+    Route::get('/warehouse-qty', [WarehouseManagerController::class, 'getWarehouseQty'])->name('wh.manager.getWarehouseQty');
+    Route::get('/get-sub-categories', [\App\Http\Controllers\ProductController::class, 'getSubCategories'])->name('wh.manager.getSubCategory');
+    Route::get('/get-products', [\App\Http\Controllers\ProductController::class, 'getProducts'])->name('wh.manager.getProducts');
 });
 
 Route::prefix('warehouse')->middleware(['auth', WarehouseMiddleware::class])->group(function () {
