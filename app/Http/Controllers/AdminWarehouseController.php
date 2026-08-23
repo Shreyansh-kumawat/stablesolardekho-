@@ -296,6 +296,9 @@ class AdminWarehouseController extends Controller
             $mainInventory->decrement('available_qty', $qty);
             $warehouseInventory->increment('available_qty', $qty);
 
+            $mainInventory->refresh();
+            Product::where('id', $productId)->update(['quantity' => $mainInventory->available_qty]);
+
             DB::commit();
 
             return redirect()->back()->with('success', "Successfully transferred {$qty} items to warehouse.");
