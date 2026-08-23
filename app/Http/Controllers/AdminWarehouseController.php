@@ -184,9 +184,6 @@ class AdminWarehouseController extends Controller
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
             'unit_price' => 'nullable|numeric|min:0',
-            'invoice_number' => 'nullable|string|max:100',
-            'invoice_date' => 'nullable|date',
-            'is_serialNumber_required' => 'required',
             'serial_numbers' => 'nullable|array',
             'remarks' => 'nullable|string|max:500',
         ]);
@@ -197,7 +194,8 @@ class AdminWarehouseController extends Controller
             $productId = $request->product_id;
             $warehouseId = $request->warehouse_id;
             $qty = (int) $request->quantity;
-            $serialRequired = $request->is_serialNumber_required == '1';
+            $product = \App\Models\Product::findOrFail($productId);
+            $serialRequired = $product->is_serialNumber_required == '1';
             $serialNumbers = $request->serial_numbers ?? [];
 
             $mainInventory = ProductInventory::where('product_id', $productId)
