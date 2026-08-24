@@ -114,7 +114,7 @@
                         </div>
                         <div class="info-row">
                             <span class="info-label">Item</span>
-                            <span class="info-value" style="font-weight:600;">{{ $rfq->item_description }}</span>
+                            <span class="info-value" style="font-weight:600; white-space:pre-line;">{{ $rfq->item_description }}</span>
                         </div>
                         <div class="info-row">
                             <span class="info-label">Quantity</span>
