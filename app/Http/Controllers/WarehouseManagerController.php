@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\ProductInventory;
+use App\Models\ProductInventoryTransaction;
 use App\Models\Warehouse;
 use App\Models\WarehouseInventory;
 use App\Models\WarehouseInventoryTransaction;
@@ -88,7 +90,7 @@ class WarehouseManagerController extends Controller
     public function storeTransfer(Request $request)
     {
         $request->validate([
-            'to_warehouse_id' => 'required|exists:warehouses,id',
+            'to_warehouse_id' => 'required',
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
             'unit_price' => 'nullable|numeric|min:0',
@@ -96,9 +98,14 @@ class WarehouseManagerController extends Controller
         ]);
 
         $fromWhId = $this->warehouseId($request);
-        $toWhId = $request->to_warehouse_id;
+        $dest = $request->to_warehouse_id;
+        $toMain = ($dest === 'main');
 
-        if ($fromWhId == $toWhId) {
+        if (!$toMain && !Warehouse::where('id', $dest)->exists()) {
+            return redirect()->back()->with('error', 'Invalid destination warehouse.');
+        }
+
+        if (!$toMain && $fromWhId == $dest) {
             return redirect()->back()->with('error', 'Source and destination warehouse cannot be the same.');
         }
 
@@ -106,6 +113,7 @@ class WarehouseManagerController extends Controller
         try {
             $productId = $request->product_id;
             $qty = (int) $request->quantity;
+            $fromWarehouseName = Warehouse::where('id', $fromWhId)->value('name');
 
             $fromInv = WarehouseInventory::where('warehouse_id', $fromWhId)
                 ->where('product_id', $productId)
@@ -115,44 +123,66 @@ class WarehouseManagerController extends Controller
                 throw new Exception('Insufficient stock in your warehouse.');
             }
 
-            $toInv = WarehouseInventory::firstOrCreate(
-                ['warehouse_id' => $toWhId, 'product_id' => $productId],
-                ['available_qty' => 0]
-            );
-
-            $txnId = 'W2W-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+            $txnId = ($toMain ? 'W2M-' : 'W2W-') . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+            $userRemarks = $request->remarks;
 
             WarehouseInventoryTransaction::create([
                 'warehouse_id' => $fromWhId,
                 'product_id' => $productId,
                 'transaction_type' => 'OUT',
                 'quantity' => $qty,
-                'transfer_type' => 'to_warehouse',
-                'transfer_to' => $toWhId,
+                'transfer_type' => $toMain ? 'to_main' : 'to_warehouse',
+                'transfer_to' => $toMain ? null : $dest,
                 'unit_price' => $request->unit_price,
                 'performed_by' => Auth::id(),
                 'txn_id' => $txnId,
-                'remarks' => $request->remarks ?? 'Transferred to another warehouse',
-            ]);
-
-            WarehouseInventoryTransaction::create([
-                'warehouse_id' => $toWhId,
-                'product_id' => $productId,
-                'transaction_type' => 'IN',
-                'quantity' => $qty,
-                'transfer_type' => 'from_warehouse',
-                'transfer_to' => $fromWhId,
-                'unit_price' => $request->unit_price,
-                'performed_by' => Auth::id(),
-                'txn_id' => $txnId,
-                'remarks' => $request->remarks ?? 'Received from another warehouse',
+                'remarks' => $userRemarks ?: ($toMain ? 'Transferred to Main Inventory' : 'Transferred to another warehouse'),
             ]);
 
             $fromInv->decrement('available_qty', $qty);
-            $toInv->increment('available_qty', $qty);
+
+            if ($toMain) {
+                $mainInv = ProductInventory::firstOrCreate(
+                    ['product_id' => $productId],
+                    ['available_qty' => 0]
+                );
+                $mainInv->increment('available_qty', $qty);
+
+                Product::where('id', $productId)->update(['quantity' => $mainInv->fresh()->available_qty]);
+
+                ProductInventoryTransaction::create([
+                    'product_id' => $productId,
+                    'transaction_type' => 'IN',
+                    'quantity' => $qty,
+                    'unit_price' => $request->unit_price,
+                    'performed_by' => Auth::id(),
+                    'txn_id' => $txnId,
+                    'remarks' => $userRemarks ?: ('Received from warehouse: ' . $fromWarehouseName),
+                ]);
+            } else {
+                $toInv = WarehouseInventory::firstOrCreate(
+                    ['warehouse_id' => $dest, 'product_id' => $productId],
+                    ['available_qty' => 0]
+                );
+                $toInv->increment('available_qty', $qty);
+
+                WarehouseInventoryTransaction::create([
+                    'warehouse_id' => $dest,
+                    'product_id' => $productId,
+                    'transaction_type' => 'IN',
+                    'quantity' => $qty,
+                    'transfer_type' => 'from_warehouse',
+                    'transfer_to' => $fromWhId,
+                    'unit_price' => $request->unit_price,
+                    'performed_by' => Auth::id(),
+                    'txn_id' => $txnId,
+                    'remarks' => $userRemarks ?: ('Received from ' . $fromWarehouseName),
+                ]);
+            }
 
             DB::commit();
-            return redirect()->back()->with('success', "Transferred {$qty} units successfully.");
+            $destName = $toMain ? 'Main Inventory' : (Warehouse::where('id', $dest)->value('name'));
+            return redirect()->back()->with('success', "Transferred {$qty} units to {$destName} successfully.");
         } catch (Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', $e->getMessage());

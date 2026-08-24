@@ -24,8 +24,8 @@
 
 @section('content')
     <div class="page-header">
-        <h1><i class="fas fa-arrow-right me-2"></i>Transfer to Another Warehouse</h1>
-        <p>From: {{ $warehouse->name }}</p>
+        <h1><i class="fas fa-arrow-right me-2"></i>Transfer Stock</h1>
+        <p>From: <strong>{{ $warehouse->name }}</strong> &rarr; to Main Inventory or another Warehouse</p>
     </div>
 
     <div class="container-fluid">
@@ -42,12 +42,17 @@
                     @csrf
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">To Warehouse *</label>
+                            <label class="form-label">Destination *</label>
                             <select name="to_warehouse_id" class="form-select select2" required>
                                 <option value="">Select Destination</option>
-                                @foreach($otherWarehouses as $wh)
-                                    <option value="{{ $wh->id }}">{{ $wh->name }}{{ $wh->city ? ' ('.$wh->city.')' : '' }}</option>
-                                @endforeach
+                                <option value="main">&#127968; Main Inventory (Head Office)</option>
+                                @if($otherWarehouses->count())
+                                    <optgroup label="Warehouses">
+                                        @foreach($otherWarehouses as $wh)
+                                            <option value="{{ $wh->id }}">{{ $wh->name }}{{ $wh->city ? ' ('.$wh->city.')' : '' }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
                             </select>
                         </div>
 
