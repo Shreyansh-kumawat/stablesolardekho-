@@ -10,13 +10,17 @@
         .card { border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
         .card-body { padding: 1.5rem; }
         .card-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 1rem; color: var(--text-primary); }
-        .stat-card { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 1.25rem; text-align: center; }
-        .stat-card .stat-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
-        .stat-card .stat-num { font-size: 1.5rem; font-weight: 700; color: var(--primary-blue); }
-        .stat-card .stat-label { font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px; }
-        .stat-card.green .stat-num { color: #2b8a3e; }
-        .stat-card.red .stat-num { color: #c92a2a; }
-        .stat-card.orange .stat-num { color: #e67700; }
+        .stat-strip { display: flex; gap: 12px; background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+        .stat-item { flex: 1; min-width: 160px; display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-right: 1px solid #eef1f5; }
+        .stat-item:last-child { border-right: none; }
+        .stat-item .stat-icon { font-size: 1.2rem; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #f5f7fa; flex-shrink: 0; }
+        .stat-item .stat-text { display: flex; flex-direction: column; line-height: 1.15; }
+        .stat-item .stat-num { font-size: 1.1rem; font-weight: 700; color: var(--primary-blue); }
+        .stat-item .stat-label { font-size: 0.72rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.03em; margin-top: 2px; }
+        .stat-item.green .stat-num { color: #2b8a3e; }
+        .stat-item.red .stat-num { color: #c92a2a; }
+        .stat-item.orange .stat-num { color: #e67700; }
+        @media (max-width: 768px) { .stat-item { flex: 1 1 45%; border-right: none; } }
         .table thead th { background: #f8f9fa; color: var(--text-primary); font-weight: 600; border-bottom: 1px solid var(--border-color); padding: 0.75rem; font-size: 0.8rem; text-transform: uppercase; }
         .table tbody td { padding: 0.7rem 0.75rem; vertical-align: middle; border-color: var(--border-color); font-size: 0.875rem; }
         .table tbody tr:hover { background-color: var(--hover-bg); }
@@ -42,33 +46,33 @@
     </div>
 
     <div class="container-fluid">
-        <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-boxes" style="color:var(--primary-blue);"></i></div>
-                    <div class="stat-num">{{ $totalProducts }}</div>
-                    <div class="stat-label">Total Products</div>
+        <div class="stat-strip">
+            <div class="stat-item">
+                <div class="stat-icon"><i class="fas fa-boxes" style="color:var(--primary-blue);"></i></div>
+                <div class="stat-text">
+                    <span class="stat-num">{{ $totalProducts }}</span>
+                    <span class="stat-label">Total Products</span>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-cubes" style="color:#e67700;"></i></div>
-                    <div class="stat-num orange">{{ $totalStock }}</div>
-                    <div class="stat-label">Total Stock Qty</div>
+            <div class="stat-item orange">
+                <div class="stat-icon"><i class="fas fa-cubes" style="color:#e67700;"></i></div>
+                <div class="stat-text">
+                    <span class="stat-num">{{ $totalStock }}</span>
+                    <span class="stat-label">Total Stock Qty</span>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="stat-card green">
-                    <div class="stat-icon"><i class="fas fa-arrow-down" style="color:#2b8a3e;"></i></div>
-                    <div class="stat-num">{{ number_format($totalInValue, 2) }}</div>
-                    <div class="stat-label">Total IN Value (Rs)</div>
+            <div class="stat-item green">
+                <div class="stat-icon"><i class="fas fa-arrow-down" style="color:#2b8a3e;"></i></div>
+                <div class="stat-text">
+                    <span class="stat-num">&#8377; {{ number_format($totalInValue, 2) }}</span>
+                    <span class="stat-label">Total IN Value</span>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="stat-card red">
-                    <div class="stat-icon"><i class="fas fa-arrow-up" style="color:#c92a2a;"></i></div>
-                    <div class="stat-num">{{ number_format($totalOutValue, 2) }}</div>
-                    <div class="stat-label">Total OUT Value (Rs)</div>
+            <div class="stat-item red">
+                <div class="stat-icon"><i class="fas fa-arrow-up" style="color:#c92a2a;"></i></div>
+                <div class="stat-text">
+                    <span class="stat-num">&#8377; {{ number_format($totalOutValue, 2) }}</span>
+                    <span class="stat-label">Total OUT Value</span>
                 </div>
             </div>
         </div>
