@@ -27,8 +27,10 @@
         .form-label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; }
         .form-control, .form-select { font-size: 0.88rem; border-color: var(--border-color); }
         .form-control:focus, .form-select:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 2px rgba(74,144,226,0.15); }
-        .wa-btn { display: inline-flex; align-items: center; gap: 6px; padding: 0.5rem 1rem; border-radius: 6px; background: #25d366; color: #fff; font-size: 0.85rem; font-weight: 600; text-decoration: none; border: none; }
+        .wa-btn { display: inline-flex; align-items: center; gap: 6px; padding: 0.5rem 1rem; border-radius: 6px; background: #25d366; color: #fff; font-size: 0.85rem; font-weight: 600; text-decoration: none; border: none; cursor:pointer; }
         .wa-btn:hover { background: #1ebe5a; color: #fff; }
+        .save-img-btn { display: inline-flex; align-items: center; gap: 6px; padding: 0.5rem 1rem; border-radius: 6px; background: #6366f1; color: #fff; font-size: 0.85rem; font-weight: 600; text-decoration: none; border: none; cursor:pointer; }
+        .save-img-btn:hover { background: #4f46e5; color: #fff; }
 
         .match-card { border: 1px solid var(--border-color); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; background: #fbfcfd; }
         .match-card.matched { background: #f0fdf4; border-color: #bbf7d0; }
@@ -58,10 +60,12 @@
                 <p>Submitted {{ $rfq->created_at->format('d M Y, h:i A') }}</p>
             </div>
             <div class="d-flex gap-2">
-                <a href="https://wa.me/91{{ preg_replace('/[^0-9]/', '', $rfq->phone) }}?text={{ urlencode('Hi ' . $rfq->name . ', regarding your request for ' . $rfq->item_description . ' - ') }}"
-                   target="_blank" class="wa-btn">
+                <button type="button" onclick="sendWhatsApp()" class="wa-btn">
                     <i class="fab fa-whatsapp"></i> WhatsApp
-                </a>
+                </button>
+                <button type="button" onclick="saveQuoteImage()" class="save-img-btn">
+                    <i class="fas fa-download me-1"></i> Save Image
+                </button>
                 <a href="{{ route('admin.rfq.index') }}" style="padding:0.5rem 1rem;border-radius:6px;font-weight:600;font-size:0.85rem;border:1px solid var(--border-color);background:#fff;color:var(--text-primary);text-decoration:none;">
                     <i class="fas fa-arrow-left me-1"></i> Back
                 </a>
@@ -385,5 +389,303 @@
                 });
             }
         });
+
+        function getMatchData() {
+            var items = [];
+            document.querySelectorAll('.match-card').forEach(function(card) {
+                var idx = card.dataset.idx;
+                var userItem = card.querySelector('input[name="matches['+idx+'][user_item]"]').value;
+                var userQty = card.querySelector('input[name="matches['+idx+'][user_qty]"]').value || '0';
+                var prodSelect = card.querySelector('.prod-select');
+                var prodName = prodSelect.selectedIndex > 0 ? prodSelect.options[prodSelect.selectedIndex].text : '';
+                var matchedQty = card.querySelector('.qty-input').value || '0';
+                var unitPrice = card.querySelector('.unit-price-hidden').value || '0';
+                items.push({
+                    userItem: userItem,
+                    userQty: parseInt(userQty),
+                    prodName: prodName,
+                    matchedQty: parseInt(matchedQty),
+                    unitPrice: parseFloat(unitPrice)
+                });
+            });
+            return items;
+        }
+
+        function sendWhatsApp() {
+            var phone = '91{{ preg_replace("/[^0-9]/", "", $rfq->phone) }}';
+            var name = @json($rfq->name);
+            var items = getMatchData();
+            var quotedPrice = document.getElementById('quotedPrice').value || '';
+            var discount = document.getElementById('discountPercent').value || '';
+            var finalPrice = document.getElementById('finalPrice').value || '';
+
+            var msg = 'Hi ' + name + ',\n\nThank you for your enquiry with *Stable Energy*.\n\n';
+            msg += '*Your Requested Items:*\n';
+            items.forEach(function(it, i) {
+                msg += (i+1) + '. ' + it.userItem + ' - Qty: ' + it.userQty + '\n';
+            });
+
+            var hasMatch = items.some(function(it) { return it.prodName; });
+            if (hasMatch) {
+                msg += '\n*Our Offer:*\n';
+                items.forEach(function(it, i) {
+                    if (!it.prodName) return;
+                    var lineTotal = it.matchedQty * it.unitPrice;
+                    msg += (i+1) + '. ' + it.userItem + ' -> ' + it.prodName + '\n';
+                    msg += '   Qty: ' + it.matchedQty + ' | Rs.' + it.unitPrice.toLocaleString('en-IN') + ' each | Total: Rs.' + lineTotal.toLocaleString('en-IN') + '\n';
+                });
+            }
+
+            if (quotedPrice) {
+                msg += '\n*Price Summary:*\n';
+                msg += 'Subtotal: Rs.' + parseFloat(quotedPrice).toLocaleString('en-IN') + '\n';
+                if (discount) msg += 'Discount: ' + discount + '%\n';
+                if (finalPrice) msg += '*Final Price: Rs.' + parseFloat(finalPrice).toLocaleString('en-IN') + '*\n';
+            }
+
+            var remarks = document.querySelector('textarea[name="admin_remarks"]').value;
+            if (remarks) msg += '\nNote: ' + remarks + '\n';
+
+            msg += '\nThank you for choosing Stable Energy!';
+            window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
+        }
+
+        function saveQuoteImage() {
+            var items = getMatchData();
+            var name = @json($rfq->name);
+            var phone = @json($rfq->phone);
+            var city = @json($rfq->city ?? '');
+            var rfqId = @json($rfq->id);
+            var rfqDate = @json($rfq->created_at->format('d M Y'));
+            var quotedPrice = document.getElementById('quotedPrice').value || '';
+            var discount = document.getElementById('discountPercent').value || '';
+            var finalPrice = document.getElementById('finalPrice').value || '';
+            var remarks = document.querySelector('textarea[name="admin_remarks"]').value || '';
+
+            var hasMatch = items.some(function(it) { return it.prodName; });
+            var rowCount = items.length;
+            var baseH = 520;
+            var rowH = hasMatch ? 56 : 32;
+            var canvasH = baseH + (rowCount * rowH) + (quotedPrice ? 90 : 0) + (remarks ? 40 : 0);
+
+            var canvas = document.createElement('canvas');
+            canvas.width = 800;
+            canvas.height = canvasH;
+            var ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            var headerH = 90;
+            var grd = ctx.createLinearGradient(0, 0, canvas.width, 0);
+            grd.addColorStop(0, '#1e3a5f');
+            grd.addColorStop(1, '#2d5f8a');
+            ctx.fillStyle = grd;
+            ctx.fillRect(0, 0, canvas.width, headerH);
+
+            var logoImg = new Image();
+            logoImg.crossOrigin = 'anonymous';
+            logoImg.onload = function() {
+                ctx.drawImage(logoImg, 24, 15, 60, 60);
+                drawContent();
+            };
+            logoImg.onerror = function() {
+                drawContent();
+            };
+            logoImg.src = '{{ asset("stable/images/logo1.png") }}';
+
+            function drawContent() {
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 26px Arial, sans-serif';
+                ctx.fillText('Stable Energy', 96, 42);
+                ctx.font = '12px Arial, sans-serif';
+                ctx.fillStyle = '#a0c4e8';
+                ctx.fillText('Solar Solutions Provider', 96, 62);
+
+                ctx.font = 'bold 14px Arial, sans-serif';
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'right';
+                ctx.fillText('QUOTATION', canvas.width - 30, 38);
+                ctx.font = '12px Arial, sans-serif';
+                ctx.fillStyle = '#a0c4e8';
+                ctx.fillText('#RFQ-' + rfqId + '  |  ' + rfqDate, canvas.width - 30, 58);
+                ctx.textAlign = 'left';
+
+                var y = headerH + 30;
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(24, y - 6, canvas.width - 48, 60);
+                ctx.strokeStyle = '#e2e8f0';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(24, y - 6, canvas.width - 48, 60);
+
+                ctx.font = '12px Arial, sans-serif';
+                ctx.fillStyle = '#64748b';
+                ctx.fillText('Customer:', 40, y + 14);
+                ctx.fillText('Phone:', 40, y + 36);
+                ctx.font = 'bold 13px Arial, sans-serif';
+                ctx.fillStyle = '#1e293b';
+                ctx.fillText(name, 110, y + 14);
+                ctx.fillText(phone, 110, y + 36);
+                if (city) {
+                    ctx.font = '12px Arial, sans-serif';
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillText('City:', 400, y + 14);
+                    ctx.font = 'bold 13px Arial, sans-serif';
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillText(city, 440, y + 14);
+                }
+
+                y += 80;
+                ctx.font = 'bold 15px Arial, sans-serif';
+                ctx.fillStyle = '#1e3a5f';
+                ctx.fillText('Requested Items', 30, y);
+
+                if (hasMatch) {
+                    ctx.fillText('Our Offer', 420, y);
+                }
+
+                y += 20;
+                ctx.fillStyle = '#1e3a5f';
+                ctx.fillRect(24, y, canvas.width - 48, 30);
+                ctx.font = 'bold 11px Arial, sans-serif';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText('#', 36, y + 19);
+                ctx.fillText('Item Requested', 56, y + 19);
+                ctx.fillText('Qty', 260, y + 19);
+                if (hasMatch) {
+                    ctx.fillText('Matched Product', 320, y + 19);
+                    ctx.fillText('Our Qty', 560, y + 19);
+                    ctx.fillText('Price', 630, y + 19);
+                    ctx.fillText('Total', 710, y + 19);
+                }
+                y += 30;
+
+                var grandTotal = 0;
+                items.forEach(function(it, i) {
+                    var bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(24, y, canvas.width - 48, rowH);
+
+                    ctx.strokeStyle = '#e2e8f0';
+                    ctx.lineWidth = 0.5;
+                    ctx.beginPath();
+                    ctx.moveTo(24, y + rowH);
+                    ctx.lineTo(canvas.width - 24, y + rowH);
+                    ctx.stroke();
+
+                    var textY = y + (rowH / 2) + 4;
+                    ctx.font = 'bold 12px Arial, sans-serif';
+                    ctx.fillStyle = '#475569';
+                    ctx.fillText((i + 1) + '.', 36, textY);
+
+                    ctx.font = '12px Arial, sans-serif';
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillText(truncText(ctx, it.userItem, 190), 56, textY);
+                    ctx.fillStyle = '#e67700';
+                    ctx.font = 'bold 12px Arial, sans-serif';
+                    ctx.fillText(it.userQty.toString(), 268, textY);
+
+                    if (hasMatch && it.prodName) {
+                        ctx.font = '12px Arial, sans-serif';
+                        ctx.fillStyle = '#2b8a3e';
+                        ctx.fillText(truncText(ctx, it.prodName, 220), 320, textY);
+                        ctx.fillStyle = '#1e293b';
+                        ctx.fillText(it.matchedQty.toString(), 568, textY);
+                        ctx.fillText('Rs.' + it.unitPrice.toLocaleString('en-IN'), 630, textY);
+                        var lt = it.matchedQty * it.unitPrice;
+                        grandTotal += lt;
+                        ctx.font = 'bold 12px Arial, sans-serif';
+                        ctx.fillText('Rs.' + lt.toLocaleString('en-IN'), 710, textY);
+                    }
+                    y += rowH;
+                });
+
+                y += 16;
+
+                if (quotedPrice) {
+                    ctx.fillStyle = '#f0fdf4';
+                    ctx.fillRect(420, y, canvas.width - 444, 80);
+                    ctx.strokeStyle = '#bbf7d0';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(420, y, canvas.width - 444, 80);
+
+                    ctx.font = '12px Arial, sans-serif';
+                    ctx.fillStyle = '#64748b';
+                    ctx.textAlign = 'left';
+                    ctx.fillText('Subtotal:', 435, y + 22);
+                    ctx.textAlign = 'right';
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillText('Rs.' + parseFloat(quotedPrice).toLocaleString('en-IN'), canvas.width - 36, y + 22);
+
+                    if (discount) {
+                        ctx.textAlign = 'left';
+                        ctx.fillStyle = '#64748b';
+                        ctx.fillText('Discount:', 435, y + 42);
+                        ctx.textAlign = 'right';
+                        ctx.fillStyle = '#dc2626';
+                        ctx.fillText(discount + '%', canvas.width - 36, y + 42);
+                    }
+
+                    if (finalPrice) {
+                        ctx.beginPath();
+                        ctx.moveTo(435, y + 52);
+                        ctx.lineTo(canvas.width - 36, y + 52);
+                        ctx.strokeStyle = '#86efac';
+                        ctx.stroke();
+
+                        ctx.textAlign = 'left';
+                        ctx.font = 'bold 14px Arial, sans-serif';
+                        ctx.fillStyle = '#1e3a5f';
+                        ctx.fillText('Final Price:', 435, y + 72);
+                        ctx.textAlign = 'right';
+                        ctx.fillStyle = '#2b8a3e';
+                        ctx.font = 'bold 16px Arial, sans-serif';
+                        ctx.fillText('Rs.' + parseFloat(finalPrice).toLocaleString('en-IN'), canvas.width - 36, y + 72);
+                    }
+                    ctx.textAlign = 'left';
+                    y += 90;
+                }
+
+                if (remarks) {
+                    y += 10;
+                    ctx.font = '11px Arial, sans-serif';
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillText('Note: ' + remarks, 30, y);
+                    y += 30;
+                }
+
+                y += 10;
+                var footGrd = ctx.createLinearGradient(0, y, canvas.width, y);
+                footGrd.addColorStop(0, '#1e3a5f');
+                footGrd.addColorStop(1, '#2d5f8a');
+                ctx.fillStyle = footGrd;
+                ctx.fillRect(0, y, canvas.width, 40);
+                ctx.font = '11px Arial, sans-serif';
+                ctx.fillStyle = '#a0c4e8';
+                ctx.textAlign = 'center';
+                ctx.fillText('Stable Energy | WhatsApp: +91 70149 20144 | Thank you for your enquiry!', canvas.width / 2, y + 25);
+                ctx.textAlign = 'left';
+
+                var actualH = y + 40;
+                var finalCanvas = document.createElement('canvas');
+                finalCanvas.width = 800;
+                finalCanvas.height = actualH;
+                var fctx = finalCanvas.getContext('2d');
+                fctx.drawImage(canvas, 0, 0, 800, actualH, 0, 0, 800, actualH);
+
+                var link = document.createElement('a');
+                link.download = 'Quote_RFQ' + rfqId + '_' + name.replace(/\s+/g, '_') + '.png';
+                link.href = finalCanvas.toDataURL('image/png');
+                link.click();
+            }
+        }
+
+        function truncText(ctx, text, maxW) {
+            if (ctx.measureText(text).width <= maxW) return text;
+            while (text.length > 0 && ctx.measureText(text + '...').width > maxW) {
+                text = text.slice(0, -1);
+            }
+            return text + '...';
+        }
     </script>
 @endsection
