@@ -24,7 +24,10 @@
 }
 </style>
 
-@php $activePage = $activePage ?? 'dashboard'; @endphp
+@php
+    $activePage = $activePage ?? 'dashboard';
+    $isWhManager = \Illuminate\Support\Facades\DB::table('warehouse_managers')->where('user_id', Auth::id())->exists();
+@endphp
 
 <div class="ud-sidebar">
     <div class="ud-sidebar-card">
@@ -36,6 +39,10 @@
             </div>
         </div>
         <div class="ud-sidebar-nav">
+            @if($isWhManager)
+            <a href="{{ route('wh.manager.dashboard') }}" style="background:linear-gradient(135deg,#4A90E2,#3b7dc4);color:#fff;font-weight:700;margin-bottom:6px;"><i class="fas fa-warehouse"></i> Warehouse Panel</a>
+            <div class="divider"></div>
+            @endif
             <a href="{{ route('user.dashboard') }}" class="{{ $activePage === 'dashboard' ? 'active' : '' }}"><i class="fas fa-th-large"></i> Dashboard</a>
             @if(auth()->user()->role_id != 4)
             <a href="{{ route('user.orders') }}" class="{{ $activePage === 'orders' ? 'active' : '' }}"><i class="fas fa-shopping-bag"></i> My Orders</a>
