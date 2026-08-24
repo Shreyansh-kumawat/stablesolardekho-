@@ -45,7 +45,7 @@
                             <label class="form-label">Destination *</label>
                             <select name="to_warehouse_id" class="form-select select2" required>
                                 <option value="">Select Destination</option>
-                                <option value="main">&#127968; Main Inventory (Head Office)</option>
+                                <option value="main">Main Inventory (Head Office)</option>
                                 @if($otherWarehouses->count())
                                     <optgroup label="Warehouses">
                                         @foreach($otherWarehouses as $wh)
