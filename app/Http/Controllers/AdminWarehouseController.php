@@ -563,9 +563,38 @@ class AdminWarehouseController extends Controller
             ->limit(15)
             ->get();
 
+        $since = now()->subDays(30);
+        $activityRows = DB::table('warehouse_inventory_transactions')
+            ->selectRaw('warehouse_id, COUNT(*) as txn_count, SUM(quantity) as units_moved, MAX(created_at) as last_activity')
+            ->where('created_at', '>=', $since)
+            ->groupBy('warehouse_id')
+            ->get()
+            ->keyBy('warehouse_id');
+
+        $comparison = $warehouses->map(function ($wh) use ($activityRows) {
+            $row = $activityRows->get($wh->id);
+            $pnl = (float) $wh->total_out_value - (float) $wh->total_in_value;
+            return (object) [
+                'id' => $wh->id,
+                'name' => $wh->name,
+                'txn_count' => $row ? (int) $row->txn_count : 0,
+                'units_moved' => $row ? (int) $row->units_moved : 0,
+                'last_activity' => $row ? $row->last_activity : null,
+                'stock' => (int) $wh->total_stock,
+                'in_value' => (float) $wh->total_in_value,
+                'out_value' => (float) $wh->total_out_value,
+                'pnl' => $pnl,
+            ];
+        });
+
+        $grandPnl = $grandTotalOut - $grandTotalIn;
+        $maxTxnCount = max(1, $comparison->max('txn_count'));
+        $maxStock = max(1, $comparison->max('stock'));
+
         return view('Admin.warehouse.masterDashboard', compact(
             'warehouses', 'grandTotalStock', 'grandTotalIn', 'grandTotalOut',
-            'totalWarehouses', 'lowStockItems', 'recentTxns'
+            'totalWarehouses', 'lowStockItems', 'recentTxns',
+            'comparison', 'grandPnl', 'maxTxnCount', 'maxStock'
         ));
     }
 
@@ -658,6 +687,31 @@ class AdminWarehouseController extends Controller
             ->value('available_qty') ?? 0;
 
         return response()->json(['available_qty' => $qty]);
+    }
+
+    public function getWarehouseProducts(Request $request)
+    {
+        $rows = DB::table('warehouse_inventories as wi')
+            ->join('products as p', 'p.id', '=', 'wi.product_id')
+            ->leftJoin('product_categories as pc', 'pc.id', '=', 'p.category_id')
+            ->leftJoin('product_sub_categories as psc', 'psc.id', '=', 'p.sub_category_id')
+            ->where('wi.warehouse_id', $request->warehouse_id)
+            ->where('wi.available_qty', '>', 0)
+            ->select(
+                'p.id as product_id',
+                'p.item_name',
+                'p.item_code',
+                'p.category_id',
+                'p.sub_category_id',
+                'p.current_sale_price',
+                'pc.category_name',
+                'psc.sub_category_name',
+                'wi.available_qty'
+            )
+            ->orderBy('p.item_name')
+            ->get();
+
+        return response()->json($rows);
     }
 
     public function exportTransactions($id, Request $request): StreamedResponse

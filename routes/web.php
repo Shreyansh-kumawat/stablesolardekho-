@@ -327,6 +327,7 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::get('/warehouses/w2w-transfer', [\App\Http\Controllers\AdminWarehouseController::class, 'warehouseTransferForm'])->name('admin.warehouses.w2wTransfer');
     Route::post('/warehouses/w2w-transfer', [\App\Http\Controllers\AdminWarehouseController::class, 'storeWarehouseTransfer'])->name('admin.warehouses.storeW2wTransfer');
     Route::get('/warehouses/get-warehouse-product-qty', [\App\Http\Controllers\AdminWarehouseController::class, 'getWarehouseProductQty'])->name('admin.warehouses.getWarehouseProductQty');
+    Route::get('/warehouses/get-warehouse-products', [\App\Http\Controllers\AdminWarehouseController::class, 'getWarehouseProducts'])->name('admin.warehouses.getWarehouseProducts');
     Route::post('/warehouses', [\App\Http\Controllers\AdminWarehouseController::class, 'store'])->name('admin.warehouses.store');
     Route::get('/warehouses/{id}/edit', [\App\Http\Controllers\AdminWarehouseController::class, 'edit'])->name('admin.warehouses.edit');
     Route::put('/warehouses/{id}', [\App\Http\Controllers\AdminWarehouseController::class, 'update'])->name('admin.warehouses.update');
