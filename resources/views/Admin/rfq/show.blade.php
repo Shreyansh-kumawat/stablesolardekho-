@@ -446,7 +446,7 @@
             var remarks = document.querySelector('textarea[name="admin_remarks"]').value;
             if (remarks) msg += '\nNote: ' + remarks + '\n';
 
-            msg += '\nThank you for choosing Stable Energy!';
+            msg += '\nThank you for choosing Stable Energy!\nhttps://stablesolardekho.com\ninfo@stablesolardekho.com';
             window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
         }
 
