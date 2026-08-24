@@ -189,11 +189,12 @@
                 <p class="sec-label">Update Stock</p>
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="form-label">Current Quantity</label>
-                        <input type="number" class="form-control" id="epQuantity" name="quantity" min="0" required style="font-weight:700; font-size:1rem;">
-                        <div style="display:flex; align-items:center; gap:6px; margin-top:8px;">
+                        <label class="form-label">Current Quantity <small style="color:var(--txt2); font-weight:500;">(Main Inventory only)</small></label>
+                        <input type="hidden" id="epQuantity" name="quantity" value="0">
+                        <div style="padding:10px 14px; background:var(--light); border:1px solid var(--bdr); border-radius:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--txt);" id="epQtyDisplay">0</div>
+                        <div style="display:flex; align-items:center; gap:6px; margin-top:10px;">
                             <button type="button" class="qty-adj-btn qty-minus" onclick="adjustQty(-1)">&#8722;</button>
-                            <input type="number" min="0" class="form-control" id="epAdjustQty" placeholder="Enter qty" style="flex:1; text-align:center; font-weight:600;">
+                            <input type="number" min="0" class="form-control" id="epAdjustQty" placeholder="Enter qty to add/remove" style="flex:1; text-align:center; font-weight:600;">
                             <button type="button" class="qty-adj-btn qty-plus" onclick="adjustQty(1)">+</button>
                         </div>
                         <div id="epQtyHint" style="display:none; margin-top:6px; font-size:.78rem; font-weight:600; padding:4px 8px; border-radius:6px;"></div>
@@ -504,10 +505,13 @@ function onProductSelect() {
             document.getElementById('epPrice').textContent = p.current_sale_price ? '₹' + Number(p.current_sale_price).toLocaleString() : '-';
             document.getElementById('epUom').textContent = p.uom || '-';
 
-            const currentStock = p.inventory ? p.inventory.available_qty : (p.quantity || 0);
-            document.getElementById('epCurrentStock').textContent = currentStock;
-            document.getElementById('epQuantity').value = currentStock;
-            epOriginalQty = currentStock;
+            const mainStock = p.main_stock || 0;
+            const whStock = p.warehouse_stock || 0;
+            const totalStock = p.total_stock || 0;
+            document.getElementById('epCurrentStock').innerHTML = totalStock + ' <span style="font-size:.72rem;font-weight:500;color:var(--txt2);">(Main: ' + mainStock + ' + Warehouses: ' + whStock + ')</span>';
+            document.getElementById('epQuantity').value = mainStock;
+            document.getElementById('epQtyDisplay').textContent = mainStock;
+            epOriginalQty = mainStock;
             document.getElementById('epAdjustQty').value = '';
             document.getElementById('epQtyHint').style.display = 'none';
 
@@ -598,6 +602,7 @@ function adjustQty(dir) {
     var newVal = current + (dir * adj);
     if (newVal < 0) newVal = 0;
     document.getElementById('epQuantity').value = newVal;
+    document.getElementById('epQtyDisplay').textContent = newVal;
     document.getElementById('epAdjustQty').value = '';
     var hint = document.getElementById('epQtyHint');
     var diff = newVal - epOriginalQty;

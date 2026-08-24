@@ -267,7 +267,13 @@ class InventoryController extends Controller
     public function getProductJson($id)
     {
         $product = Product::with(['customSpecs', 'inventory'])->findOrFail($id);
-        return response()->json($product);
+        $mainQty = (int) ($product->inventory->available_qty ?? 0);
+        $whQty = (int) WarehouseInventory::where('product_id', $product->id)->sum('available_qty');
+        $data = $product->toArray();
+        $data['main_stock'] = $mainQty;
+        $data['warehouse_stock'] = $whQty;
+        $data['total_stock'] = $mainQty + $whQty;
+        return response()->json($data);
     }
 
     public function updateProduct(Request $request, $id)
