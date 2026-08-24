@@ -328,6 +328,7 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::post('/warehouses/w2w-transfer', [\App\Http\Controllers\AdminWarehouseController::class, 'storeWarehouseTransfer'])->name('admin.warehouses.storeW2wTransfer');
     Route::get('/warehouses/get-warehouse-product-qty', [\App\Http\Controllers\AdminWarehouseController::class, 'getWarehouseProductQty'])->name('admin.warehouses.getWarehouseProductQty');
     Route::get('/warehouses/get-warehouse-products', [\App\Http\Controllers\AdminWarehouseController::class, 'getWarehouseProducts'])->name('admin.warehouses.getWarehouseProducts');
+    Route::get('/warehouses/get-main-inventory-products', [\App\Http\Controllers\AdminWarehouseController::class, 'getMainInventoryProducts'])->name('admin.warehouses.getMainInventoryProducts');
     Route::post('/warehouses', [\App\Http\Controllers\AdminWarehouseController::class, 'store'])->name('admin.warehouses.store');
     Route::get('/warehouses/{id}/edit', [\App\Http\Controllers\AdminWarehouseController::class, 'edit'])->name('admin.warehouses.edit');
     Route::put('/warehouses/{id}', [\App\Http\Controllers\AdminWarehouseController::class, 'update'])->name('admin.warehouses.update');
@@ -411,6 +412,7 @@ Route::prefix('wh-manager')->middleware(['auth', WarehouseManagerMiddleware::cla
     Route::get('/transfer', [WarehouseManagerController::class, 'transferForm'])->name('wh.manager.transfer');
     Route::post('/transfer', [WarehouseManagerController::class, 'storeTransfer'])->name('wh.manager.storeTransfer');
     Route::get('/warehouse-qty', [WarehouseManagerController::class, 'getWarehouseQty'])->name('wh.manager.getWarehouseQty');
+    Route::get('/my-warehouse-products', [WarehouseManagerController::class, 'getMyWarehouseProducts'])->name('wh.manager.getMyWarehouseProducts');
     Route::get('/get-sub-categories', [\App\Http\Controllers\ProductController::class, 'getSubCategories'])->name('wh.manager.getSubCategory');
     Route::get('/get-products', [\App\Http\Controllers\ProductController::class, 'getProducts'])->name('wh.manager.getProducts');
 });

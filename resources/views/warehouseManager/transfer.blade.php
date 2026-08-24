@@ -19,6 +19,27 @@
         .select2-container { width: 100% !important; }
         .select2-container--default .select2-selection--single { height: 38px !important; border: 1px solid var(--border-color) !important; border-radius: 6px !important; padding: 0.35rem 0.75rem !important; display: flex !important; align-items: center !important; }
         .select2-container--default .select2-selection--single .select2-selection__arrow { height: 36px !important; }
+
+        .wh-prod-panel { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; margin: 8px 0 16px; overflow: hidden; }
+        .wh-prod-header { padding: 10px 14px; background: #f8fbff; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        .wh-prod-header .title { font-weight: 700; font-size: 0.85rem; color: var(--text-primary); }
+        .wh-prod-header .count { font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; background: #eef3ff; padding: 2px 8px; border-radius: 10px; }
+        .wh-prod-search { border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; min-width: 200px; outline: none; }
+        .wh-prod-search:focus { border-color: var(--primary-blue); }
+        .wh-prod-scroll { max-height: 260px; overflow-y: auto; }
+        .wh-prod-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        .wh-prod-table thead th { background: #f5f7fa; padding: 8px 12px; text-align: left; font-weight: 700; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 2; }
+        .wh-prod-table tbody td { padding: 8px 12px; border-bottom: 1px solid #f1f3f5; vertical-align: middle; }
+        .wh-prod-table tbody tr:hover { background: #f8fbff; }
+        .wh-prod-table tbody tr.selected { background: #eef3ff; }
+        .wh-prod-table tbody tr.hidden { display: none; }
+        .wh-qty-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; background: #d3f9d8; color: #2b8a3e; font-weight: 700; font-size: 0.75rem; }
+        .wh-qty-badge.low { background: #fff3cd; color: #b8860b; }
+        .wh-select-btn { background: var(--primary-blue); color: #fff; border: none; padding: 4px 10px; border-radius: 5px; font-size: 0.72rem; font-weight: 600; cursor: pointer; }
+        .wh-select-btn:hover { background: #3b7dc4; }
+        .wh-select-btn.picked { background: #2b8a3e; }
+        .wh-prod-empty { padding: 24px; text-align: center; color: var(--text-secondary); font-size: 0.85rem; }
+        .wh-prod-loading { padding: 20px; text-align: center; color: var(--text-secondary); font-size: 0.85rem; }
     </style>
 @endsection
 
@@ -54,6 +75,34 @@
                                     </optgroup>
                                 @endif
                             </select>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="wh-prod-panel">
+                                <div class="wh-prod-header">
+                                    <div style="display:flex; align-items:center; gap:10px;">
+                                        <span class="title"><i class="fas fa-boxes me-1" style="color:var(--primary-blue);"></i> Products in {{ $warehouse->name }}</span>
+                                        <span class="count" id="whProdCount">0 items</span>
+                                    </div>
+                                    <input type="text" class="wh-prod-search" id="whProdSearch" placeholder="Search by name, code, category...">
+                                </div>
+                                <div class="wh-prod-scroll">
+                                    <table class="wh-prod-table" id="whProdTable">
+                                        <thead>
+                                            <tr>
+                                                <th style="width:32%;">Product</th>
+                                                <th style="width:20%;">Category</th>
+                                                <th style="width:20%;">Sub Category</th>
+                                                <th style="width:14%;">Available Qty</th>
+                                                <th style="width:14%; text-align:right;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="whProdTbody"></tbody>
+                                    </table>
+                                    <div id="whProdEmpty" class="wh-prod-empty" style="display:none;">No products in your warehouse.</div>
+                                    <div id="whProdLoading" class="wh-prod-loading"><i class="fas fa-spinner fa-spin me-1"></i> Loading products...</div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="col-md-6">
@@ -170,6 +219,84 @@
                 $('#available_qty_hint').text('');
                 availableQty = null;
             }
+
+            const getMyWhProductsUrl = "{{ route('wh.manager.getMyWarehouseProducts') }}";
+            loadMyWhProducts();
+
+            function loadMyWhProducts() {
+                var $body = $('#whProdTbody');
+                var $empty = $('#whProdEmpty');
+                var $loading = $('#whProdLoading');
+                var $count = $('#whProdCount');
+                $body.empty(); $empty.hide(); $loading.show(); $count.text('0 items');
+
+                $.get(getMyWhProductsUrl, function (data) {
+                    $loading.hide();
+                    var list = data || [];
+                    $count.text(list.length + ' item' + (list.length === 1 ? '' : 's'));
+                    if (list.length === 0) { $empty.show(); return; }
+
+                    var html = '';
+                    list.forEach(function (p) {
+                        var qtyCls = p.available_qty <= 5 ? 'low' : '';
+                        html += '<tr data-pid="' + p.product_id + '" data-cat="' + (p.category_id || '') + '" data-sub="' + (p.sub_category_id || '') + '" data-price="' + (p.current_sale_price || 0) + '" data-qty="' + p.available_qty + '" data-name="' + escAttr(p.item_name) + '" data-catname="' + escAttr(p.category_name || '') + '" data-subname="' + escAttr(p.sub_category_name || '') + '">'
+                            + '<td><strong>' + escHtml(p.item_name) + '</strong>' + (p.item_code ? ' <span style="color:#868e96; font-size:.72rem;">(' + escHtml(p.item_code) + ')</span>' : '') + '</td>'
+                            + '<td>' + escHtml(p.category_name || '-') + '</td>'
+                            + '<td>' + escHtml(p.sub_category_name || '-') + '</td>'
+                            + '<td><span class="wh-qty-badge ' + qtyCls + '">' + p.available_qty + '</span></td>'
+                            + '<td style="text-align:right;"><button type="button" class="wh-select-btn" onclick="pickMyProduct(this)"><i class="fas fa-check me-1"></i> Select</button></td>'
+                            + '</tr>';
+                    });
+                    $body.html(html);
+                });
+            }
+
+            $('#whProdSearch').on('input', function () {
+                var q = $(this).val().toLowerCase().trim();
+                $('#whProdTbody tr').each(function () {
+                    var text = ($(this).text() || '').toLowerCase();
+                    $(this).toggleClass('hidden', q.length > 0 && text.indexOf(q) === -1);
+                });
+            });
+
+            window.pickMyProduct = function (btn) {
+                var $tr = $(btn).closest('tr');
+                var pid = $tr.data('pid');
+                var cat = String($tr.data('cat') || '');
+                var sub = String($tr.data('sub') || '');
+                var price = $tr.data('price');
+                var qty = parseInt($tr.data('qty'), 10) || 0;
+                var name = $tr.data('name');
+
+                $('#whProdTbody tr').removeClass('selected');
+                $('#whProdTbody .wh-select-btn').removeClass('picked').html('<i class="fas fa-check me-1"></i> Select');
+                $tr.addClass('selected');
+                $(btn).addClass('picked').html('<i class="fas fa-check-circle me-1"></i> Picked');
+
+                if (cat) {
+                    if ($('#category_id option[value="' + cat + '"]').length === 0) {
+                        $('#category_id').append('<option value="' + cat + '">' + $tr.data('catname') + '</option>');
+                    }
+                    $('#category_id').val(cat).trigger('change.select2');
+                }
+
+                $('#sub_category_id').empty().append('<option value="">Select Sub Category</option>');
+                if (sub) {
+                    $('#sub_category_id').append('<option value="' + sub + '" selected>' + $tr.data('subname') + '</option>').trigger('change.select2');
+                }
+
+                $('#product_id').empty().append('<option value="">Select Product</option>')
+                    .append('<option value="' + pid + '" data-price="' + price + '" selected>' + name + '</option>')
+                    .trigger('change.select2');
+
+                $('#unit_price').val(price || '');
+                availableQty = qty;
+                $('#available_qty_hint').text('Available in your warehouse: ' + qty);
+                $('#quantity').attr('max', qty).val('').focus();
+            };
+
+            function escHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+            function escAttr(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;'); }
         });
     </script>
 @endsection

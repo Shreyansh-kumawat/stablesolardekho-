@@ -196,4 +196,31 @@ class WarehouseManagerController extends Controller
             ->where('product_id', $request->product_id)->first();
         return response()->json(['available_qty' => $inv ? $inv->available_qty : 0]);
     }
+
+    public function getMyWarehouseProducts(Request $request)
+    {
+        $whId = $this->warehouseId($request);
+        $rows = DB::table('warehouse_inventories as wi')
+            ->join('products as p', 'p.id', '=', 'wi.product_id')
+            ->leftJoin('product_categories as pc', 'pc.id', '=', 'p.category_id')
+            ->leftJoin('product_sub_categories as psc', 'psc.id', '=', 'p.sub_category_id')
+            ->where('wi.warehouse_id', $whId)
+            ->where('wi.available_qty', '>', 0)
+            ->select(
+                'p.id as product_id',
+                'p.item_name',
+                'p.item_code',
+                'p.category_id',
+                'p.sub_category_id',
+                'p.current_sale_price',
+                'p.uom',
+                'pc.category_name',
+                'psc.sub_category_name',
+                'wi.available_qty'
+            )
+            ->orderBy('p.item_name')
+            ->get();
+
+        return response()->json($rows);
+    }
 }
