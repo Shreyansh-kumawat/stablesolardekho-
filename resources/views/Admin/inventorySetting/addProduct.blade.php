@@ -28,6 +28,28 @@
     .custom-spec-row { display: flex; gap: .5rem; align-items: center; margin-bottom: .5rem; }
     .custom-spec-row input { flex: 1; }
     .custom-spec-row button { flex-shrink: 0; background: none; border: none; color: #e74c3c; cursor: pointer; padding: .25rem; }
+    .dest-select { position: relative; }
+    .dest-select .dest-input { border-radius: 8px; border: 1px solid var(--bdr); padding: .55rem .85rem; font-size: .88rem; font-weight: 600; cursor: pointer; background: #fff; width: 100%; display: flex; align-items: center; justify-content: space-between; transition: border-color .15s; }
+    .dest-select .dest-input:hover, .dest-select .dest-input.open { border-color: var(--blue); }
+    .dest-select .dest-input .dest-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: .85rem; margin-right: 8px; flex-shrink: 0; }
+    .dest-select .dest-input .dest-icon.main { background: #d1fae5; color: #059669; }
+    .dest-select .dest-input .dest-icon.wh { background: #eef3ff; color: var(--blue); }
+    .dest-select .dest-input .dest-label { flex: 1; text-align: left; }
+    .dest-select .dest-input .dest-arrow { color: var(--txt2); font-size: .7rem; margin-left: 8px; transition: transform .15s; }
+    .dest-select .dest-input.open .dest-arrow { transform: rotate(180deg); }
+    .dest-panel { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid var(--bdr); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.12); z-index: 200; overflow: hidden; }
+    .dest-panel.open { display: block; }
+    .dest-panel .dest-search { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
+    .dest-panel .dest-search input { width: 100%; border: 1px solid var(--bdr); border-radius: 6px; padding: 7px 10px; font-size: .84rem; outline: none; }
+    .dest-panel .dest-search input:focus { border-color: var(--blue); }
+    .dest-panel .dest-list { max-height: 220px; overflow-y: auto; }
+    .dest-panel .dest-option { padding: 9px 14px; cursor: pointer; font-size: .86rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f8f8f8; transition: background .1s; }
+    .dest-panel .dest-option:hover { background: #f0f5ff; }
+    .dest-panel .dest-option.selected { background: #eef3ff; font-weight: 600; }
+    .dest-panel .dest-option .d-icon { width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: .8rem; flex-shrink: 0; }
+    .dest-panel .dest-option .d-icon.main { background: #d1fae5; color: #059669; }
+    .dest-panel .dest-option .d-icon.wh { background: #eef3ff; color: var(--blue); }
+    .dest-panel .dest-option.hidden { display: none; }
     .preview-strip { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .5rem; }
     .preview-strip img { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid var(--bdr); }
     .mode-toggle { display: flex; gap: 0; border: 1px solid var(--bdr); border-radius: 8px; overflow: hidden; }
@@ -170,7 +192,7 @@
                         <label class="form-label">Current Quantity</label>
                         <input type="number" class="form-control" id="epQuantity" name="quantity" min="0" required style="font-weight:700; font-size:1rem;">
                         <div style="display:flex; align-items:center; gap:6px; margin-top:8px;">
-                            <button type="button" class="qty-adj-btn qty-minus" onclick="adjustQty(-1)">−</button>
+                            <button type="button" class="qty-adj-btn qty-minus" onclick="adjustQty(-1)">&#8722;</button>
                             <input type="number" min="0" class="form-control" id="epAdjustQty" placeholder="Enter qty" style="flex:1; text-align:center; font-weight:600;">
                             <button type="button" class="qty-adj-btn qty-plus" onclick="adjustQty(1)">+</button>
                         </div>
@@ -191,6 +213,32 @@
                     <div class="col-md-4">
                         <label class="form-label">Invoice Date</label>
                         <input type="date" class="form-control" name="invoice_date">
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Destination <span class="req">*</span></label>
+                        <input type="hidden" name="destination_warehouse_id" id="existDestWarehouseId" value="">
+                        <div class="dest-select" id="existDestSelect">
+                            <div class="dest-input" id="existDestBtn" onclick="toggleDest('exist')">
+                                <span class="dest-icon main">&#9679;</span>
+                                <span class="dest-label" id="existDestLabel">Main Inventory</span>
+                                <span class="dest-arrow">&#9660;</span>
+                            </div>
+                            <div class="dest-panel" id="existDestPanel">
+                                <div class="dest-search">
+                                    <input type="text" placeholder="Search destination..." id="existDestSearch" oninput="filterDest('exist', this.value)" autocomplete="off">
+                                </div>
+                                <div class="dest-list" id="existDestList">
+                                    <div class="dest-option selected" data-value="" data-text="Main Inventory" onclick="pickDest('exist', '', 'Main Inventory', 'main')">
+                                        <span class="d-icon main">&#9679;</span> Main Inventory
+                                    </div>
+                                    @foreach($warehouses as $wh)
+                                    <div class="dest-option" data-value="{{ $wh->id }}" data-text="{{ $wh->name }}" onclick="pickDest('exist', '{{ $wh->id }}', '{{ addslashes($wh->name) }}', 'wh')">
+                                        <span class="d-icon wh">&#9632;</span> {{ $wh->name }}
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -301,6 +349,32 @@
                     <div class="col-md-4">
                         <label class="form-label">Invoice Date</label>
                         <input type="date" class="form-control" name="invoice_date" value="{{ old('invoice_date') }}">
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Destination <span class="req">*</span></label>
+                        <input type="hidden" name="destination_warehouse_id" id="newDestWarehouseId" value="">
+                        <div class="dest-select" id="newDestSelect">
+                            <div class="dest-input" id="newDestBtn" onclick="toggleDest('new')">
+                                <span class="dest-icon main">&#9679;</span>
+                                <span class="dest-label" id="newDestLabel">Main Inventory</span>
+                                <span class="dest-arrow">&#9660;</span>
+                            </div>
+                            <div class="dest-panel" id="newDestPanel">
+                                <div class="dest-search">
+                                    <input type="text" placeholder="Search destination..." id="newDestSearch" oninput="filterDest('new', this.value)" autocomplete="off">
+                                </div>
+                                <div class="dest-list" id="newDestList">
+                                    <div class="dest-option selected" data-value="" data-text="Main Inventory" onclick="pickDest('new', '', 'Main Inventory', 'main')">
+                                        <span class="d-icon main">&#9679;</span> Main Inventory
+                                    </div>
+                                    @foreach($warehouses as $wh)
+                                    <div class="dest-option" data-value="{{ $wh->id }}" data-text="{{ $wh->name }}" onclick="pickDest('new', '{{ $wh->id }}', '{{ addslashes($wh->name) }}', 'wh')">
+                                        <span class="d-icon wh">&#9632;</span> {{ $wh->name }}
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -563,6 +637,48 @@ document.addEventListener('click', function(e) {
     document.querySelectorAll('.search-dropdown.open').forEach(function(dd) {
         if (!dd.parentElement.contains(e.target)) dd.classList.remove('open');
     });
+    ['new', 'exist'].forEach(function(prefix) {
+        var panel = document.getElementById(prefix + 'DestPanel');
+        var select = document.getElementById(prefix + 'DestSelect');
+        if (panel && select && !select.contains(e.target)) {
+            panel.classList.remove('open');
+            document.getElementById(prefix + 'DestBtn').classList.remove('open');
+        }
+    });
 });
+
+function toggleDest(prefix) {
+    var panel = document.getElementById(prefix + 'DestPanel');
+    var btn = document.getElementById(prefix + 'DestBtn');
+    var isOpen = panel.classList.contains('open');
+    panel.classList.toggle('open', !isOpen);
+    btn.classList.toggle('open', !isOpen);
+    if (!isOpen) {
+        var search = document.getElementById(prefix + 'DestSearch');
+        search.value = '';
+        filterDest(prefix, '');
+        setTimeout(function() { search.focus(); }, 50);
+    }
+}
+
+function filterDest(prefix, query) {
+    var q = query.toLowerCase();
+    document.getElementById(prefix + 'DestList').querySelectorAll('.dest-option').forEach(function(opt) {
+        var text = opt.getAttribute('data-text').toLowerCase();
+        opt.classList.toggle('hidden', q.length > 0 && text.indexOf(q) === -1);
+    });
+}
+
+function pickDest(prefix, value, text, type) {
+    document.getElementById(prefix + 'DestWarehouseId').value = value;
+    document.getElementById(prefix + 'DestLabel').textContent = text;
+    var icon = document.getElementById(prefix + 'DestBtn').querySelector('.dest-icon');
+    icon.className = 'dest-icon ' + type;
+    document.getElementById(prefix + 'DestPanel').classList.remove('open');
+    document.getElementById(prefix + 'DestBtn').classList.remove('open');
+    document.getElementById(prefix + 'DestList').querySelectorAll('.dest-option').forEach(function(opt) {
+        opt.classList.toggle('selected', opt.getAttribute('data-value') === value);
+    });
+}
 </script>
 @endsection

@@ -292,6 +292,7 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::post('/customer-orders/{id}/status', [OrderController::class, 'updateCustomerOrderStatus'])->name('updateCustomerOrderStatus');
     Route::post('/customer-orders/{id}/approve-payment', [OrderController::class, 'approvePayment'])->name('admin.order.approvePayment');
     Route::post('/customer-orders/{id}/reject-payment', [OrderController::class, 'rejectPayment'])->name('admin.order.rejectPayment');
+    Route::post('/customer-orders/{id}/fulfill', [OrderController::class, 'fulfillOrder'])->name('admin.order.fulfill');
     Route::delete('/customer-orders/{id}', [OrderController::class, 'deleteCustomerOrder'])->name('admin.order.delete');
     Route::get('/razorpay-transactions', [OrderController::class, 'razorpayTransactions'])->name('razorpayTransactions');
 

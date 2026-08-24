@@ -9,8 +9,12 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
+use App\Models\Warehouse;
+use App\Models\WarehouseInventory;
+use App\Models\WarehouseInventoryTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -406,7 +410,145 @@ class OrderController extends Controller
     {
         abort_unless(auth()->user()->hasAdminPermission('orders.manage'), 403);
         $order = CustomerOrder::with(['user', 'items.product'])->findOrFail($id);
-        return view('Admin.orders.viewCustomerOrder', compact('order'));
+        $warehouses = Warehouse::where('is_active', true)->orderBy('name')->get();
+
+        $stockInfo = [];
+        foreach ($order->items as $item) {
+            $pid = $item->product_id;
+            if (!$pid) continue;
+
+            $mainQty = (int) (ProductInventory::where('product_id', $pid)->value('available_qty') ?? 0);
+            $whStocks = WarehouseInventory::where('product_id', $pid)->get()->keyBy('warehouse_id');
+
+            $fulfilledMain = (int) ProductInventoryTransaction::where('product_id', $pid)
+                ->where('transaction_type', 'OUT')
+                ->where('remarks', 'like', '%Customer Order #' . ($order->order_number ?? $order->id) . '%')
+                ->where('remarks', 'like', '%[from Main Inventory]%')
+                ->sum('quantity');
+
+            $fulfilledWh = [];
+            foreach ($warehouses as $wh) {
+                $fulfilledWh[$wh->id] = (int) WarehouseInventoryTransaction::where('product_id', $pid)
+                    ->where('warehouse_id', $wh->id)
+                    ->where('transaction_type', 'OUT')
+                    ->where('remarks', 'like', '%Customer Order #' . ($order->order_number ?? $order->id) . '%')
+                    ->sum('quantity');
+            }
+
+            $totalFulfilled = $fulfilledMain + array_sum($fulfilledWh);
+
+            $stockInfo[$item->id] = [
+                'main' => $mainQty,
+                'warehouses' => $whStocks,
+                'fulfilled_main' => $fulfilledMain,
+                'fulfilled_wh' => $fulfilledWh,
+                'total_fulfilled' => $totalFulfilled,
+                'remaining' => max(0, $item->quantity - $totalFulfilled),
+            ];
+        }
+
+        return view('Admin.orders.viewCustomerOrder', compact('order', 'warehouses', 'stockInfo'));
+    }
+
+    public function fulfillOrder(Request $request, $id)
+    {
+        abort_unless(auth()->user()->hasAdminPermission('orders.manage'), 403);
+        $order = CustomerOrder::with('items.product')->findOrFail($id);
+        $itemId = (int) $request->item_id;
+        $item = $order->items()->where('id', $itemId)->firstOrFail();
+
+        $sources = $request->input('sources', []);
+        $sources = array_values(array_filter($sources, function ($s) {
+            return isset($s['source']) && $s['source'] !== '' && (int)($s['qty'] ?? 0) > 0;
+        }));
+
+        if (empty($sources)) {
+            return redirect()->back()->with('error', 'Please add at least one source with a quantity.');
+        }
+
+        $totalAlloc = array_sum(array_map(fn($s) => (int) $s['qty'], $sources));
+
+        $fulfilledMain = (int) ProductInventoryTransaction::where('product_id', $item->product_id)
+            ->where('transaction_type', 'OUT')
+            ->where('remarks', 'like', '%Customer Order #' . ($order->order_number ?? $order->id) . '%')
+            ->where('remarks', 'like', '%[from Main Inventory]%')
+            ->sum('quantity');
+        $fulfilledWhTotal = (int) WarehouseInventoryTransaction::where('product_id', $item->product_id)
+            ->where('transaction_type', 'OUT')
+            ->where('remarks', 'like', '%Customer Order #' . ($order->order_number ?? $order->id) . '%')
+            ->sum('quantity');
+        $alreadyFulfilled = $fulfilledMain + $fulfilledWhTotal;
+        $remaining = $item->quantity - $alreadyFulfilled;
+
+        if ($totalAlloc > $remaining) {
+            return redirect()->back()->with('error', 'Allocated quantity (' . $totalAlloc . ') exceeds remaining (' . $remaining . ').');
+        }
+
+        try {
+            DB::beginTransaction();
+            $orderRef = $order->order_number ?? $order->id;
+            $salePrice = $item->price ?? ($item->product->current_sale_price ?? 0);
+
+            foreach ($sources as $s) {
+                $src = $s['source'];
+                $qty = (int) $s['qty'];
+
+                if ($src === 'main') {
+                    $inv = ProductInventory::where('product_id', $item->product_id)->first();
+                    $available = $inv ? $inv->available_qty : 0;
+                    if ($qty > $available) {
+                        throw new \Exception('Main Inventory has only ' . $available . ' available.');
+                    }
+                    if ($inv) {
+                        $inv->available_qty = $inv->available_qty - $qty;
+                        $inv->save();
+                    }
+                    Product::where('id', $item->product_id)->update(['quantity' => $inv ? $inv->available_qty : 0]);
+
+                    ProductInventoryTransaction::create([
+                        'product_id' => $item->product_id,
+                        'transaction_type' => 'OUT',
+                        'quantity' => $qty,
+                        'unit_price' => $salePrice,
+                        'performed_by' => Auth::id(),
+                        'txn_id' => $this->getTxnId(),
+                        'remarks' => 'Customer Order #' . $orderRef . ' fulfilled [from Main Inventory]',
+                    ]);
+                } else {
+                    $whId = (int) str_replace('wh:', '', $src);
+                    $whInv = WarehouseInventory::where('warehouse_id', $whId)->where('product_id', $item->product_id)->first();
+                    $available = $whInv ? $whInv->available_qty : 0;
+                    if ($qty > $available) {
+                        $whName = Warehouse::where('id', $whId)->value('name') ?? ('Warehouse ' . $whId);
+                        throw new \Exception($whName . ' has only ' . $available . ' available.');
+                    }
+                    $whInv->decrement('available_qty', $qty);
+
+                    $whName = Warehouse::where('id', $whId)->value('name') ?? ('Warehouse ' . $whId);
+                    WarehouseInventoryTransaction::create([
+                        'warehouse_id' => $whId,
+                        'product_id' => $item->product_id,
+                        'transaction_type' => 'OUT',
+                        'quantity' => $qty,
+                        'unit_price' => $salePrice,
+                        'performed_by' => Auth::id(),
+                        'txn_id' => $this->getTxnId(),
+                        'remarks' => 'Customer Order #' . $orderRef . ' fulfilled [from ' . $whName . ']',
+                    ]);
+                }
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Stock deducted successfully from selected sources for ' . $item->product_name . '.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    private function getTxnId()
+    {
+        return 'INV' . date('Ymd') . strtoupper(substr(uniqid(), -4));
     }
 
     public function updateCustomerOrderStatus(Request $request, $id)
@@ -436,40 +578,12 @@ class OrderController extends Controller
 
     public function approvePayment($id)
     {
-        $order = CustomerOrder::with('items')->findOrFail($id);
+        $order = CustomerOrder::findOrFail($id);
         $order->update([
             'payment_status' => 'paid',
             'status' => 'confirmed',
         ]);
-
-        foreach ($order->items as $item) {
-            $product = Product::find($item->product_id);
-            if (!$product) continue;
-
-            $product->quantity = max(0, $product->quantity - $item->quantity);
-            $product->save();
-
-            $inventory = ProductInventory::where('product_id', $item->product_id)->first();
-            if ($inventory) {
-                $inventory->available_qty = max(0, $inventory->available_qty - $item->quantity);
-                $inventory->save();
-            }
-
-            $salePrice = $item->price ?? $product->current_sale_price ?? 0;
-
-            $txnId = 'INV' . date('Ymd') . strtoupper(substr(uniqid(), -4));
-            ProductInventoryTransaction::create([
-                'product_id' => $item->product_id,
-                'transaction_type' => 'OUT',
-                'quantity' => $item->quantity,
-                'unit_price' => $salePrice,
-                'performed_by' => Auth::id(),
-                'txn_id' => $txnId,
-                'remarks' => 'Customer Order #' . ($order->order_number ?? $order->id) . ' approved',
-            ]);
-        }
-
-        return redirect()->back()->with('success', 'Payment approved and order confirmed.');
+        return redirect()->back()->with('success', 'Payment approved. Please allocate stock sources to fulfill the order.');
     }
 
     public function rejectPayment($id)

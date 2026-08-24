@@ -256,11 +256,12 @@ class InventoryController extends Controller
         $categories = ProductCategory::with('subCategories')->get();
         $suppliers = ChannelPartner::where('cp_role', '1')->get();
         $products = Product::with('category')->orderBy('item_name')->get();
+        $warehouses = Warehouse::where('is_active', true)->orderBy('name')->get();
         $editProduct = null;
         if ($id) {
             $editProduct = Product::with(['customSpecs', 'inventory'])->findOrFail($id);
         }
-        return view('Admin.inventorySetting.addProduct', compact('categories', 'suppliers', 'products', 'editProduct'));
+        return view('Admin.inventorySetting.addProduct', compact('categories', 'suppliers', 'products', 'warehouses', 'editProduct'));
     }
 
     public function getProductJson($id)
@@ -332,13 +333,62 @@ class InventoryController extends Controller
             }
 
             $qty = (int) ($request->quantity ?? 0);
+            $warehouseId = $request->destination_warehouse_id;
             $inventory = ProductInventory::firstOrCreate(
                 ['product_id' => $product->id],
                 ['available_qty' => 0]
             );
             $oldQty = $inventory->available_qty;
 
-            if ($qty !== $oldQty) {
+            if ($warehouseId) {
+                $addQty = $qty - $oldQty;
+                if ($addQty > 0) {
+                    $txn_id = $this->getTxnId();
+
+                    ProductInventoryTransaction::create([
+                        'product_id' => $product->id,
+                        'transaction_type' => 'IN',
+                        'quantity' => $addQty,
+                        'supplier_name' => $request->supplier_name ?: null,
+                        'unit_price' => $request->unit_price ?: null,
+                        'invoice_number' => $request->invoice_number ?: null,
+                        'invoice_date' => $request->invoice_date ?: null,
+                        'performed_by' => Auth::id(),
+                        'txn_id' => $txn_id,
+                        'remarks' => 'Stock received',
+                    ]);
+
+                    $warehouseName = Warehouse::where('id', $warehouseId)->value('name');
+                    ProductInventoryTransaction::create([
+                        'product_id' => $product->id,
+                        'transaction_type' => 'OUT',
+                        'quantity' => $addQty,
+                        'performed_by' => Auth::id(),
+                        'txn_id' => $txn_id,
+                        'remarks' => 'Transferred to warehouse: ' . $warehouseName,
+                    ]);
+
+                    $warehouseInv = WarehouseInventory::firstOrCreate(
+                        ['warehouse_id' => $warehouseId, 'product_id' => $product->id],
+                        ['available_qty' => 0]
+                    );
+                    $warehouseInv->increment('available_qty', $addQty);
+
+                    WarehouseInventoryTransaction::create([
+                        'warehouse_id' => $warehouseId,
+                        'product_id' => $product->id,
+                        'transaction_type' => 'IN',
+                        'quantity' => $addQty,
+                        'transfer_type' => 'direct_purchase',
+                        'unit_price' => $request->unit_price ?: null,
+                        'invoice_number' => $request->invoice_number ?: null,
+                        'invoice_date' => $request->invoice_date ?: null,
+                        'performed_by' => Auth::id(),
+                        'txn_id' => $txn_id,
+                        'remarks' => 'Stock received directly at warehouse',
+                    ]);
+                }
+            } else if ($qty !== $oldQty) {
                 $diff = $qty - $oldQty;
                 $inventory->update(['available_qty' => $qty]);
                 $product->update(['quantity' => $qty]);
@@ -353,7 +403,7 @@ class InventoryController extends Controller
                     'invoice_date' => $request->invoice_date ?: null,
                     'performed_by' => Auth::id(),
                     'txn_id' => $this->getTxnId(),
-                    'remarks' => 'Product updated: stock ' . $oldQty . ' → ' . $qty,
+                    'remarks' => 'Product updated: stock ' . $oldQty . ' > ' . $qty,
                 ]);
             }
 
@@ -366,6 +416,8 @@ class InventoryController extends Controller
     public function storeProduct(Request $request, InventoryService $inventoryService)
     {
         try {
+            DB::beginTransaction();
+
             $product = new Product();
             $product->category_id = $request->category_id;
             $product->sub_category_id = $request->sub_category_id ?: null;
@@ -418,28 +470,83 @@ class InventoryController extends Controller
             }
 
             $qty = (int) ($request->quantity ?? 0);
+            $warehouseId = $request->destination_warehouse_id;
+
             if ($qty > 0) {
                 $txn_id = $this->getTxnId();
-                ProductInventory::create([
-                    'product_id' => $product->id,
-                    'available_qty' => $qty,
-                ]);
-                ProductInventoryTransaction::create([
-                    'product_id' => $product->id,
-                    'transaction_type' => 'IN',
-                    'quantity' => $qty,
-                    'supplier_name' => $request->supplier_name ?: null,
-                    'unit_price' => $request->unit_price ?: null,
-                    'invoice_number' => $request->invoice_number ?: null,
-                    'invoice_date' => $request->invoice_date ?: null,
-                    'performed_by' => Auth::id(),
-                    'txn_id' => $txn_id,
-                    'remarks' => 'Product added to inventory',
-                ]);
+
+                if ($warehouseId) {
+                    ProductInventory::firstOrCreate(
+                        ['product_id' => $product->id],
+                        ['available_qty' => 0]
+                    );
+
+                    ProductInventoryTransaction::create([
+                        'product_id' => $product->id,
+                        'transaction_type' => 'IN',
+                        'quantity' => $qty,
+                        'supplier_name' => $request->supplier_name ?: null,
+                        'unit_price' => $request->unit_price ?: null,
+                        'invoice_number' => $request->invoice_number ?: null,
+                        'invoice_date' => $request->invoice_date ?: null,
+                        'performed_by' => Auth::id(),
+                        'txn_id' => $txn_id,
+                        'remarks' => 'Stock received',
+                    ]);
+
+                    $warehouseName = Warehouse::where('id', $warehouseId)->value('name');
+                    ProductInventoryTransaction::create([
+                        'product_id' => $product->id,
+                        'transaction_type' => 'OUT',
+                        'quantity' => $qty,
+                        'performed_by' => Auth::id(),
+                        'txn_id' => $txn_id,
+                        'remarks' => 'Transferred to warehouse: ' . $warehouseName,
+                    ]);
+
+                    $warehouseInv = WarehouseInventory::firstOrCreate(
+                        ['warehouse_id' => $warehouseId, 'product_id' => $product->id],
+                        ['available_qty' => 0]
+                    );
+                    $warehouseInv->increment('available_qty', $qty);
+
+                    WarehouseInventoryTransaction::create([
+                        'warehouse_id' => $warehouseId,
+                        'product_id' => $product->id,
+                        'transaction_type' => 'IN',
+                        'quantity' => $qty,
+                        'transfer_type' => 'direct_purchase',
+                        'unit_price' => $request->unit_price ?: null,
+                        'invoice_number' => $request->invoice_number ?: null,
+                        'invoice_date' => $request->invoice_date ?: null,
+                        'performed_by' => Auth::id(),
+                        'txn_id' => $txn_id,
+                        'remarks' => 'Stock received directly at warehouse',
+                    ]);
+                } else {
+                    ProductInventory::create([
+                        'product_id' => $product->id,
+                        'available_qty' => $qty,
+                    ]);
+                    ProductInventoryTransaction::create([
+                        'product_id' => $product->id,
+                        'transaction_type' => 'IN',
+                        'quantity' => $qty,
+                        'supplier_name' => $request->supplier_name ?: null,
+                        'unit_price' => $request->unit_price ?: null,
+                        'invoice_number' => $request->invoice_number ?: null,
+                        'invoice_date' => $request->invoice_date ?: null,
+                        'performed_by' => Auth::id(),
+                        'txn_id' => $txn_id,
+                        'remarks' => 'Product added to inventory',
+                    ]);
+                }
             }
 
+            DB::commit();
             return redirect()->route('inventoryEntries')->with('success', $product->item_name . ' has been added successfully.');
         } catch (\Exception $e) {
+            DB::rollBack();
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
