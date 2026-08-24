@@ -29,6 +29,24 @@
         .form-control:focus, .form-select:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 2px rgba(74,144,226,0.15); }
         .wa-btn { display: inline-flex; align-items: center; gap: 6px; padding: 0.5rem 1rem; border-radius: 6px; background: #25d366; color: #fff; font-size: 0.85rem; font-weight: 600; text-decoration: none; border: none; }
         .wa-btn:hover { background: #1ebe5a; color: #fff; }
+
+        .match-card { border: 1px solid var(--border-color); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; background: #fbfcfd; }
+        .match-card.matched { background: #f0fdf4; border-color: #bbf7d0; }
+        .match-line { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #d1d5db; }
+        .match-line .num { width: 26px; height: 26px; border-radius: 50%; background: var(--primary-blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; flex-shrink: 0; }
+        .match-line .req { flex: 1; }
+        .match-line .req .name { font-weight: 700; color: var(--text-primary); font-size: 0.9rem; }
+        .match-line .req .qty { font-size: 0.75rem; color: var(--text-secondary); margin-top: 1px; }
+        .match-line .req .qty strong { color: #e67700; }
+        .match-fields { display: grid; grid-template-columns: 1fr 1fr 1fr 100px; gap: 8px; }
+        .match-fields .stock-hint { font-size: 0.72rem; color: var(--text-secondary); margin-top: 3px; }
+        .match-fields .stock-hint.ok { color: #2b8a3e; font-weight: 600; }
+        .match-fields .stock-hint.low { color: #b8860b; font-weight: 600; }
+        .match-fields .stock-hint.zero { color: #c92a2a; font-weight: 600; }
+        .match-fields label { font-size: 0.68rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 3px; display: block; }
+        .match-fields select, .match-fields input { font-size: 0.82rem; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border-color); width: 100%; }
+        .match-fields select:focus, .match-fields input:focus { border-color: var(--primary-blue); outline: none; }
+        @media (max-width: 900px) { .match-fields { grid-template-columns: 1fr 1fr; } }
     </style>
 @endsection
 
@@ -133,10 +151,14 @@
                     <div class="card-body">
                         <h5 class="card-title"><i class="fas fa-cog me-1"></i> Process This Request</h5>
 
-                        <form action="{{ route('admin.rfq.process', $rfq->id) }}" method="POST">
+                        @if(session('error'))
+                            <div class="alert alert-danger" style="font-size:.85rem;">{{ session('error') }}</div>
+                        @endif
+
+                        <form action="{{ route('admin.rfq.process', $rfq->id) }}" method="POST" id="rfqProcessForm">
                             @csrf
 
-                            <div class="row g-3">
+                            <div class="row g-3 mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Status</label>
                                     <select name="status" class="form-select" required>
@@ -147,34 +169,72 @@
                                         <option value="closed" {{ $rfq->status == 'closed' ? 'selected' : '' }}>Closed</option>
                                     </select>
                                 </div>
+                            </div>
 
-                                <div class="col-md-6">
-                                    <label class="form-label">Match Category</label>
-                                    <select id="categorySelect" class="form-select">
-                                        <option value="">Select Category</option>
-                                        @foreach($categories as $cat)
-                                        <option value="{{ $cat->id }}">{{ $cat->category_name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                            <div style="margin-top:6px;">
+                                <label class="form-label" style="display:block; margin-bottom:10px;"><i class="fas fa-link me-1"></i> Match Each Requested Item to a Product</label>
 
-                                <div class="col-md-6">
-                                    <label class="form-label">Sub Category</label>
-                                    <select id="subCategorySelect" class="form-select">
-                                        <option value="">Select Sub Category</option>
-                                    </select>
-                                </div>
+                                @php $savedMatches = is_array($rfq->matches) ? $rfq->matches : []; @endphp
 
-                                <div class="col-md-6">
-                                    <label class="form-label">Match Product</label>
-                                    <select name="product_id" id="productSelect" class="form-select">
-                                        <option value="">Select Product</option>
-                                        @if($rfq->product)
-                                        <option value="{{ $rfq->product_id }}" selected>{{ $rfq->product->item_name }}</option>
-                                        @endif
-                                    </select>
-                                </div>
+                                @foreach($userItems as $idx => $item)
+                                    @php
+                                        $saved = $savedMatches[$idx] ?? null;
+                                        $isMatched = $saved && !empty($saved['product_id']);
+                                    @endphp
+                                    <div class="match-card {{ $isMatched ? 'matched' : '' }}" data-idx="{{ $idx }}">
+                                        <div class="match-line">
+                                            <div class="num">{{ $idx + 1 }}</div>
+                                            <div class="req">
+                                                <div class="name">{{ $item['name'] }}</div>
+                                                @if($item['qty'])
+                                                    <div class="qty">User asked for: <strong>{{ $item['qty'] }} units</strong></div>
+                                                @endif
+                                            </div>
+                                        </div>
 
+                                        <input type="hidden" name="matches[{{ $idx }}][user_item]" value="{{ $item['name'] }}">
+                                        <input type="hidden" name="matches[{{ $idx }}][user_qty]" value="{{ $item['qty'] ?? '' }}">
+
+                                        <div class="match-fields">
+                                            <div>
+                                                <label>Category</label>
+                                                <select class="cat-select" data-idx="{{ $idx }}">
+                                                    <option value="">Select</option>
+                                                    @foreach($categories as $cat)
+                                                        <option value="{{ $cat->id }}">{{ $cat->category_name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label>Sub Category</label>
+                                                <select class="sub-select" data-idx="{{ $idx }}">
+                                                    <option value="">Select</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label>Product</label>
+                                                <select name="matches[{{ $idx }}][product_id]" class="prod-select" data-idx="{{ $idx }}">
+                                                    <option value="">Select</option>
+                                                    @if($isMatched)
+                                                        @php $sp = \App\Models\Product::find($saved['product_id']); @endphp
+                                                        @if($sp)
+                                                            <option value="{{ $sp->id }}" data-price="{{ $sp->current_sale_price }}" selected>{{ $sp->item_name }}</option>
+                                                        @endif
+                                                    @endif
+                                                </select>
+                                                <div class="stock-hint" id="stockHint{{ $idx }}"></div>
+                                            </div>
+                                            <div>
+                                                <label>Our Qty</label>
+                                                <input type="number" name="matches[{{ $idx }}][matched_qty]" min="0" value="{{ $saved['matched_qty'] ?? '' }}" class="qty-input" data-idx="{{ $idx }}" placeholder="0">
+                                                <input type="hidden" name="matches[{{ $idx }}][unit_price]" value="{{ $saved['unit_price'] ?? '' }}" class="unit-price-hidden" data-idx="{{ $idx }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <div class="row g-3 mt-2">
                                 <div class="col-md-4">
                                     <label class="form-label">Quoted Price (Rs)</label>
                                     <input type="number" name="quoted_price" class="form-control" step="0.01" min="0" value="{{ $rfq->quoted_price }}" id="quotedPrice">
@@ -211,45 +271,105 @@
 
 @section('js')
     <script src="/assets/js/jquery-3.6.0.min.js"></script>
-    <script src="/assets/js/select2.min.js"></script>
     <script>
         $(function () {
-            $('#categorySelect').on('change', function () {
+            var subCatUrl = "{{ route('getSubCategory') }}";
+            var productsUrl = "{{ route('getProducts') }}";
+            var stockUrl = "{{ route('admin.rfq.getProductTotalStock') }}";
+
+            $(document).on('change', '.cat-select', function () {
+                var idx = $(this).data('idx');
                 var catId = $(this).val();
-                $('#subCategorySelect').html('<option value="">Loading...</option>');
-                $('#productSelect').html('<option value="">Select Product</option>');
+                var $sub = $('.sub-select[data-idx="' + idx + '"]');
+                var $prod = $('.prod-select[data-idx="' + idx + '"]');
+                $sub.html('<option value="">Select</option>');
+                $prod.html('<option value="">Select</option>');
+                clearStock(idx);
                 if (!catId) return;
 
-                $.get('/getSubCategory', { category_id: catId }, function (data) {
-                    var opts = '<option value="">Select Sub Category</option>';
+                $.get(subCatUrl, { category_id: catId }, function (data) {
+                    var opts = '<option value="">Select</option>';
                     data.forEach(function (sc) {
-                        opts += '<option value="' + sc.id + '">' + sc.sub_category_name + '</option>';
+                        opts += '<option value="' + sc.id + '">' + escapeHtml(sc.sub_category_name) + '</option>';
                     });
-                    $('#subCategorySelect').html(opts);
+                    $sub.html(opts);
+                }).fail(function () {
+                    $sub.html('<option value="">Failed to load</option>');
                 });
             });
 
-            $('#subCategorySelect').on('change', function () {
-                var subCatId = $(this).val();
-                $('#productSelect').html('<option value="">Loading...</option>');
-                if (!subCatId) return;
+            $(document).on('change', '.sub-select', function () {
+                var idx = $(this).data('idx');
+                var subId = $(this).val();
+                var $prod = $('.prod-select[data-idx="' + idx + '"]');
+                $prod.html('<option value="">Select</option>');
+                clearStock(idx);
+                if (!subId) return;
 
-                $.get('/getProducts', { sub_category_id: subCatId }, function (data) {
-                    var opts = '<option value="">Select Product</option>';
+                $.get(productsUrl, { sub_category_id: subId }, function (data) {
+                    var opts = '<option value="">Select</option>';
                     data.forEach(function (p) {
-                        opts += '<option value="' + p.id + '" data-price="' + (p.current_sale_price || 0) + '">' + p.item_name + ' (' + p.item_code + ')</option>';
+                        opts += '<option value="' + p.id + '" data-price="' + (p.current_sale_price || 0) + '">' + escapeHtml(p.item_name) + (p.item_code ? ' (' + escapeHtml(p.item_code) + ')' : '') + '</option>';
                     });
-                    $('#productSelect').html(opts);
+                    $prod.html(opts);
+                }).fail(function () {
+                    $prod.html('<option value="">Failed to load</option>');
                 });
             });
 
-            $('#productSelect').on('change', function () {
-                var price = $(this).find(':selected').data('price');
-                if (price && price > 0) {
-                    $('#quotedPrice').val(price);
-                    calcFinal();
+            $(document).on('change', '.prod-select', function () {
+                var idx = $(this).data('idx');
+                var pid = $(this).val();
+                var $hint = $('#stockHint' + idx);
+                var $qty = $('.qty-input[data-idx="' + idx + '"]');
+                var $unitPrice = $('.unit-price-hidden[data-idx="' + idx + '"]');
+                var $card = $('.match-card[data-idx="' + idx + '"]');
+
+                if (!pid) { clearStock(idx); $card.removeClass('matched'); return; }
+                $hint.text('Checking stock...').removeClass('ok low zero');
+
+                $.get(stockUrl, { product_id: pid }, function (data) {
+                    var total = data.total_stock || 0;
+                    var main = data.main_stock || 0;
+                    var wh = data.warehouse_stock || 0;
+                    var price = data.unit_price || 0;
+                    $qty.attr('max', total);
+                    $unitPrice.val(price);
+                    var cls = total === 0 ? 'zero' : (total <= 5 ? 'low' : 'ok');
+                    $hint.attr('class', 'stock-hint ' + cls).text('Available: ' + total + ' (Main: ' + main + ', Warehouses: ' + wh + ')');
+                    $card.addClass('matched');
+                    if (total > 0 && !$qty.val()) {
+                        var userQty = parseInt($('input[name="matches[' + idx + '][user_qty]"]').val()) || 0;
+                        $qty.val(Math.min(userQty > 0 ? userQty : total, total));
+                    }
+                    if (parseInt($qty.val()) > total) $qty.val(total);
+                }).fail(function () {
+                    $hint.attr('class', 'stock-hint zero').text('Could not load stock');
+                });
+            });
+
+            $(document).on('input', '.qty-input', function () {
+                var max = parseInt($(this).attr('max')) || 0;
+                var val = parseInt($(this).val()) || 0;
+                if (max > 0 && val > max) {
+                    $(this).val(max);
+                    $(this).css('border-color', '#c92a2a');
+                    setTimeout(function () { $(this).css('border-color', ''); }.bind(this), 800);
                 }
             });
+
+            function clearStock(idx) {
+                $('#stockHint' + idx).text('').attr('class', 'stock-hint');
+                $('.qty-input[data-idx="' + idx + '"]').removeAttr('max');
+                $('.unit-price-hidden[data-idx="' + idx + '"]').val('');
+            }
+
+            @foreach($userItems as $idx => $item)
+                @php $saved = $savedMatches[$idx] ?? null; @endphp
+                @if($saved && !empty($saved['product_id']))
+                    $('.prod-select[data-idx="{{ $idx }}"]').trigger('change');
+                @endif
+            @endforeach
 
             function calcFinal() {
                 var price = parseFloat($('#quotedPrice').val()) || 0;
@@ -257,8 +377,13 @@
                 var final_p = price - (price * disc / 100);
                 $('#finalPrice').val(final_p.toFixed(2));
             }
-
             $('#quotedPrice, #discountPercent').on('input', calcFinal);
+
+            function escapeHtml(s) {
+                return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                });
+            }
         });
     </script>
 @endsection

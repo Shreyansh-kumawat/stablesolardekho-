@@ -462,9 +462,23 @@
         </div>
 
         @if(session('rfq_success'))
-        <div style="background:rgba(43,138,62,0.15);border:1px solid rgba(43,138,62,0.3);border-radius:10px;padding:14px 18px;margin-bottom:20px;color:#2b8a3e;font-size:0.88rem;font-weight:600;">
-            {{ session('rfq_success') }}
+        <div id="rfqToast" style="position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-20px);background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;padding:14px 22px;border-radius:12px;box-shadow:0 10px 30px rgba(22,163,74,0.4),0 4px 12px rgba(0,0,0,0.2);font-size:0.92rem;font-weight:600;z-index:9999;display:flex;align-items:center;gap:12px;max-width:520px;opacity:0;transition:opacity .3s ease, transform .3s ease;">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>{{ session('rfq_success') }}</span>
+            <button type="button" onclick="document.getElementById('rfqToast').remove()" style="background:transparent;border:none;color:#fff;font-size:1.3rem;cursor:pointer;padding:0 4px;line-height:1;opacity:.85;">&times;</button>
         </div>
+        <script>
+            (function(){
+                var t = document.getElementById('rfqToast');
+                if (!t) return;
+                setTimeout(function(){ t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)'; }, 50);
+                setTimeout(function(){
+                    if (!t.parentNode) return;
+                    t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(-20px)';
+                    setTimeout(function(){ if (t.parentNode) t.remove(); }, 300);
+                }, 5000);
+            })();
+        </script>
         @endif
 
         <form action="{{ route('rfq.store') }}" method="POST" class="rfq-form">

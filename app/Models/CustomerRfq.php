@@ -10,7 +10,7 @@ class CustomerRfq extends Model
         'user_id', 'name', 'phone', 'email', 'city',
         'item_description', 'quantity', 'preferred_brand', 'additional_notes',
         'status', 'product_id', 'quoted_price', 'discount_percent', 'final_price',
-        'admin_remarks', 'processed_by', 'quoted_at',
+        'admin_remarks', 'processed_by', 'quoted_at', 'matches',
     ];
 
     protected $casts = [
@@ -18,6 +18,7 @@ class CustomerRfq extends Model
         'quoted_price' => 'decimal:2',
         'discount_percent' => 'decimal:2',
         'final_price' => 'decimal:2',
+        'matches' => 'array',
     ];
 
     public function user()

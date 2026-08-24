@@ -348,8 +348,9 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     // RFQ Management
     Route::get('/rfq', [\App\Http\Controllers\CustomerRfqController::class, 'adminIndex'])->name('admin.rfq.index');
     Route::get('/rfq/export', [\App\Http\Controllers\CustomerRfqController::class, 'adminExport'])->name('admin.rfq.export');
-    Route::get('/rfq/{id}', [\App\Http\Controllers\CustomerRfqController::class, 'adminShow'])->name('admin.rfq.show');
-    Route::post('/rfq/{id}/process', [\App\Http\Controllers\CustomerRfqController::class, 'adminProcess'])->name('admin.rfq.process');
+    Route::get('/rfq/get-product-total-stock', [\App\Http\Controllers\CustomerRfqController::class, 'getProductTotalStock'])->name('admin.rfq.getProductTotalStock');
+    Route::get('/rfq/{id}', [\App\Http\Controllers\CustomerRfqController::class, 'adminShow'])->where('id', '[0-9]+')->name('admin.rfq.show');
+    Route::post('/rfq/{id}/process', [\App\Http\Controllers\CustomerRfqController::class, 'adminProcess'])->where('id', '[0-9]+')->name('admin.rfq.process');
 });
 
 Route::get('/cp-dashboard', [UserController::class, 'cpDashboard'])->middleware(['auth', ChannelPartnerMiddleware::class])->name('cpDashboard');

@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\CustomerRfq;
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\ProductInventory;
+use App\Models\WarehouseInventory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CustomerRfqController extends Controller
@@ -94,8 +97,45 @@ class CustomerRfqController extends Controller
         abort_unless(Auth::user()->hasAdminPermission('rfq.view'), 403);
         $rfq = CustomerRfq::with(['user', 'product', 'processor'])->findOrFail($id);
         $categories = ProductCategory::where('active_status', 1)->orderBy('category_name')->get();
+        $userItems = $this->parseRequestedItems($rfq->item_description, $rfq->quantity);
 
-        return view('Admin.rfq.show', compact('rfq', 'categories'));
+        return view('Admin.rfq.show', compact('rfq', 'categories', 'userItems'));
+    }
+
+    private function parseRequestedItems($description, $totalQty)
+    {
+        $items = [];
+        if (!$description) return $items;
+        $lines = preg_split('/\r?\n/', trim($description));
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '') continue;
+            if (preg_match('/^\d+[\.\)]\s*(.+?)\s*-\s*Qty:\s*(\d+)\s*$/i', $line, $m)) {
+                $items[] = ['name' => trim($m[1]), 'qty' => (int) $m[2]];
+            } else {
+                $items[] = ['name' => $line, 'qty' => null];
+            }
+        }
+        if (empty($items)) {
+            $items[] = ['name' => $description, 'qty' => (int) $totalQty];
+        }
+        return $items;
+    }
+
+    public function getProductTotalStock(Request $request)
+    {
+        abort_unless(Auth::user()->hasAdminPermission('rfq.view'), 403);
+        $pid = (int) $request->product_id;
+        $main = (int) (ProductInventory::where('product_id', $pid)->value('available_qty') ?? 0);
+        $wh = (int) WarehouseInventory::where('product_id', $pid)->sum('available_qty');
+        $product = Product::select('current_sale_price', 'item_name')->find($pid);
+        return response()->json([
+            'main_stock' => $main,
+            'warehouse_stock' => $wh,
+            'total_stock' => $main + $wh,
+            'unit_price' => $product ? (float) $product->current_sale_price : 0,
+            'item_name' => $product->item_name ?? '',
+        ]);
     }
 
     public function adminProcess(Request $request, $id)
@@ -103,22 +143,60 @@ class CustomerRfqController extends Controller
         abort_unless(Auth::user()->hasAdminPermission('rfq.manage'), 403);
         $request->validate([
             'status' => 'required|in:processing,quoted,accepted,rejected,closed',
-            'product_id' => 'nullable|exists:products,id',
             'quoted_price' => 'nullable|numeric|min:0',
             'discount_percent' => 'nullable|numeric|min:0|max:100',
             'final_price' => 'nullable|numeric|min:0',
             'admin_remarks' => 'nullable|string|max:1000',
+            'matches' => 'nullable|array',
+            'matches.*.user_item' => 'nullable|string|max:500',
+            'matches.*.user_qty' => 'nullable|integer|min:0',
+            'matches.*.product_id' => 'nullable|exists:products,id',
+            'matches.*.matched_qty' => 'nullable|integer|min:0',
+            'matches.*.unit_price' => 'nullable|numeric|min:0',
         ]);
 
         $rfq = CustomerRfq::findOrFail($id);
 
+        $matches = [];
+        if (is_array($request->matches)) {
+            foreach ($request->matches as $m) {
+                if (empty($m['product_id']) && empty($m['user_item'])) continue;
+                $matches[] = [
+                    'user_item' => $m['user_item'] ?? null,
+                    'user_qty' => isset($m['user_qty']) ? (int) $m['user_qty'] : null,
+                    'product_id' => !empty($m['product_id']) ? (int) $m['product_id'] : null,
+                    'matched_qty' => isset($m['matched_qty']) ? (int) $m['matched_qty'] : 0,
+                    'unit_price' => isset($m['unit_price']) ? (float) $m['unit_price'] : 0,
+                ];
+            }
+        }
+
+        if (!empty($matches)) {
+            foreach ($matches as $m) {
+                if (!$m['product_id'] || $m['matched_qty'] <= 0) continue;
+                $main = (int) (ProductInventory::where('product_id', $m['product_id'])->value('available_qty') ?? 0);
+                $wh = (int) WarehouseInventory::where('product_id', $m['product_id'])->sum('available_qty');
+                $available = $main + $wh;
+                if ($m['matched_qty'] > $available) {
+                    $pname = Product::where('id', $m['product_id'])->value('item_name');
+                    return redirect()->back()->withInput()->with('error', "Matched qty ({$m['matched_qty']}) exceeds available stock ({$available}) for product: {$pname}");
+                }
+            }
+        }
+
+        $firstProductId = null;
+        foreach ($matches as $m) {
+            if (!empty($m['product_id'])) { $firstProductId = $m['product_id']; break; }
+        }
+
         $data = [
             'status' => $request->status,
-            'product_id' => $request->product_id,
+            'product_id' => $firstProductId,
             'quoted_price' => $request->quoted_price,
             'discount_percent' => $request->discount_percent,
             'final_price' => $request->final_price,
             'admin_remarks' => $request->admin_remarks,
+            'matches' => !empty($matches) ? $matches : null,
             'processed_by' => Auth::id(),
         ];
 
