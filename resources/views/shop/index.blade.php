@@ -245,7 +245,18 @@
     .rfq-err { color: #f87171; font-size: 0.75rem; margin-top: 2px; }
     .rfq-submit-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--orange); color: #fff; border: none; border-radius: 8px; padding: 12px 28px; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: background 0.2s; }
     .rfq-submit-btn:hover { background: #ea580c; }
-    @media(max-width:640px) { .rfq-grid { grid-template-columns: 1fr; } .rfq-inner { padding: 20px; } }
+    .rfq-items-wrap { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+    .rfq-item-row { display: grid; grid-template-columns: 1fr 110px 38px; gap: 8px; margin-bottom: 8px; align-items: center; }
+    .rfq-item-row:last-child { margin-bottom: 0; }
+    .rfq-item-row input { background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 0.86rem; color: var(--text); outline: none; font-family: inherit; }
+    .rfq-item-row input:focus { border-color: var(--orange); }
+    .rfq-item-row input::placeholder { color: #475569; }
+    .rfq-item-remove { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; width: 38px; height: 38px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .rfq-item-remove:hover { background: rgba(239,68,68,0.25); }
+    .rfq-item-remove:disabled { opacity: 0.35; cursor: not-allowed; }
+    .rfq-add-item-btn { background: rgba(249,115,22,0.15); color: var(--orange); border: 1px dashed rgba(249,115,22,0.4); border-radius: 8px; padding: 8px 14px; font-size: 0.82rem; font-weight: 600; cursor: pointer; margin-top: 6px; transition: all 0.15s; }
+    .rfq-add-item-btn:hover { background: rgba(249,115,22,0.22); }
+    @media(max-width:640px) { .rfq-grid { grid-template-columns: 1fr; } .rfq-inner { padding: 20px; } .rfq-item-row { grid-template-columns: 1fr 90px 34px; } }
 </style>
 @endsection
 
@@ -475,23 +486,33 @@
                 </div>
                 <div class="rfq-field">
                     <label>City</label>
-                    <input type="text" name="city" value="{{ old('city') }}" placeholder="Your city">
+                    <input type="text" name="city" value="{{ Auth::check() ? (Auth::user()->city ?? old('city')) : old('city') }}" placeholder="Your city">
                 </div>
             </div>
             <div class="rfq-field" style="margin-top:12px;">
-                <label>What item do you need? <span style="color:#f87171;">*</span></label>
-                <textarea name="item_description" required rows="3" placeholder="Describe the product you're looking for (e.g., 545W Mono PERC Solar Panel, 5kW On-Grid Inverter, etc.)">{{ old('item_description') }}</textarea>
-                @error('item_description') <span class="rfq-err">{{ $message }}</span> @enderror
+                <label>What items do you need? <span style="color:#f87171;">*</span></label>
+                <div class="rfq-items-wrap" id="rfqItemsWrap">
+                    <div style="display:grid; grid-template-columns: 1fr 110px 38px; gap:8px; margin-bottom:6px; font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.4px;">
+                        <div>Product Name</div>
+                        <div>Quantity</div>
+                        <div></div>
+                    </div>
+                    <div id="rfqItemsList">
+                        <div class="rfq-item-row">
+                            <input type="text" name="items[0][name]" required placeholder="e.g., 545W Mono PERC Solar Panel">
+                            <input type="number" name="items[0][qty]" required min="1" value="1" placeholder="Qty">
+                            <button type="button" class="rfq-item-remove" onclick="removeRfqItem(this)" disabled title="Remove">&times;</button>
+                        </div>
+                    </div>
+                    <button type="button" class="rfq-add-item-btn" onclick="addRfqItem()">+ Add another product</button>
+                </div>
+                @error('items') <span class="rfq-err">{{ $message }}</span> @enderror
+                @error('items.*.name') <span class="rfq-err">{{ $message }}</span> @enderror
+                @error('items.*.qty') <span class="rfq-err">{{ $message }}</span> @enderror
             </div>
-            <div class="rfq-grid" style="margin-top:12px;">
-                <div class="rfq-field">
-                    <label>Quantity <span style="color:#f87171;">*</span></label>
-                    <input type="number" name="quantity" required min="1" value="{{ old('quantity', 1) }}" placeholder="How many?">
-                </div>
-                <div class="rfq-field">
-                    <label>Preferred Brand</label>
-                    <input type="text" name="preferred_brand" value="{{ old('preferred_brand') }}" placeholder="e.g., Tata, Adani, Havells">
-                </div>
+            <div class="rfq-field" style="margin-top:12px;">
+                <label>Preferred Brand</label>
+                <input type="text" name="preferred_brand" value="{{ old('preferred_brand') }}" placeholder="e.g., Tata, Adani, Havells (optional)">
             </div>
             <div class="rfq-field" style="margin-top:12px;">
                 <label>Additional Notes</label>
@@ -512,6 +533,32 @@
 
 @section('js')
 <script>
+var rfqItemIdx = 1;
+function addRfqItem() {
+    var list = document.getElementById('rfqItemsList');
+    var row = document.createElement('div');
+    row.className = 'rfq-item-row';
+    row.innerHTML = '<input type="text" name="items[' + rfqItemIdx + '][name]" required placeholder="e.g., 5kW On-Grid Inverter">'
+        + '<input type="number" name="items[' + rfqItemIdx + '][qty]" required min="1" value="1" placeholder="Qty">'
+        + '<button type="button" class="rfq-item-remove" onclick="removeRfqItem(this)" title="Remove">&times;</button>';
+    list.appendChild(row);
+    rfqItemIdx++;
+    updateRfqRemoveButtons();
+}
+function removeRfqItem(btn) {
+    var list = document.getElementById('rfqItemsList');
+    if (list.querySelectorAll('.rfq-item-row').length <= 1) return;
+    btn.closest('.rfq-item-row').remove();
+    updateRfqRemoveButtons();
+}
+function updateRfqRemoveButtons() {
+    var rows = document.querySelectorAll('#rfqItemsList .rfq-item-row');
+    rows.forEach(function(r) {
+        var btn = r.querySelector('.rfq-item-remove');
+        if (btn) btn.disabled = (rows.length <= 1);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     var searchInput = document.getElementById('shopSearchInput');
     var sortSelect = document.getElementById('shopSortSelect');

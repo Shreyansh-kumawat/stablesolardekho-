@@ -18,11 +18,29 @@ class CustomerRfqController extends Controller
             'phone' => 'required|string|max:15',
             'email' => 'nullable|email|max:255',
             'city' => 'nullable|string|max:100',
-            'item_description' => 'required|string|max:1000',
-            'quantity' => 'required|integer|min:1|max:99999',
+            'items' => 'required|array|min:1',
+            'items.*.name' => 'required|string|max:255',
+            'items.*.qty' => 'required|integer|min:1|max:99999',
             'preferred_brand' => 'nullable|string|max:255',
             'additional_notes' => 'nullable|string|max:1000',
         ]);
+
+        $items = array_values(array_filter($request->items, function ($it) {
+            return !empty($it['name']) && !empty($it['qty']);
+        }));
+
+        if (empty($items)) {
+            return redirect()->back()->withInput()->withErrors(['items' => 'Please add at least one product with quantity.']);
+        }
+
+        $lines = [];
+        $totalQty = 0;
+        foreach ($items as $i => $it) {
+            $qty = (int) $it['qty'];
+            $lines[] = ($i + 1) . '. ' . trim($it['name']) . ' - Qty: ' . $qty;
+            $totalQty += $qty;
+        }
+        $itemDescription = implode("\n", $lines);
 
         CustomerRfq::create([
             'user_id' => Auth::check() ? Auth::id() : null,
@@ -30,8 +48,8 @@ class CustomerRfqController extends Controller
             'phone' => $request->phone,
             'email' => $request->email,
             'city' => $request->city,
-            'item_description' => $request->item_description,
-            'quantity' => $request->quantity,
+            'item_description' => $itemDescription,
+            'quantity' => $totalQty,
             'preferred_brand' => $request->preferred_brand,
             'additional_notes' => $request->additional_notes,
         ]);
