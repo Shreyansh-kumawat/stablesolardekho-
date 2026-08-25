@@ -98,12 +98,7 @@
                                         <a href="{{ route('admin.warehouses.edit', $wh->id) }}" class="btn btn-sm btn-outline-warning" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form action="{{ route('admin.warehouses.toggleActive', $wh->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-outline-{{ $wh->is_active ? 'danger' : 'success' }}" title="{{ $wh->is_active ? 'Deactivate' : 'Activate' }}">
-                                                <i class="fas fa-{{ $wh->is_active ? 'ban' : 'check' }}"></i>
-                                            </button>
-                                        </form>
+                                        {{-- Toggle disabled: stock becomes ghost if warehouse deactivated --}}
                                         <form action="{{ route('admin.warehouses.destroy', $wh->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this warehouse?')">
                                             @csrf
                                             @method('DELETE')
