@@ -315,6 +315,10 @@
             }
         }
 
+        @media (min-width: 1024px) {
+            .mobile-menu, .mobile-backdrop { display: none !important; }
+        }
+
         @media (max-width: 1023px) {
             .desktop-menu {
                 display: none;
@@ -430,60 +434,60 @@
                     </button>
                 </div>
             </div>
-
-            <!-- Mobile Backdrop -->
-            <div id="mobile-backdrop" class="mobile-backdrop"></div>
-
-            <!-- Mobile Slide-in Sidebar -->
-            <aside id="mobile-menu" class="mobile-menu" aria-hidden="true">
-                <div class="mobile-menu-header">
-                    <span class="brand">Menu</span>
-                    <button type="button" class="mobile-close-btn" id="mobile-close-btn" aria-label="Close menu">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                    </button>
-                </div>
-
-                @auth
-                @php $cartCountM = count(session('cart', [])); @endphp
-                <div class="mobile-actions">
-                    <a href="{{ Auth::user()->role_id == 1 || Auth::user()->role_id == 2 ? route('masterAdminDashboard') : (Auth::user()->role_id == 4 ? route('cpDashboard') : route('user.dashboard')) }}" class="mobile-user">
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=4A90E2&color=fff&size=32" alt="">
-                        <span>{{ Auth::user()->name }}</span>
-                    </a>
-                    <a href="{{ route('cart.index') }}" class="mobile-action-icon" aria-label="Cart">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-                        @if($cartCountM > 0)<span class="badge">{{ $cartCountM }}</span>@endif
-                    </a>
-                </div>
-                @else
-                <div class="mobile-actions">
-                    <a href="{{ route('login') }}" class="mobile-user" style="justify-content:center;">
-                        <span style="color:#f97316; font-weight:700;">Login</span>
-                    </a>
-                    <a href="{{ route('register') }}" class="mobile-action-icon" aria-label="Sign Up" style="background:linear-gradient(135deg,#f97316,#ea580c); border:none; color:#fff;">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z"/></svg>
-                    </a>
-                </div>
-                @endauth
-
-                <nav class="mobile-links">
-                    <a href="{{ route('dashBoardFunction') }}" class="{{ request()->routeIs('dashBoardFunction') ? 'active' : '' }}">Home</a>
-                    <a href="{{ route('shop') }}" class="{{ request()->routeIs('shop') ? 'active' : '' }}">Shop</a>
-                    <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'active' : '' }}">About</a>
-                    <a href="{{ route('ourTeam') }}" class="{{ request()->routeIs('ourTeam') ? 'active' : '' }}">Team</a>
-                    <a href="{{ route('allInstallationPhotos') }}" class="{{ request()->routeIs('allInstallationPhotos') ? 'active' : '' }}">Gallery</a>
-                    <a href="{{ route('CpInterest') }}" class="{{ request()->routeIs('CpInterest') ? 'active' : '' }}">Channel Partner</a>
-                    <a href="{{ route('contactUs') }}" class="{{ request()->routeIs('contactUs') ? 'active' : '' }}">Contact</a>
-                    @auth
-                    <a href="{{ route('user.orders') }}">My Orders</a>
-                    <a href="{{ route('user.account') }}">Account</a>
-                    @endauth
-                </nav>
-            </aside>
         </nav>
+
+        <!-- Mobile Backdrop -->
+        <div id="mobile-backdrop" class="mobile-backdrop"></div>
+
+        <!-- Mobile Slide-in Sidebar -->
+        <aside id="mobile-menu" class="mobile-menu" aria-hidden="true">
+            <div class="mobile-menu-header">
+                <span class="brand">Menu</span>
+                <button type="button" class="mobile-close-btn" id="mobile-close-btn" aria-label="Close menu">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            @auth
+            @php $cartCountM = count(session('cart', [])); @endphp
+            <div class="mobile-actions">
+                <a href="{{ Auth::user()->role_id == 1 || Auth::user()->role_id == 2 ? route('masterAdminDashboard') : (Auth::user()->role_id == 4 ? route('cpDashboard') : route('user.dashboard')) }}" class="mobile-user">
+                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=4A90E2&color=fff&size=32" alt="">
+                    <span>{{ Auth::user()->name }}</span>
+                </a>
+                <a href="{{ route('cart.index') }}" class="mobile-action-icon" aria-label="Cart">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+                    @if($cartCountM > 0)<span class="badge">{{ $cartCountM }}</span>@endif
+                </a>
+            </div>
+            @else
+            <div class="mobile-actions">
+                <a href="{{ route('login') }}" class="mobile-user" style="justify-content:center;">
+                    <span style="color:#f97316; font-weight:700;">Login</span>
+                </a>
+                <a href="{{ route('register') }}" class="mobile-action-icon" aria-label="Sign Up" style="background:linear-gradient(135deg,#f97316,#ea580c); border:none; color:#fff;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z"/></svg>
+                </a>
+            </div>
+            @endauth
+
+            <nav class="mobile-links">
+                <a href="{{ route('dashBoardFunction') }}" class="{{ request()->routeIs('dashBoardFunction') ? 'active' : '' }}">Home</a>
+                <a href="{{ route('shop') }}" class="{{ request()->routeIs('shop') ? 'active' : '' }}">Shop</a>
+                <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'active' : '' }}">About</a>
+                <a href="{{ route('ourTeam') }}" class="{{ request()->routeIs('ourTeam') ? 'active' : '' }}">Team</a>
+                <a href="{{ route('allInstallationPhotos') }}" class="{{ request()->routeIs('allInstallationPhotos') ? 'active' : '' }}">Gallery</a>
+                <a href="{{ route('CpInterest') }}" class="{{ request()->routeIs('CpInterest') ? 'active' : '' }}">Channel Partner</a>
+                <a href="{{ route('contactUs') }}" class="{{ request()->routeIs('contactUs') ? 'active' : '' }}">Contact</a>
+                @auth
+                <a href="{{ route('user.orders') }}">My Orders</a>
+                <a href="{{ route('user.account') }}">Account</a>
+                @endauth
+            </nav>
+        </aside>
 
         <!-- Main Content -->
         <main>
