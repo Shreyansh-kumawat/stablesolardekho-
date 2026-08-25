@@ -75,6 +75,7 @@ Route::post('QueryCpInterest', [UserController::class, 'QueryCpInterest'])->midd
 Route::get('installationPartner', [UserController::class, 'installationPartner'])->name('installationPartner');
 Route::post('QueryInstallationPartner', [UserController::class, 'QueryInstallationPartner'])->name('QueryInstallationPartner');
 Route::post('userQuoteQuery', [LeadController::class, 'userQuoteQuery'])->name('userQuoteQuery');
+Route::view('about', 'publicPages.about')->name('about');
 Route::get('contactUs', [UserController::class, 'contactUs'])->name('contactUs');
 Route::get('ourTeam', [UserController::class, 'ourTeam'])->name('ourTeam');
 Route::post('QueryContactUs', [UserController::class, 'QueryContactUs'])->name('QueryContactUs');

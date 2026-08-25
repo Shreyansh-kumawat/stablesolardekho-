@@ -331,13 +331,10 @@ class AdminWarehouseController extends Controller
 
         $transactions = $query->orderByDesc('created_at')->get();
 
-        $products = WarehouseInventoryTransaction::where('warehouse_id', $id)
-            ->distinct('product_id')
-            ->with('product')
-            ->get()
-            ->pluck('product')
-            ->filter()
-            ->unique('id');
+        $productIds = WarehouseInventoryTransaction::where('warehouse_id', $id)
+            ->distinct()
+            ->pluck('product_id');
+        $products = Product::whereIn('id', $productIds)->orderBy('item_name')->get();
 
         return view('Admin.warehouse.transactions', compact('warehouse', 'transactions', 'products'));
     }
@@ -349,13 +346,19 @@ class AdminWarehouseController extends Controller
         $totalProducts = WarehouseInventory::where('warehouse_id', $id)->count();
         $totalStock = WarehouseInventory::where('warehouse_id', $id)->sum('available_qty');
 
+        $internalTypes = ['to_warehouse', 'from_warehouse', 'to_main', 'admin_adjustment'];
+
         $totalInValue = WarehouseInventoryTransaction::where('warehouse_id', $id)
             ->where('transaction_type', 'IN')
+            ->where('transfer_type', 'from_main')
             ->selectRaw('SUM(COALESCE(unit_price, 0) * quantity) as total')
             ->value('total') ?? 0;
 
         $totalOutValue = WarehouseInventoryTransaction::where('warehouse_id', $id)
             ->where('transaction_type', 'OUT')
+            ->where(function ($q) use ($internalTypes) {
+                $q->whereNull('transfer_type')->orWhereNotIn('transfer_type', $internalTypes);
+            })
             ->selectRaw('SUM(COALESCE(unit_price, 0) * quantity) as total')
             ->value('total') ?? 0;
 
@@ -454,8 +457,16 @@ class AdminWarehouseController extends Controller
             default => null,
         };
 
-        $inQuery = WarehouseInventoryTransaction::where('warehouse_id', $id)->where('transaction_type', 'IN');
-        $outQuery = WarehouseInventoryTransaction::where('warehouse_id', $id)->where('transaction_type', 'OUT');
+        $internalTypes = ['to_warehouse', 'from_warehouse', 'to_main', 'admin_adjustment'];
+
+        $inQuery = WarehouseInventoryTransaction::where('warehouse_id', $id)
+            ->where('transaction_type', 'IN')
+            ->where('transfer_type', 'from_main');
+        $outQuery = WarehouseInventoryTransaction::where('warehouse_id', $id)
+            ->where('transaction_type', 'OUT')
+            ->where(function ($q) use ($internalTypes) {
+                $q->whereNull('transfer_type')->orWhereNotIn('transfer_type', $internalTypes);
+            });
 
         if ($dateFilter) {
             $inQuery->whereBetween('created_at', [$dateFilter[0], $dateFilter[1] . ' 23:59:59']);
@@ -476,10 +487,10 @@ class AdminWarehouseController extends Controller
             })
             ->select(
                 'p.id', 'p.item_name', 'p.item_code',
-                DB::raw("SUM(CASE WHEN t.transaction_type = 'IN' THEN COALESCE(t.unit_price, 0) * t.quantity ELSE 0 END) as purchase_value"),
-                DB::raw("SUM(CASE WHEN t.transaction_type = 'OUT' THEN COALESCE(t.unit_price, 0) * t.quantity ELSE 0 END) as sales_value"),
-                DB::raw("SUM(CASE WHEN t.transaction_type = 'IN' THEN t.quantity ELSE 0 END) as qty_in"),
-                DB::raw("SUM(CASE WHEN t.transaction_type = 'OUT' THEN t.quantity ELSE 0 END) as qty_out")
+                DB::raw("SUM(CASE WHEN t.transaction_type = 'IN' AND t.transfer_type = 'from_main' THEN COALESCE(t.unit_price, 0) * t.quantity ELSE 0 END) as purchase_value"),
+                DB::raw("SUM(CASE WHEN t.transaction_type = 'OUT' AND (t.transfer_type IS NULL OR t.transfer_type NOT IN ('to_warehouse','from_warehouse','to_main','admin_adjustment')) THEN COALESCE(t.unit_price, 0) * t.quantity ELSE 0 END) as sales_value"),
+                DB::raw("SUM(CASE WHEN t.transaction_type = 'IN' AND t.transfer_type = 'from_main' THEN t.quantity ELSE 0 END) as qty_in"),
+                DB::raw("SUM(CASE WHEN t.transaction_type = 'OUT' AND (t.transfer_type IS NULL OR t.transfer_type NOT IN ('to_warehouse','from_warehouse','to_main','admin_adjustment')) THEN t.quantity ELSE 0 END) as qty_out")
             )
             ->groupBy('p.id', 'p.item_name', 'p.item_code')
             ->orderBy('p.item_name')
@@ -526,17 +537,23 @@ class AdminWarehouseController extends Controller
     public function masterDashboard()
     {
         $this->checkAccess();
+        $internalTypes = ['to_warehouse', 'from_warehouse', 'to_main', 'admin_adjustment'];
+
         $warehouses = Warehouse::where('is_active', true)
             ->withCount('inventories')
             ->get()
-            ->map(function ($wh) {
+            ->map(function ($wh) use ($internalTypes) {
                 $wh->total_stock = WarehouseInventory::where('warehouse_id', $wh->id)->sum('available_qty');
                 $wh->total_in_value = WarehouseInventoryTransaction::where('warehouse_id', $wh->id)
                     ->where('transaction_type', 'IN')
+                    ->where('transfer_type', 'from_main')
                     ->selectRaw('SUM(COALESCE(unit_price, 0) * quantity) as total')
                     ->value('total') ?? 0;
                 $wh->total_out_value = WarehouseInventoryTransaction::where('warehouse_id', $wh->id)
                     ->where('transaction_type', 'OUT')
+                    ->where(function ($q) use ($internalTypes) {
+                        $q->whereNull('transfer_type')->orWhereNotIn('transfer_type', $internalTypes);
+                    })
                     ->selectRaw('SUM(COALESCE(unit_price, 0) * quantity) as total')
                     ->value('total') ?? 0;
                 return $wh;

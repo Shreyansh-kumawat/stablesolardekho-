@@ -33,10 +33,10 @@
                     @foreach([
                         ['Home', route('dashBoardFunction')],
                         ['Shop', route('shop')],
-                        ['Enroll as Channel Partner', route('CpInterest')],
-                        ['Enroll as Installation Partner', route('installationPartner')],
+                        ['About Us', route('about')],
                         ['Our Team', route('ourTeam')],
                         ['Installation Photos', route('allInstallationPhotos')],
+                        ['Enroll as Channel Partner', route('CpInterest')],
                         ['Contact Us', route('contactUs')],
                     ] as [$label, $href])
                     <li>

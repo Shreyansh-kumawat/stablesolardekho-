@@ -47,64 +47,67 @@
         }
 
         .logo-img {
-            height: 46px;
+            height: 40px;
             width: auto;
-            max-width: 180px;
+            max-width: 160px;
             object-fit: contain;
-            filter: drop-shadow(0 6px 18px rgba(0, 0, 0, .25));
         }
 
         /* Navigation */
         .solar-nav {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.75), rgba(2, 6, 23, 0.65));
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-            box-shadow: 0 10px 30px rgba(2, 6, 23, 0.4);
-            position: relative;
+            background: rgba(8, 13, 26, 0.85);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         }
 
         .nav-container {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            height: 72px;
-            gap: 1.5rem;
-            overflow: visible;
+            height: 68px;
+            gap: 2rem;
         }
 
         .desktop-menu {
             display: flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.15rem;
             flex-grow: 1;
             justify-content: center;
         }
 
         .nav-link {
-            color: var(--text);
-            font-weight: 600;
-            font-size: 0.9rem;
-            padding: 0.55rem 1rem;
-            border-radius: 999px;
-            transition: all 0.25s ease;
-            position: relative;
+            color: #cbd5e1;
+            font-weight: 500;
+            font-size: 0.88rem;
+            padding: 0.5rem 0.95rem;
+            border-radius: 8px;
+            transition: color 0.15s ease, background 0.15s ease;
             white-space: nowrap;
-            border: 1px solid transparent;
+            position: relative;
         }
 
         .nav-link:hover {
-            color: var(--white);
-            background: var(--glass);
-            border-color: var(--border);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.04);
         }
 
         .nav-link.active {
-            color: var(--white);
-            background: linear-gradient(135deg, rgba(96, 165, 250, 0.25), rgba(167, 139, 250, 0.25));
-            border-color: rgba(96, 165, 250, 0.35);
-            box-shadow: 0 6px 18px rgba(96, 165, 250, 0.2);
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 2px;
+            background: #60a5fa;
+            border-radius: 2px;
         }
 
         /* Login Button (kept but not shown in markup) */
@@ -235,21 +238,21 @@
                             class="nav-link {{ request()->routeIs('shop') ? 'active' : '' }}">
                             Shop
                         </a>
-                        <a href="{{ route('CpInterest') }}"
-                            class="nav-link {{ request()->routeIs('CpInterest') ? 'active' : '' }}">
-                            Enroll For Channel Partner
-                        </a>
-                        <a href="{{ route('installationPartner') }}"
-                            class="nav-link {{ request()->routeIs('installationPartner') ? 'active' : '' }}">
-                            Enroll For Installation Partner
+                        <a href="{{ route('about') }}"
+                            class="nav-link {{ request()->routeIs('about') ? 'active' : '' }}">
+                            About
                         </a>
                         <a href="{{ route('ourTeam') }}"
                             class="nav-link {{ request()->routeIs('ourTeam') ? 'active' : '' }}">
-                            Our Team
+                            Team
                         </a>
                         <a href="{{ route('allInstallationPhotos') }}"
                             class="nav-link {{ request()->routeIs('allInstallationPhotos') ? 'active' : '' }}">
-                            Installation Photos
+                            Gallery
+                        </a>
+                        <a href="{{ route('CpInterest') }}"
+                            class="nav-link {{ request()->routeIs('CpInterest') ? 'active' : '' }}">
+                            Channel Partner
                         </a>
                         <a href="{{ route('contactUs') }}"
                             class="nav-link {{ request()->routeIs('contactUs') ? 'active' : '' }}">
@@ -321,13 +324,13 @@
                 <a href="{{ route('user.orders') }}">My Orders</a>
                 <a href="{{ route('user.account') }}">Account</a>
                 @endauth
-                <a href="{{ route('CpInterest') }}"
-                    class="{{ request()->routeIs('CpInterest') ? 'active' : '' }}">Enroll For Channel Partner</a>
-                <a href="{{ route('installationPartner') }}"
-                    class="{{ request()->routeIs('installationPartner') ? 'active' : '' }}">Enroll For Installation Partner</a>
-                <a href="{{ route('ourTeam') }}" class="{{ request()->routeIs('ourTeam') ? 'active' : '' }}">Our Team</a>
+                <a href="{{ route('about') }}"
+                    class="{{ request()->routeIs('about') ? 'active' : '' }}">About</a>
+                <a href="{{ route('ourTeam') }}" class="{{ request()->routeIs('ourTeam') ? 'active' : '' }}">Team</a>
                 <a href="{{ route('allInstallationPhotos') }}"
-                    class="{{ request()->routeIs('allInstallationPhotos') ? 'active' : '' }}">Installation Photos</a>
+                    class="{{ request()->routeIs('allInstallationPhotos') ? 'active' : '' }}">Gallery</a>
+                <a href="{{ route('CpInterest') }}"
+                    class="{{ request()->routeIs('CpInterest') ? 'active' : '' }}">Channel Partner</a>
                 <a href="{{ route('contactUs') }}"
                     class="{{ request()->routeIs('contactUs') ? 'active' : '' }}">Contact</a>
             </div>
