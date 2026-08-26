@@ -199,8 +199,16 @@ class ProductController extends Controller
     {
         abort_unless(auth()->user()->hasAdminPermission('categories.add'), 403);
         try {
+            $name = trim($request->categoryName);
+            if ($name === '') {
+                return redirect()->back()->withInput()->with('error', 'Category name is required.');
+            }
+            $exists = ProductCategory::whereRaw('LOWER(category_name) = ?', [strtolower($name)])->exists();
+            if ($exists) {
+                return redirect()->back()->withInput()->with('error', 'Category "' . $name . '" already exists. Please use a different name.');
+            }
             $category = new ProductCategory();
-            $category->category_name = $request->categoryName;
+            $category->category_name = $name;
             $category->category_description = $request->categoryDiscription;
             $category->active_status = '1';
             if ($request->hasFile('image')) {
@@ -218,7 +226,16 @@ class ProductController extends Controller
         abort_unless(auth()->user()->hasAdminPermission('categories.edit'), 403);
         try {
             $category = ProductCategory::find($request->category_id);
-            $category->category_name = $request->categoryName;
+            $name = trim($request->categoryName);
+            if ($name === '') {
+                return redirect()->back()->withInput()->with('error', 'Category name is required.');
+            }
+            $exists = ProductCategory::whereRaw('LOWER(category_name) = ?', [strtolower($name)])
+                ->where('id', '!=', $category->id)->exists();
+            if ($exists) {
+                return redirect()->back()->withInput()->with('error', 'Another category with name "' . $name . '" already exists. Please use a different name.');
+            }
+            $category->category_name = $name;
             $category->category_description = $request->categoryDiscription;
             $category->active_status = $request->activeStatus ?? '1';
             if ($request->hasFile('image')) {
@@ -256,9 +273,18 @@ class ProductController extends Controller
     public function saveNewSubCategory(Request $request)
     {
         try {
+            $name = trim($request->sub_category_name);
+            if ($name === '' || !$request->category_id) {
+                return redirect()->back()->withInput()->with('error', 'Category and Sub-Category name are required.');
+            }
+            $exists = ProductSubCategory::where('category_id', $request->category_id)
+                ->whereRaw('LOWER(sub_category_name) = ?', [strtolower($name)])->exists();
+            if ($exists) {
+                return redirect()->back()->withInput()->with('error', 'Sub-Category "' . $name . '" already exists in this category. Please use a different name.');
+            }
             $sub_category = new ProductSubCategory();
             $sub_category->category_id = $request->category_id;
-            $sub_category->sub_category_name = $request->sub_category_name;
+            $sub_category->sub_category_name = $name;
             $sub_category->remarks = $request->sub_category_description;
             $sub_category->save();
             return redirect()->back()->with('success', 'Sub-Category has been added successfully');
@@ -284,8 +310,18 @@ class ProductController extends Controller
     {
         try {
             $sub_category = ProductSubCategory::find($request->sub_category_id);
+            $name = trim($request->sub_category_name);
+            if ($name === '' || !$request->category_id) {
+                return redirect()->back()->withInput()->with('error', 'Category and Sub-Category name are required.');
+            }
+            $exists = ProductSubCategory::where('category_id', $request->category_id)
+                ->whereRaw('LOWER(sub_category_name) = ?', [strtolower($name)])
+                ->where('id', '!=', $sub_category->id)->exists();
+            if ($exists) {
+                return redirect()->back()->withInput()->with('error', 'Another Sub-Category with name "' . $name . '" already exists in this category. Please use a different name.');
+            }
             $sub_category->category_id = $request->category_id;
-            $sub_category->sub_category_name = $request->sub_category_name;
+            $sub_category->sub_category_name = $name;
             $sub_category->remarks = $request->sub_category_description;
             $sub_category->update();
             return redirect()->back()->with('success', 'Sub-Category has been updated successfully');

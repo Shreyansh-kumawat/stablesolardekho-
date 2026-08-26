@@ -424,6 +424,18 @@ class InventoryController extends Controller
         try {
             DB::beginTransaction();
 
+            if ($request->filled('item_code')) {
+                $existing = Product::where('item_code', $request->item_code)->first();
+                if ($existing) {
+                    DB::rollBack();
+                    return redirect()->back()->withInput()->with('error',
+                        'Product Code "' . $request->item_code . '" already exists (assigned to "' . $existing->item_name . '"). '
+                        . 'To add more stock, please use the "Existing Product" tab and select this product. '
+                        . 'To add a different product, please choose a unique Product Code.'
+                    );
+                }
+            }
+
             $product = new Product();
             $product->category_id = $request->category_id;
             $product->sub_category_id = $request->sub_category_id ?: null;
