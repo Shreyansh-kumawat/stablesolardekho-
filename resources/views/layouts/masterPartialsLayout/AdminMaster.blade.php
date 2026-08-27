@@ -6,16 +6,22 @@
 @include('layouts.partials.menuRfqPartials')
 
 @if(Auth::user()->role_id == 1)
-    @include('layouts.partials.menuUserSettingPartials')
+    {{-- Hidden per client request --}}
+    {{-- @include('layouts.partials.menuUserSettingPartials') --}}
 
-    @include('layouts.partials.menuCpSettingPartials')
+    {{-- Hidden per client request --}}
+    {{-- @include('layouts.partials.menuCpSettingPartials') --}}
 
     @include('layouts.partials.menuProductPartials')
 
-    @include('layouts.partials.menuInventoryPartials')
+    {{-- Hidden per client request --}}
+    {{-- @include('layouts.partials.menuInventoryPartials') --}}
 
     @include('layouts.partials.modals.menuAdminSetting')
-    @include('layouts.partials.menuFundSetting')
 
-    @include('layouts.partials.menuOrderSetting')
+    {{-- Hidden per client request --}}
+    {{-- @include('layouts.partials.menuFundSetting') --}}
+
+    {{-- Hidden per client request --}}
+    {{-- @include('layouts.partials.menuOrderSetting') --}}
 @endif
