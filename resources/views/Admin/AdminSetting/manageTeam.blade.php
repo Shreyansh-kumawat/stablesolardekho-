@@ -749,6 +749,11 @@
                               + '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>'
                               + 'Add new position: <strong>' + escHtml(query.trim()) + '</strong></div>';
                     }
+                } else {
+                    // Persistent "Add Custom Position" hint at the bottom
+                    html += '<div class="pos-custom pos-custom-hint" data-focus="1">'
+                          + '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>'
+                          + '<span>Add Custom Position <em style="color:#78716c;font-style:normal;font-weight:400;">(type in search box above)</em></span></div>';
                 }
                 list.innerHTML = html;
 
@@ -758,13 +763,16 @@
                         closePos(prefix);
                     });
                 });
-                const custom = list.querySelector('.pos-custom');
-                if (custom) {
-                    custom.addEventListener('click', () => {
-                        setPosValue(prefix, custom.getAttribute('data-add'));
-                        closePos(prefix);
+                list.querySelectorAll('.pos-custom').forEach(el => {
+                    el.addEventListener('click', () => {
+                        if (el.getAttribute('data-focus')) {
+                            document.getElementById(prefix + '_position_search').focus();
+                        } else {
+                            setPosValue(prefix, el.getAttribute('data-add'));
+                            closePos(prefix);
+                        }
                     });
-                }
+                });
             }
 
             function closePos(prefix) {
