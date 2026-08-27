@@ -527,6 +527,48 @@
                 padding: 1rem;
             }
         }
+
+        /* ========================================
+           Global Admin Table — Mobile Horizontal Scroll
+           ========================================
+           Applies to every table in admin panel.
+           Ensures side-scroll works on phones so Edit/Delete
+           columns are always reachable.
+        */
+        @media (max-width: 992px) {
+            /* Any container directly wrapping a table becomes scrollable */
+            .table-responsive,
+            .dataTables_wrapper,
+            .card-body:has(> table),
+            .card:has(> .card-body > table),
+            div:has(> table:not(.no-scroll)) {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+                max-width: 100%;
+            }
+
+            /* Force tables to stay wide enough to trigger scroll */
+            table:not(.no-scroll) {
+                min-width: 640px;
+            }
+
+            /* Prevent cells from wrapping and shrinking the table */
+            table:not(.no-scroll) thead th,
+            table:not(.no-scroll) tbody td {
+                white-space: nowrap;
+            }
+
+            /* Smooth scrollbar on webkit */
+            .table-responsive::-webkit-scrollbar,
+            .dataTables_wrapper::-webkit-scrollbar {
+                height: 6px;
+            }
+            .table-responsive::-webkit-scrollbar-thumb,
+            .dataTables_wrapper::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 3px;
+            }
+        }
     </style>
     {{-- Page-specific CSS --}}
     @yield('css')

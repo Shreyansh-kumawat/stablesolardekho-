@@ -233,6 +233,32 @@
         align-items: center;
     }
 
+    /* Horizontal scroll for wide DataTables */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .dataTables_wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .dataTables_scroll,
+    .dataTables_scrollBody {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table.dataTable {
+        min-width: 720px;
+    }
+
+    table.dataTable thead th,
+    table.dataTable tbody td {
+        white-space: nowrap;
+    }
+
     @media (max-width: 768px) {
         .controls-top {
             flex-direction: column;
@@ -247,5 +273,22 @@
         .action-btn {
             padding: 0.25rem 0.5rem;
             font-size: 0.7rem;
+        }
+
+        /* Subtle hint that table is scrollable */
+        .table-responsive,
+        .dataTables_wrapper {
+            position: relative;
+        }
+        .table-responsive::after,
+        .dataTables_wrapper::after {
+            content: '';
+            position: sticky;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 24px;
+            background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
+            pointer-events: none;
         }
     }
