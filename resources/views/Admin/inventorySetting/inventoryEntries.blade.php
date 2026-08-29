@@ -62,7 +62,7 @@
     @endif
 
     <div class="search-bar">
-        <input type="text" id="entrySearch" placeholder="Search by product, code, or person...">
+        <input type="text" id="entrySearch" placeholder="Search by product, code, supplier, person, invoice, or txn ID...">
         <select id="entryTypeFilter">
             <option value="">All Types</option>
             <option value="IN">Stock IN</option>
@@ -72,7 +72,7 @@
 
     <div id="entriesContainer">
     @forelse($entries as $entry)
-        <div class="entry-card" data-type="{{ $entry->transaction_type }}" data-search="{{ strtolower(($entry->product->item_name ?? '').' '.($entry->product->item_code ?? '').' '.($entry->performer_name ?? '')) }}">
+        <div class="entry-card" data-type="{{ $entry->transaction_type }}" data-search="{{ strtolower(($entry->product->item_name ?? '').' '.($entry->product->item_code ?? '').' '.($entry->performer_name ?? '').' '.($entry->supplier_name ?? '').' '.($entry->channelPartner->cp_name ?? '').' '.($entry->invoice_number ?? '').' '.($entry->txn_id ?? '')) }}">
             <div class="entry-top">
                 <div class="entry-product">
                     @if($entry->product && $entry->product->image)
