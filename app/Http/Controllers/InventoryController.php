@@ -1158,20 +1158,33 @@ class InventoryController extends Controller
     public function downloadSerialTemplate()
     {
         $filename = 'serial_upload_template.csv';
-        $content = "# Serial Number Upload Template\n"
-                 . "# Format: Product Name in one row, then serial numbers below it (one per row).\n"
-                 . "# Everything after 'SR.NO' (or 'SERIAL') label is treated as serial numbers.\n"
-                 . "# Blank rows separate product blocks. Any other extra text is ignored.\n"
-                 . "\n"
-                 . "Product Name,Serial Number\n"
-                 . "SAMPLE PRODUCT NAME - 3600W INVERTER,\n"
-                 . ",SERIAL-001-ABC\n"
-                 . ",SERIAL-002-ABC\n"
-                 . ",SERIAL-003-ABC\n"
-                 . "\n"
-                 . "ANOTHER PRODUCT - 5000W INVERTER,\n"
-                 . ",SERIAL-101-XYZ\n"
-                 . ",SERIAL-102-XYZ\n";
+        // Column A = # (numeric row: 1, 2, 3...) — starts a new product block
+        // Column B = Item & Description
+        //   - Product name line(s) (before SR.NO)
+        //   - SR.NO. header row
+        //   - Serial numbers (one per row)
+        //   - Blank row = end of serials
+        //   - Anything after blank = "skipped" (shown as warning in the app)
+        $content = "#,Item & Description\n"
+                 . "1,POLYCAB SOLAR GRID TIE INVERTER 3600 WATT WITH RMS-SOLAR POWER BASED DEVICE\n"
+                 . ",SR.NO.\n"
+                 . ",3K6210826-2628-986705182P\n"
+                 . ",3K6210826-2628-986705285P\n"
+                 . ",3K6210826-2628-986705299P\n"
+                 . ",\n"
+                 . ",8 YEAR WARRANTY BY POLYCAB INDIA LTD.\n"
+                 . "2,POLYCAB SOLAR GRID TIE INVERTER 5000 WATT WITH RMS-SOLAR POWER BASED DEVICE\n"
+                 . ",SR.NO.\n"
+                 . ",5K0190826-2628-991803185P\n"
+                 . ",5K0190826-2628-991803564P\n"
+                 . ",\n"
+                 . ",8 YEAR WARRANTY BY POLYCAB INDIA LTD.\n"
+                 . "3,POLYCAB SOLAR GRID TIE INVERTER 6000 WATT WITH RMS-SOLAR POWER BASED DEVICE\n"
+                 . ",SR.NO.\n"
+                 . ",6K0100826-2626-485601077P\n"
+                 . ",6K0100826-2626-485601069P\n"
+                 . ",\n"
+                 . ",8 YEAR WARRANTY BY POLYCAB INDIA LTD.\n";
         return response($content, 200, [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
