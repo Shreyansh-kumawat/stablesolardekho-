@@ -1116,7 +1116,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 var bulkCards = []; // Array of {idx, product_name, serials, skipped, product_id, category_id, sub_category_id, unit_price, gst_percent}
 var bulkCardIdxSeq = 0;
-var allCategoriesForBulk = @json($categories->map(fn($c) => ['id' => $c->id, 'name' => $c->category_name, 'subs' => $c->subCategories->map(fn($s) => ['id' => $s->id, 'name' => $s->sub_category_name])->values()])->values());
+@php
+    $bulkCatsData = $categories->map(function ($c) {
+        return [
+            'id' => $c->id,
+            'name' => $c->category_name,
+            'subs' => $c->subCategories->map(function ($s) {
+                return ['id' => $s->id, 'name' => $s->sub_category_name];
+            })->values()->all(),
+        ];
+    })->values()->all();
+@endphp
+var allCategoriesForBulk = {!! json_encode($bulkCatsData) !!};
 
 function handleBulkExcelUpload(input) {
     var file = input.files[0];
