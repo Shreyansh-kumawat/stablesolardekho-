@@ -259,30 +259,6 @@
                 </div>
             </div>
 
-            {{-- Serial Numbers section (shown only when selected product is serial-tracked) --}}
-            <div class="sec-card" id="epSerialSection" style="display:none;">
-                <p class="sec-label">
-                    Serial Numbers
-                    <span style="font-weight:400; font-size:.78rem; color:var(--txt2);">(add as many as needed - any gap = new serial)</span>
-                </p>
-                <div class="serial-tools" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; align-items:center;">
-                    <label class="btn-secondary" style="cursor:pointer; padding:8px 14px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:8px; font-weight:600; font-size:.85rem;">
-                        <i class="fas fa-file-excel me-1"></i> Upload Excel
-                        <input type="file" id="epSerialExcel" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleSerialExcelUpload('ep', this)">
-                    </label>
-                    <a href="{{ route('inventorySerialTemplate') }}" style="padding:8px 14px; background:#f3f4f6; color:#4b5563; border:1px solid #d1d5db; border-radius:8px; font-weight:600; font-size:.85rem; text-decoration:none;">
-                        <i class="fas fa-download me-1"></i> Template
-                    </a>
-                    <button type="button" onclick="beautifySerialsText('ep')" style="padding:8px 14px; background:#fef3c7; color:#92400e; border:1px solid #fde68a; border-radius:8px; font-weight:600; font-size:.85rem; cursor:pointer;">
-                        <i class="fas fa-magic me-1"></i> Beautify
-                    </button>
-                    <span id="epSerialSummary" style="margin-left:auto; font-size:.85rem; color:var(--txt2); font-weight:600;">0 serial(s) detected</span>
-                </div>
-                <textarea name="serials_text" id="epSerialsText" rows="6" class="form-control"
-                          placeholder="Paste serial numbers - separate by space, line break, or comma. Any gap creates a new serial. Example:&#10;3K6210826-2628-986705182P 3K6210826-2628-986705285P 3K6210826-2628-986705289P&#10;&#10;Click 'Beautify' to arrange one per line."
-                          oninput="onSerialsTextChange('ep')"></textarea>
-                <div id="epSerialFeedback" style="margin-top:8px; font-size:.82rem;"></div>
-            </div>
 
             <div style="display:flex;gap:.75rem;margin-bottom:2rem;">
                 <button type="submit" class="btn-green" id="epSubmitBtn">Update Stock</button>
@@ -372,13 +348,6 @@
                             <label class="form-check-label" for="isFeatured" style="font-size:.85rem;">Mark as Featured</label>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Serial Tracked</label>
-                        <div class="form-check form-switch mt-1">
-                            <input class="form-check-input" type="checkbox" name="is_serial_tracked" value="1" id="npIsSerialTracked" onchange="toggleNewProductSerials()">
-                            <label class="form-check-label" for="npIsSerialTracked" style="font-size:.85rem;">Enable Serial Tracking</label>
-                        </div>
-                    </div>
                     <div class="col-12">
                         <label class="form-label">Description</label>
                         <textarea class="form-control" name="description" rows="2" placeholder="Brief product description (optional)">{{ old('description') }}</textarea>
@@ -445,30 +414,6 @@
                 </div>
             </div>
 
-            {{-- Serial Numbers section (shown when Serial Tracked is enabled) --}}
-            <div class="sec-card" id="npSerialSection" style="display:none;">
-                <p class="sec-label">
-                    Serial Numbers
-                    <span style="font-weight:400; font-size:.78rem; color:var(--txt2);">(add as many as needed - any gap = new serial)</span>
-                </p>
-                <div class="serial-tools" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; align-items:center;">
-                    <label class="btn-secondary" style="cursor:pointer; padding:8px 14px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:8px; font-weight:600; font-size:.85rem;">
-                        <i class="fas fa-file-excel me-1"></i> Upload Excel
-                        <input type="file" id="npSerialExcel" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleSerialExcelUpload('np', this)">
-                    </label>
-                    <a href="{{ route('inventorySerialTemplate') }}" style="padding:8px 14px; background:#f3f4f6; color:#4b5563; border:1px solid #d1d5db; border-radius:8px; font-weight:600; font-size:.85rem; text-decoration:none;">
-                        <i class="fas fa-download me-1"></i> Template
-                    </a>
-                    <button type="button" onclick="beautifySerialsText('np')" style="padding:8px 14px; background:#fef3c7; color:#92400e; border:1px solid #fde68a; border-radius:8px; font-weight:600; font-size:.85rem; cursor:pointer;">
-                        <i class="fas fa-magic me-1"></i> Beautify
-                    </button>
-                    <span id="npSerialSummary" style="margin-left:auto; font-size:.85rem; color:var(--txt2); font-weight:600;">0 serial(s) detected</span>
-                </div>
-                <textarea name="serials_text" id="npSerialsText" rows="6" class="form-control"
-                          placeholder="Paste serial numbers - separate by space, line break, or comma. Any gap creates a new serial. Example:&#10;3K6210826-2628-986705182P 3K6210826-2628-986705285P 3K6210826-2628-986705289P&#10;&#10;Click 'Beautify' to arrange one per line."
-                          oninput="onSerialsTextChange('np')"></textarea>
-                <div id="npSerialFeedback" style="margin-top:8px; font-size:.82rem;"></div>
-            </div>
 
             {{-- Specifications --}}
             <div class="sec-card">
@@ -732,16 +677,7 @@ function onProductSelect() {
                     }
                 }).catch(function(){});
 
-            // Show / hide Serial Numbers section based on product
-            const epSerialSection = document.getElementById('epSerialSection');
-            if (p.is_serialNumber_required == 1 || p.is_serialNumber_required === true) {
-                epSerialSection.style.display = '';
-                document.getElementById('epSerialsText').value = '';
-                onSerialsTextChange('ep');
-            } else {
-                epSerialSection.style.display = 'none';
-                document.getElementById('epSerialsText').value = '';
-            }
+            // Serial section removed from Existing tab — use Bulk Serial Upload tab for serial-tracked products
         })
         .catch(() => {
             document.getElementById('existingProductLoading').style.display = 'none';
@@ -1102,13 +1038,7 @@ function handleSerialExcelUpload(prefix, input) {
     });
 }
 
-// Recalculate on qty changes
-document.addEventListener('DOMContentLoaded', function() {
-    var qtyInput = document.getElementById('npQuantity');
-    if (qtyInput) qtyInput.addEventListener('input', function() { if (document.getElementById('npSerialSection').style.display !== 'none') onSerialsTextChange('np'); });
-    var epQtyBtns = document.querySelectorAll('.qty-adj-btn');
-    epQtyBtns.forEach(function(b) { b.addEventListener('click', function() { setTimeout(function(){ if (document.getElementById('epSerialSection').style.display !== 'none') onSerialsTextChange('ep'); }, 100); }); });
-});
+// Note: serial handling moved to Bulk Serial Upload tab
 
 /* ═══════════════════════════════════════════════════════════
    BULK SERIAL UPLOAD
@@ -1202,6 +1132,7 @@ function clearBulkCards() {
     document.getElementById('bulkParseStatus').innerHTML = '';
 }
 
+var bulkNameCheckTimers = {};
 function updateBulkField(idx, field, value) {
     var c = bulkCards.find(x => x.idx === idx);
     if (!c) return;
@@ -1213,7 +1144,58 @@ function updateBulkField(idx, field, value) {
     if (field === 'serials_text') {
         c.serials = parseSerialsFromText(value);
         renderBulkCardStats(idx);
+        // Also check DB duplicates in real-time
+        clearTimeout(bulkNameCheckTimers['ser_' + idx]);
+        bulkNameCheckTimers['ser_' + idx] = setTimeout(function() { checkBulkSerialsDb(idx); }, 700);
     }
+    if (field === 'product_name') {
+        // Debounced product name existence check
+        clearTimeout(bulkNameCheckTimers[idx]);
+        bulkNameCheckTimers[idx] = setTimeout(function() { checkBulkProductName(idx); }, 500);
+    }
+}
+
+function checkBulkProductName(idx) {
+    var c = bulkCards.find(x => x.idx === idx);
+    if (!c || !c.product_name || !c.product_name.trim()) return;
+    fetch("{{ route('inventoryFindProductByName') }}?name=" + encodeURIComponent(c.product_name.trim()))
+        .then(r => r.json())
+        .then(data => {
+            if (data.exists) {
+                c.product_id = data.id;
+                c.suggested_product = {
+                    id: data.id,
+                    item_name: data.item_name,
+                    item_code: data.item_code,
+                    category_id: data.category_id,
+                    sub_category_id: data.sub_category_id
+                };
+                if (!c.category_id) c.category_id = data.category_id || '';
+                if (!c.sub_category_id) c.sub_category_id = data.sub_category_id || '';
+            } else {
+                c.product_id = null;
+                c.suggested_product = null;
+            }
+            renderBulkCards();
+        })
+        .catch(() => {});
+}
+
+function checkBulkSerialsDb(idx) {
+    var c = bulkCards.find(x => x.idx === idx);
+    if (!c || !c.serials.length) return;
+    var token = document.querySelector('meta[name="csrf-token"]');
+    fetch("{{ route('inventorySerialsCheckDuplicates') }}", {
+        method: 'POST',
+        headers: {'Content-Type':'application/json', 'X-CSRF-TOKEN': token.getAttribute('content'), 'Accept':'application/json'},
+        body: JSON.stringify({serials: c.serials})
+    })
+    .then(r => r.json())
+    .then(data => {
+        c.db_duplicates = data.duplicates || [];
+        renderBulkCards();
+    })
+    .catch(() => {});
 }
 
 function renderBulkCards() {
@@ -1243,9 +1225,12 @@ function renderBulkCards() {
         }
         var dupHtml = '';
         if (c.db_duplicates && c.db_duplicates.length) {
-            dupHtml = '<div style="background:#fee2e2;border:1px solid #fecaca;color:#991b1b;padding:8px 12px;border-radius:6px;font-size:.78rem;margin-bottom:10px;">'
-                + '<i class="fas fa-times-circle me-1"></i> Serials already in DB: ' + c.db_duplicates.slice(0,5).join(', ')
-                + (c.db_duplicates.length > 5 ? ' +' + (c.db_duplicates.length-5) + ' more' : '')
+            var willSave = c.serials.length - c.db_duplicates.length;
+            dupHtml = '<div style="background:#fff7ed;border:1px solid #fdba74;color:#9a3412;padding:8px 12px;border-radius:6px;font-size:.78rem;margin-bottom:10px;">'
+                + '<strong><i class="fas fa-info-circle me-1"></i> ' + c.db_duplicates.length + ' serial(s) already in database — will be auto-skipped:</strong>'
+                + '<div style="margin-top:4px; font-family:monospace; font-size:.72rem;">' + c.db_duplicates.slice(0,10).join(', ')
+                + (c.db_duplicates.length > 10 ? ' +' + (c.db_duplicates.length-10) + ' more' : '') + '</div>'
+                + '<div style="margin-top:6px; font-weight:600;">Effective save: ' + willSave + ' new serial(s) (qty will be ' + willSave + ')</div>'
                 + '</div>';
         }
         var skippedHtml = '';
@@ -1258,8 +1243,10 @@ function renderBulkCards() {
         }
         var suggHtml = '';
         if (c.suggested_product) {
-            suggHtml = '<div style="background:#ecfdf5;border:1px solid #86efac;color:#065f46;padding:6px 10px;border-radius:6px;font-size:.75rem;margin-bottom:8px;">'
-                + '<i class="fas fa-lightbulb me-1"></i> Matched existing product: <strong>' + escapeHtmlBulk(c.suggested_product.item_name) + '</strong> (code: ' + escapeHtmlBulk(c.suggested_product.item_code || '-') + ')'
+            suggHtml = '<div style="background:#dbeafe;border:1px solid #60a5fa;color:#1e3a8a;padding:10px 12px;border-radius:6px;font-size:.82rem;margin-bottom:10px;">'
+                + '<strong><i class="fas fa-link me-1"></i> Product already exists:</strong> "<strong>' + escapeHtmlBulk(c.suggested_product.item_name) + '</strong>"'
+                + (c.suggested_product.item_code ? ' <span style="color:#6b7280;">(code: ' + escapeHtmlBulk(c.suggested_product.item_code) + ')</span>' : '')
+                + '<div style="margin-top:4px; font-size:.75rem;">These serials will be added to this existing product (no new product will be created).</div>'
                 + '</div>';
         }
 
@@ -1277,12 +1264,12 @@ function renderBulkCards() {
              + '    <input type="text" class="form-control" value="' + escapeAttrBulk(c.product_name) + '" oninput="updateBulkField(' + c.idx + ', \'product_name\', this.value)">'
              + '  </div>'
              + '  <div class="col-md-6">'
-             + '    <label class="form-label">Category <span class="req">*</span></label>'
-             + '    <select class="form-select" onchange="updateBulkField(' + c.idx + ', \'category_id\', this.value)">' + catOptions + '</select>'
+             + '    <label class="form-label">Category ' + (c.suggested_product ? '<small style="color:#059669;font-weight:400;">(auto-set from existing)</small>' : '<span class="req">*</span>') + '</label>'
+             + '    <select class="form-select" onchange="updateBulkField(' + c.idx + ', \'category_id\', this.value)"' + (c.suggested_product ? ' disabled' : '') + '>' + catOptions + '</select>'
              + '  </div>'
              + '  <div class="col-md-6">'
              + '    <label class="form-label">Sub Category</label>'
-             + '    <select class="form-select" onchange="updateBulkField(' + c.idx + ', \'sub_category_id\', this.value)">' + subOptions + '</select>'
+             + '    <select class="form-select" onchange="updateBulkField(' + c.idx + ', \'sub_category_id\', this.value)"' + (c.suggested_product ? ' disabled' : '') + '>' + subOptions + '</select>'
              + '  </div>'
              + '  <div class="col-md-4">'
              + '    <label class="form-label">Unit Price (Purchase)</label>'
@@ -1346,7 +1333,8 @@ function submitBulkUpload() {
     for (var i = 0; i < bulkCards.length; i++) {
         var c = bulkCards[i];
         if (!c.product_name.trim()) { alert('Product #' + (i+1) + ': product name is required.'); return; }
-        if (!c.category_id) { alert('Product #' + (i+1) + ' ("' + c.product_name + '"): category is required.'); return; }
+        // Category required only for NEW products (not when matched to existing)
+        if (!c.product_id && !c.category_id) { alert('Product #' + (i+1) + ' ("' + c.product_name + '"): this is a NEW product, please select a category.'); return; }
         if (c.serials.length === 0) { alert('Product #' + (i+1) + ' ("' + c.product_name + '"): at least one serial number required.'); return; }
     }
 
@@ -1383,7 +1371,14 @@ function submitBulkUpload() {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-check me-1"></i> Save All Products';
         if (data.success) {
-            alert('Success! ' + (data.results ? data.results.length : bulkCards.length) + ' products saved.');
+            var msg = 'Success! ' + (data.results ? data.results.length : bulkCards.length) + ' products saved.';
+            if (data.skipped_summary && data.skipped_summary.length) {
+                msg += '\n\nSome serials were auto-skipped (already exist in DB):';
+                data.skipped_summary.forEach(function(s) {
+                    msg += '\n• ' + s.product + ': ' + s.skipped_count + ' skipped, ' + s.saved_count + ' saved';
+                });
+            }
+            alert(msg);
             window.location.href = "{{ route('inventoryEntries') }}";
         } else {
             alert(data.message || 'Failed to save.');

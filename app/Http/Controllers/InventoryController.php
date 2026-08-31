@@ -347,15 +347,8 @@ class InventoryController extends Controller
             );
             $oldQty = $inventory->available_qty;
 
-            $serialsInput = $this->parseSerialsInput($request->serials_text);
-            // Serial count is INDEPENDENT of quantity - admin can add any number
-            if ($product->is_serialNumber_required && !empty($serialsInput)) {
-                $dupes = ProductSerial::whereIn('serial_number', $serialsInput)->pluck('serial_number')->toArray();
-                if (!empty($dupes)) {
-                    return redirect()->back()->withInput()->with('error',
-                        'These serials already exist: ' . implode(', ', array_slice($dupes, 0, 10)));
-                }
-            }
+            // Serial handling removed from this flow — use "Bulk Serial Upload" tab for serial-tracked products
+            $serialsInput = [];
 
             if ($warehouseId) {
                 $addQty = $qty - $oldQty;
@@ -518,7 +511,7 @@ class InventoryController extends Controller
             $product->country_of_origin = $request->country_of_origin;
             $product->input_voltage = $request->input_voltage;
             $product->max_supported_panel_power = $request->max_supported_panel_power;
-            $product->is_serialNumber_required = $request->has('is_serial_tracked') ? 1 : 0;
+            $product->is_serialNumber_required = 0;
             if ($request->hasFile('image')) {
                 $product->image = $request->file('image')->store('products', 'public');
             }
@@ -549,16 +542,8 @@ class InventoryController extends Controller
             $qty = (int) ($request->quantity ?? 0);
             $warehouseId = $request->destination_warehouse_id;
 
-            $serialsInput = $this->parseSerialsInput($request->serials_text);
-            // Serial count is INDEPENDENT of quantity - admin can add any number
-            if ($product->is_serialNumber_required && !empty($serialsInput)) {
-                $dupes = ProductSerial::whereIn('serial_number', $serialsInput)->pluck('serial_number')->toArray();
-                if (!empty($dupes)) {
-                    DB::rollBack();
-                    return redirect()->back()->withInput()->with('error',
-                        'These serials already exist in database: ' . implode(', ', array_slice($dupes, 0, 10)));
-                }
-            }
+            // Serial handling removed from New/Existing tabs — use Bulk Serial Upload for serial-tracked products
+            $serialsInput = [];
 
             if ($qty > 0) {
                 $txn_id = $this->getTxnId();
@@ -943,6 +928,26 @@ class InventoryController extends Controller
         }
     }
 
+    public function findProductByName(Request $request)
+    {
+        $name = trim((string) $request->input('name', ''));
+        if ($name === '') return response()->json(['exists' => false]);
+        $product = Product::whereRaw('LOWER(item_name) = ?', [strtolower($name)])->first();
+        if (!$product) {
+            // Fuzzy
+            $product = Product::where('item_name', 'like', '%' . $name . '%')->first();
+        }
+        if (!$product) return response()->json(['exists' => false]);
+        return response()->json([
+            'exists' => true,
+            'id' => $product->id,
+            'item_name' => $product->item_name,
+            'item_code' => $product->item_code,
+            'category_id' => $product->category_id,
+            'sub_category_id' => $product->sub_category_id,
+        ]);
+    }
+
     public function checkSerialDuplicates(Request $request)
     {
         $serials = $request->input('serials', []);
@@ -960,7 +965,7 @@ class InventoryController extends Controller
             'products' => 'required|array|min:1',
             'products.*.product_id' => 'nullable|exists:products,id',
             'products.*.item_name' => 'required|string|max:500',
-            'products.*.category_id' => 'required|exists:product_categories,id',
+            'products.*.category_id' => 'nullable|exists:product_categories,id',
             'products.*.sub_category_id' => 'nullable|exists:product_sub_categories,id',
             'products.*.qty' => 'required|integer|min:1',
             'products.*.unit_price' => 'nullable|numeric|min:0',
@@ -980,29 +985,50 @@ class InventoryController extends Controller
                 throw new \Exception('Warehouse must be selected for warehouse destination.');
             }
 
-            $allSerials = collect($request->products)->flatMap(fn($p) => $p['serials'])->map('trim')->filter()->values()->toArray();
-            $existing = ProductSerial::whereIn('serial_number', $allSerials)->pluck('serial_number')->toArray();
-            if (!empty($existing)) {
-                throw new \Exception('These serial numbers already exist: ' . implode(', ', array_slice($existing, 0, 10)));
-            }
-            $dupeCheck = array_count_values($allSerials);
-            $dupes = array_keys(array_filter($dupeCheck, fn($c) => $c > 1));
-            if (!empty($dupes)) {
-                throw new \Exception('Duplicate serials in upload: ' . implode(', ', array_slice($dupes, 0, 10)));
-            }
+            // Pre-fetch all existing serials from DB to auto-skip
+            $allSerialsInput = collect($request->products)->flatMap(fn($p) => $p['serials'])->map('trim')->filter()->values()->toArray();
+            $existingInDb = ProductSerial::whereIn('serial_number', $allSerialsInput)->pluck('serial_number')->toArray();
+            $existingSet = array_flip($existingInDb);
 
             $results = [];
+            $skippedSummary = [];
+            $seenInThisRun = [];
             foreach ($request->products as $item) {
-                $serials = array_values(array_filter(array_map('trim', $item['serials'])));
-                if (count($serials) !== (int) $item['qty']) {
-                    throw new \Exception('Product "' . $item['item_name'] . '": qty (' . $item['qty'] . ') does not match serial count (' . count($serials) . ').');
+                $rawSerials = array_values(array_filter(array_map('trim', $item['serials'])));
+
+                // Filter: skip serials already in DB OR seen earlier in this run
+                $validSerials = [];
+                $skippedSerials = [];
+                foreach ($rawSerials as $sn) {
+                    $key = strtoupper($sn);
+                    if (isset($existingSet[$sn]) || isset($seenInThisRun[$key])) {
+                        $skippedSerials[] = $sn;
+                    } else {
+                        $validSerials[] = $sn;
+                        $seenInThisRun[$key] = true;
+                    }
                 }
 
+                if (empty($validSerials)) {
+                    $skippedSummary[] = [
+                        'product' => $item['item_name'],
+                        'skipped_count' => count($skippedSerials),
+                        'skipped' => array_slice($skippedSerials, 0, 20),
+                        'saved_count' => 0,
+                    ];
+                    continue; // Skip this product entirely - no valid serials
+                }
+
+                // ── Auto-match on product name (fuzzy first-word / exact name) ──
                 $product = null;
                 if (!empty($item['product_id'])) {
                     $product = Product::find($item['product_id']);
                 }
                 if (!$product) {
+                    $product = Product::whereRaw('LOWER(item_name) = ?', [strtolower(trim($item['item_name']))])->first();
+                }
+                if (!$product) {
+                    // Create new
                     if (empty($item['category_id'])) {
                         throw new \Exception('Product "' . $item['item_name'] . '" is new: please assign a category.');
                     }
@@ -1022,7 +1048,19 @@ class InventoryController extends Controller
                     $product->update(['is_serialNumber_required' => 1]);
                 }
 
-                $qty = (int) $item['qty'];
+                // Use only validSerials from here onwards
+                $serials = $validSerials;
+                if (!empty($skippedSerials)) {
+                    $skippedSummary[] = [
+                        'product' => $item['item_name'],
+                        'skipped_count' => count($skippedSerials),
+                        'skipped' => array_slice($skippedSerials, 0, 20),
+                        'saved_count' => count($serials),
+                    ];
+                }
+
+                // Qty always = actual saved serials count
+                $qty = count($serials);
                 $unitPrice = $item['unit_price'] !== null && $item['unit_price'] !== '' ? (float) $item['unit_price'] : null;
                 $gstPercent = isset($item['gst_percent']) && $item['gst_percent'] !== '' ? (float) $item['gst_percent'] : null;
                 [$gstAmt, $totWithGst] = $this->gstFields($unitPrice, $gstPercent);
@@ -1105,7 +1143,12 @@ class InventoryController extends Controller
             }
 
             DB::commit();
-            return response()->json(['success' => true, 'message' => 'Bulk stock uploaded successfully.', 'results' => $results]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Bulk stock uploaded successfully.',
+                'results' => $results,
+                'skipped_summary' => $skippedSummary,
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);

@@ -221,6 +221,7 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::get('/inventory/supplier-report/export', [InventoryController::class, 'supplierReportExport'])->name('inventorySupplierReportExport');
     Route::post('/inventory/serials/parse-excel', [InventoryController::class, 'parseSerialExcel'])->name('inventorySerialsParseExcel');
     Route::post('/inventory/serials/check-duplicates', [InventoryController::class, 'checkSerialDuplicates'])->name('inventorySerialsCheckDuplicates');
+    Route::get('/inventory/find-product-by-name', [InventoryController::class, 'findProductByName'])->name('inventoryFindProductByName');
     Route::post('/inventory/serials/bulk-store', [InventoryController::class, 'bulkStoreFromExcel'])->name('inventorySerialsBulkStore');
     Route::get('/inventory/serials/template', [InventoryController::class, 'downloadSerialTemplate'])->name('inventorySerialTemplate');
     Route::get('/inventory/serials/search', [InventoryController::class, 'serialSearchPage'])->name('inventorySerialSearch');
