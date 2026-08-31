@@ -404,6 +404,7 @@
                         countEl.style.color = (qty > 0 && selected.size === qty) ? '#059669' : '#dc2626';
                     }
                     syncSerialInputs(itemId);
+                    recalcAlloc(itemId);
                 }
 
                 function toggleSourceSerial(itemId, idx, cb) {
@@ -534,16 +535,48 @@
                                 'cancelled' => ['dot'=>'#ef4444','bg'=>'#fef2f2','br'=>'#ef4444'],
                             ];
                         @endphp
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="statusPillGrid" data-current="{{ $order->status }}">
                             @foreach(['pending','confirmed','shipped','delivered','cancelled'] as $st)
                                 @php $c = $stColors[$st]; $active = $order->status === $st; @endphp
-                                <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid {{ $active ? $c['br'] : '#e5e7eb' }};background:{{ $active ? $c['bg'] : '#fff' }};border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:{{ $active ? '#111827' : '#6b7280' }};transition:all 0.15s;{{ $st === 'cancelled' ? 'grid-column:1/-1;' : '' }}">
-                                    <input type="radio" name="status" value="{{ $st }}" {{ $active ? 'checked' : '' }} style="display:none;">
+                                <label class="status-pill {{ $active ? 'active' : '' }}"
+                                       data-status="{{ $st }}"
+                                       data-dot="{{ $c['dot'] }}"
+                                       data-bg="{{ $c['bg'] }}"
+                                       data-br="{{ $c['br'] }}"
+                                       style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid {{ $active ? $c['br'] : '#e5e7eb' }};background:{{ $active ? $c['bg'] : '#fff' }};border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:{{ $active ? '#111827' : '#6b7280' }};transition:all 0.15s;{{ $st === 'cancelled' ? 'grid-column:1/-1;' : '' }}">
+                                    <input type="radio" name="status" value="{{ $st }}" {{ $active ? 'checked' : '' }} style="position:absolute;opacity:0;pointer-events:none;">
                                     <span style="width:8px;height:8px;border-radius:50%;background:{{ $c['dot'] }};flex-shrink:0;"></span>
                                     <span style="text-transform:capitalize;">{{ $st }}</span>
+                                    <span class="status-check" style="margin-left:auto;color:{{ $c['dot'] }};font-weight:900;display:{{ $active ? 'inline' : 'none' }};">✓</span>
                                 </label>
                             @endforeach
                         </div>
+                        <script>
+                            (function () {
+                                var grid = document.getElementById('statusPillGrid');
+                                if (!grid) return;
+                                grid.querySelectorAll('.status-pill').forEach(function (pill) {
+                                    pill.addEventListener('click', function () {
+                                        grid.querySelectorAll('.status-pill').forEach(function (p) {
+                                            p.style.border = '2px solid #e5e7eb';
+                                            p.style.background = '#fff';
+                                            p.style.color = '#6b7280';
+                                            var ck = p.querySelector('.status-check');
+                                            if (ck) ck.style.display = 'none';
+                                            p.classList.remove('active');
+                                        });
+                                        pill.style.border = '2px solid ' + pill.dataset.br;
+                                        pill.style.background = pill.dataset.bg;
+                                        pill.style.color = '#111827';
+                                        var ck = pill.querySelector('.status-check');
+                                        if (ck) ck.style.display = 'inline';
+                                        pill.classList.add('active');
+                                        var radio = pill.querySelector('input[type="radio"]');
+                                        if (radio) radio.checked = true;
+                                    });
+                                });
+                            })();
+                        </script>
                         <button type="submit" style="margin-top:14px;width:100%;padding:11px;background:linear-gradient(135deg,#4f46e5,#4338ca);color:#fff;font-size:13px;font-weight:700;border-radius:8px;border:none;cursor:pointer;box-shadow:0 4px 10px rgba(79,70,229,0.25);">
                             <i class="fas fa-check me-1"></i> Update Status
                         </button>
