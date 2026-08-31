@@ -684,16 +684,20 @@
             function isBadDataTable($table) {
                 var headerCells = $table.find('thead tr').first().find('th, td').length;
                 var $bodyRows = $table.find('tbody tr');
-                if ($bodyRows.length === 0) return true; // empty tbody
-                // If ANY body row has a different cell count than headers → skip init
+                if ($bodyRows.length === 0) return true;
                 var mismatch = false;
                 $bodyRows.each(function () {
-                    var cells = 0;
+                    var actualCells = jQuery(this).find('td, th').length;
+                    var spanned = 0;
+                    var hasColspan = false;
                     jQuery(this).find('td, th').each(function () {
                         var cs = parseInt(jQuery(this).attr('colspan')) || 1;
-                        cells += cs;
+                        if (cs > 1) hasColspan = true;
+                        spanned += cs;
                     });
-                    if (headerCells > 0 && cells !== headerCells) {
+                    // Bad if: actual cell count != header count (regardless of colspan)
+                    // OR any row uses colspan (DataTables can't handle it)
+                    if (headerCells > 0 && (actualCells !== headerCells || hasColspan)) {
                         mismatch = true;
                         return false;
                     }
@@ -894,11 +898,12 @@
                 if ($rows.length === 0) return true;
                 var bad = false;
                 $rows.each(function () {
-                    var cells = 0;
+                    var actualCells = jQuery(this).find('td, th').length;
+                    var hasColspan = false;
                     jQuery(this).find('td, th').each(function () {
-                        cells += (parseInt(jQuery(this).attr('colspan')) || 1);
+                        if ((parseInt(jQuery(this).attr('colspan')) || 1) > 1) hasColspan = true;
                     });
-                    if (head > 0 && cells !== head) { bad = true; return false; }
+                    if (head > 0 && (actualCells !== head || hasColspan)) { bad = true; return false; }
                 });
                 return bad;
             }

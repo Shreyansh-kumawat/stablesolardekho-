@@ -387,7 +387,7 @@
 
                 $('#product_id').empty().append('<option value="">Select Product</option>')
                     .append('<option value="' + pid + '" data-uom="' + uom + '" data-price="' + price + '" selected>' + name + '</option>')
-                    .trigger('change.select2');
+                    .trigger('change'); // fires both select2 and regular change handlers (serial picker etc.)
 
                 $('#uom').val(uom);
                 $('#unit_price').val(price || '');
