@@ -1145,8 +1145,10 @@ function updateBulkField(idx, field, value) {
         c.serials = parseSerialsFromText(value);
         renderBulkCardStats(idx);
         // Also check DB duplicates in real-time
+        // Immediate cross-card (in-file) duplicate check + debounced DB check
+        updateBulkDupWarning(idx);
         clearTimeout(bulkNameCheckTimers['ser_' + idx]);
-        bulkNameCheckTimers['ser_' + idx] = setTimeout(function() { checkBulkSerialsDb(idx); }, 700);
+        bulkNameCheckTimers['ser_' + idx] = setTimeout(function() { checkBulkSerialsDb(idx); }, 250);
     }
     if (field === 'product_name') {
         // Debounced product name existence check
@@ -1183,7 +1185,12 @@ function checkBulkProductName(idx) {
 
 function checkBulkSerialsDb(idx) {
     var c = bulkCards.find(x => x.idx === idx);
-    if (!c || !c.serials.length) return;
+    if (!c) return;
+    if (!c.serials.length) {
+        c.db_duplicates = [];
+        updateBulkDupWarning(idx);
+        return;
+    }
     var token = document.querySelector('meta[name="csrf-token"]');
     fetch("{{ route('inventorySerialsCheckDuplicates') }}", {
         method: 'POST',
@@ -1193,10 +1200,93 @@ function checkBulkSerialsDb(idx) {
     .then(r => r.json())
     .then(data => {
         c.db_duplicates = data.duplicates || [];
-        renderBulkCards();
+        updateBulkDupWarning(idx);
     })
     .catch(() => {});
 }
+
+/**
+ * In-place warning update — doesn't re-render whole cards, keeps textarea focus.
+ * Shows: DB duplicates, in-file duplicates (across ALL bulk cards), skipped count/save-count preview.
+ */
+function updateBulkDupWarning(idx) {
+    var c = bulkCards.find(x => x.idx === idx);
+    if (!c) return;
+    var dupBox = document.getElementById('bulkDupBox_' + idx);
+    if (!dupBox) return;
+
+    // Collect cross-card duplicates (serials that appear in OTHER cards)
+    var otherCardSerials = {};
+    bulkCards.forEach(function (other) {
+        if (other.idx === idx) return;
+        other.serials.forEach(function (s) { otherCardSerials[s.toUpperCase()] = true; });
+    });
+    var crossCardDupes = c.serials.filter(function (s) { return otherCardSerials[s.toUpperCase()]; });
+
+    // In-textarea duplicates (same serial repeated within this card's textarea)
+    var seen = {}, inCardDupes = [];
+    var rawText = (document.getElementById('bulkSerText_' + idx) || {value: ''}).value;
+    (rawText.split(/[\s,;]+/)).forEach(function (l) {
+        var t = l.trim();
+        if (!t) return;
+        var k = t.toUpperCase();
+        if (seen[k]) inCardDupes.push(t);
+        else seen[k] = true;
+    });
+
+    var dbDupes = c.db_duplicates || [];
+    var allSkipCount = dbDupes.length + crossCardDupes.length + inCardDupes.length;
+    var effectiveSave = Math.max(0, c.serials.length - dbDupes.length - crossCardDupes.length);
+
+    if (allSkipCount === 0) {
+        dupBox.innerHTML = '';
+        dupBox.style.display = 'none';
+        // Update count badge
+        var badge = document.getElementById('bulkSerCnt_' + idx);
+        if (badge) badge.textContent = c.serials.length + ' serials';
+        calcBulkGst(idx);
+        return;
+    }
+
+    var html = '<div style="background:#fff7ed;border:1px solid #fdba74;color:#9a3412;padding:10px 12px;border-radius:6px;font-size:.78rem;">';
+    html += '<strong><i class="fas fa-info-circle me-1"></i> ' + allSkipCount + ' duplicate(s) detected — will be auto-skipped on save:</strong>';
+
+    if (dbDupes.length) {
+        html += '<div style="margin-top:6px;"><strong style="color:#7c2d12;">Already in database (' + dbDupes.length + '):</strong>'
+              + '<div style="font-family:monospace; font-size:.72rem;">' + escapeHtmlBulk(dbDupes.slice(0,10).join(', '))
+              + (dbDupes.length > 10 ? ' +' + (dbDupes.length-10) + ' more' : '') + '</div></div>';
+    }
+    if (crossCardDupes.length) {
+        html += '<div style="margin-top:6px;"><strong style="color:#7c2d12;">Also in another product card (' + crossCardDupes.length + '):</strong>'
+              + '<div style="font-family:monospace; font-size:.72rem;">' + escapeHtmlBulk(crossCardDupes.slice(0,10).join(', '))
+              + (crossCardDupes.length > 10 ? ' +' + (crossCardDupes.length-10) + ' more' : '') + '</div></div>';
+    }
+    if (inCardDupes.length) {
+        html += '<div style="margin-top:6px;"><strong style="color:#7c2d12;">Repeated within this card (' + inCardDupes.length + '):</strong>'
+              + '<div style="font-family:monospace; font-size:.72rem;">' + escapeHtmlBulk(inCardDupes.slice(0,10).join(', '))
+              + (inCardDupes.length > 10 ? ' +' + (inCardDupes.length-10) + ' more' : '') + '</div></div>';
+    }
+    html += '<div style="margin-top:6px; font-weight:700;">Effective save: ' + effectiveSave + ' new serial(s) (qty will be ' + effectiveSave + ')</div>';
+    html += '</div>';
+
+    dupBox.innerHTML = html;
+    dupBox.style.display = '';
+
+    // Update badge + total
+    var badge = document.getElementById('bulkSerCnt_' + idx);
+    if (badge) badge.textContent = c.serials.length + ' serials → ' + effectiveSave + ' will save';
+    calcBulkGst(idx);
+
+    // Refresh OTHER cards' warnings (their cross-card status might have changed)
+    if (!_bulkDupCascading) {
+        _bulkDupCascading = true;
+        bulkCards.forEach(function (other) {
+            if (other.idx !== idx) updateBulkDupWarning(other.idx);
+        });
+        _bulkDupCascading = false;
+    }
+}
+var _bulkDupCascading = false;
 
 function renderBulkCards() {
     var wrap = document.getElementById('bulkProductCards');
@@ -1223,16 +1313,8 @@ function renderBulkCards() {
                 + c.warnings.map(w => '<div><i class="fas fa-exclamation-triangle me-1"></i>' + escapeHtmlBulk(w) + '</div>').join('')
                 + '</div>';
         }
-        var dupHtml = '';
-        if (c.db_duplicates && c.db_duplicates.length) {
-            var willSave = c.serials.length - c.db_duplicates.length;
-            dupHtml = '<div style="background:#fff7ed;border:1px solid #fdba74;color:#9a3412;padding:8px 12px;border-radius:6px;font-size:.78rem;margin-bottom:10px;">'
-                + '<strong><i class="fas fa-info-circle me-1"></i> ' + c.db_duplicates.length + ' serial(s) already in database — will be auto-skipped:</strong>'
-                + '<div style="margin-top:4px; font-family:monospace; font-size:.72rem;">' + c.db_duplicates.slice(0,10).join(', ')
-                + (c.db_duplicates.length > 10 ? ' +' + (c.db_duplicates.length-10) + ' more' : '') + '</div>'
-                + '<div style="margin-top:6px; font-weight:600;">Effective save: ' + willSave + ' new serial(s) (qty will be ' + willSave + ')</div>'
-                + '</div>';
-        }
+        // Duplicate warning box — populated in real-time by updateBulkDupWarning (no re-render needed)
+        var dupHtml = '<div id="bulkDupBox_' + c.idx + '" style="margin-bottom:10px; display:none;"></div>';
         var skippedHtml = '';
         if (c.skipped_text) {
             skippedHtml = '<div style="background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:8px 12px;border-radius:6px;font-size:.78rem;margin-bottom:10px;">'
@@ -1282,6 +1364,10 @@ function renderBulkCards() {
              + '  <div class="col-md-4">'
              + '    <label class="form-label">Amount with GST (per unit)</label>'
              + '    <input type="text" class="form-control" readonly id="bulkAmtGst_' + c.idx + '" style="background:#f0fdf4;color:#065f46;font-weight:600;" placeholder="Auto">'
+             + '    <div style="margin-top:6px; padding:6px 10px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px;">'
+             + '      <div style="font-size:.7rem; color:#6b7280; font-weight:600; text-transform:uppercase; letter-spacing:.03em;">Total Amount (' + c.serials.length + ' × unit)</div>'
+             + '      <div id="bulkTotalAmt_' + c.idx + '" style="color:#1d4ed8; font-weight:700; font-size:1.05rem;">-</div>'
+             + '    </div>'
              + '  </div>'
              + '  <div class="col-12">'
              + '    <label class="form-label">Serial Numbers <span class="serial-count-badge" id="bulkSerCnt_' + c.idx + '" style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:.72rem;font-weight:600;margin-left:8px;">' + c.serials.length + ' serials</span></label>'
@@ -1296,7 +1382,10 @@ function renderBulkCards() {
     }).join('');
 
     // Compute GST after render
-    bulkCards.forEach(c => calcBulkGst(c.idx));
+    bulkCards.forEach(function (c) {
+        calcBulkGst(c.idx);
+        updateBulkDupWarning(c.idx);
+    });
 }
 
 function renderBulkCardStats(idx) {
@@ -1304,6 +1393,7 @@ function renderBulkCardStats(idx) {
     if (!c) return;
     var badge = document.getElementById('bulkSerCnt_' + idx);
     if (badge) badge.textContent = c.serials.length + ' serials';
+    calcBulkGst(idx); // Recalculate total since count changed
 }
 
 function calcBulkGst(idx) {
@@ -1311,9 +1401,24 @@ function calcBulkGst(idx) {
     if (!c) return;
     var price = parseFloat(c.unit_price) || 0;
     var gst = parseFloat(c.gst_percent) || 0;
-    var total = +(price + (price * gst / 100)).toFixed(2);
+    var perUnit = +(price + (price * gst / 100)).toFixed(2);
+    var count = c.serials.length;
+    var totalAmt = +(perUnit * count).toFixed(2);
+
     var el = document.getElementById('bulkAmtGst_' + idx);
-    if (el) el.value = total > 0 ? '₹ ' + total.toLocaleString('en-IN') : '';
+    if (el) el.value = perUnit > 0 ? '₹ ' + perUnit.toLocaleString('en-IN') : '';
+
+    var totalEl = document.getElementById('bulkTotalAmt_' + idx);
+    if (totalEl) {
+        if (perUnit > 0 && count > 0) {
+            totalEl.textContent = '₹ ' + totalAmt.toLocaleString('en-IN');
+            // Update the label to reflect current count
+            var lbl = totalEl.previousElementSibling;
+            if (lbl) lbl.textContent = 'Total Amount (' + count + ' × unit)';
+        } else {
+            totalEl.textContent = '-';
+        }
+    }
 }
 
 function beautifyBulkSerials(idx) {
