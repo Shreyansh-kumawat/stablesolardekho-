@@ -871,6 +871,62 @@
     </script>
 
     @yield('js')
+
+    <script>
+        /* ─────────────────────────────────────────────────────
+           RE-APPLY DataTables safety patch AFTER page scripts
+           Page-level @section('js') often reloads jquery.dataTables.min.js
+           which overwrites the earlier wrapper. This second pass re-wraps.
+           Runs SYNCHRONOUSLY before $(document).ready handlers fire.
+           ───────────────────────────────────────────────────── */
+        (function () {
+            if (!window.jQuery || !jQuery.fn.DataTable) return;
+            // Skip if already guarded by our marker
+            if (jQuery.fn.DataTable.__guarded) return;
+
+            jQuery.fn.DataTable.ext.errMode = 'throw';
+            var _orig = jQuery.fn.DataTable;
+            var _origLow = jQuery.fn.dataTable;
+
+            function badTable($t) {
+                var head = $t.find('thead tr').first().find('th, td').length;
+                var $rows = $t.find('tbody tr');
+                if ($rows.length === 0) return true;
+                var bad = false;
+                $rows.each(function () {
+                    var cells = 0;
+                    jQuery(this).find('td, th').each(function () {
+                        cells += (parseInt(jQuery(this).attr('colspan')) || 1);
+                    });
+                    if (head > 0 && cells !== head) { bad = true; return false; }
+                });
+                return bad;
+            }
+
+            function wrap(orig) {
+                var fn = function () {
+                    var $t = this;
+                    if ($t && $t.length) {
+                        var skip = false;
+                        $t.each(function () { if (badTable(jQuery(this))) skip = true; });
+                        if (skip) {
+                            console.warn('[DataTables] Init skipped — empty tbody or column mismatch on', $t.get(0));
+                            return $t;
+                        }
+                    }
+                    try { return orig.apply(this, arguments); }
+                    catch (e) { console.error('[DataTables] Init failed silently:', e.message); return $t; }
+                };
+                fn.__guarded = true;
+                // Copy statics (ext, defaults, etc.)
+                for (var k in orig) { if (Object.prototype.hasOwnProperty.call(orig, k)) fn[k] = orig[k]; }
+                return fn;
+            }
+
+            jQuery.fn.DataTable = wrap(_orig);
+            jQuery.fn.dataTable = wrap(_origLow);
+        })();
+    </script>
 </body>
 
 </html>
