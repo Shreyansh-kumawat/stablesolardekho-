@@ -77,6 +77,7 @@
 
         <div class="card">
             <div class="card-body">
+                @if($transactions->count())
                 <div class="table-responsive">
                     <table class="table table-hover mb-0" id="txnTable">
                         <thead>
@@ -96,7 +97,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($transactions as $i => $txn)
+                            @foreach($transactions as $i => $txn)
                             <tr>
                                 <td>{{ $i + 1 }}</td>
                                 <td style="white-space:nowrap;">{{ $txn->created_at->format('d M Y, h:i A') }}</td>
@@ -115,14 +116,19 @@
                                 <td>{{ $txn->performer->name ?? '-' }}</td>
                                 <td><small>{{ $txn->remarks ?? '-' }}</small></td>
                             </tr>
-                            @empty
-                            <tr>
-                                <td colspan="12" class="text-center text-muted py-4">No transactions yet.</td>
-                            </tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
+                @else
+                <div class="text-center py-5" style="color:#94a3b8;">
+                    <svg width="42" height="42" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24" style="margin-bottom:10px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                    <p style="margin:0; font-weight:600;">No transactions yet.</p>
+                    <p style="margin:4px 0 0; font-size:.85rem;">This warehouse hasn't recorded any stock movements.</p>
+                </div>
+                @endif
             </div>
         </div>
 
@@ -143,12 +149,14 @@
     <script src="/assets/js/buttons.html5.min.js"></script>
     <script>
         $(function () {
-            $('#txnTable').DataTable({
-                pageLength: 25,
-                order: [[1, 'desc']],
-                dom: 'Bfrtip',
-                buttons: ['copy', 'excel', 'csv']
-            });
+            if ($('#txnTable').length && $('#txnTable tbody tr').length) {
+                $('#txnTable').DataTable({
+                    pageLength: 25,
+                    order: [[1, 'desc']],
+                    dom: 'Bfrtip',
+                    buttons: ['copy', 'excel', 'csv']
+                });
+            }
         });
     </script>
 @endsection
