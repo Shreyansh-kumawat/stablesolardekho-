@@ -1,7 +1,12 @@
 @extends('layouts.adminLayout')
 
 @section('content')
-<div class="p-6">
+<style>
+    @media (max-width: 1024px) {
+        .order-layout-grid { grid-template-columns: 1fr !important; }
+    }
+</style>
+<div class="p-6" style="max-width: 1400px; margin: 0 auto;">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-3">
@@ -36,10 +41,10 @@
         <div class="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">{{ session('success') }}</div>
     @endif
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    <div style="display:grid; grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr); gap: 20px; align-items: start;" class="order-layout-grid">
 
         <!-- Left: Order Items only -->
-        <div class="lg:col-span-2 space-y-4">
+        <div class="space-y-4" style="min-width:0;">
 
             <!-- Payment Verification Card -->
             @if($order->payment_status === 'verification_pending' && $order->payment_screenshot)
