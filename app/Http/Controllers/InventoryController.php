@@ -970,6 +970,26 @@ class InventoryController extends Controller
             'products.*.qty' => 'required|integer|min:1',
             'products.*.unit_price' => 'nullable|numeric|min:0',
             'products.*.gst_percent' => 'nullable|numeric|min:0|max:100',
+            'products.*.sale_price' => 'nullable|string|max:100',
+            'products.*.item_code' => 'nullable|string|max:100',
+            'products.*.uom' => 'nullable|string|max:50',
+            'products.*.description' => 'nullable|string|max:2000',
+            'products.*.type' => 'nullable|string|max:100',
+            'products.*.brand' => 'nullable|string|max:100',
+            'products.*.model' => 'nullable|string|max:100',
+            'products.*.operating_voltage' => 'nullable|string|max:100',
+            'products.*.solar_panel_type' => 'nullable|string|max:100',
+            'products.*.mnre_approved' => 'nullable|string|max:100',
+            'products.*.certifications' => 'nullable|string|max:255',
+            'products.*.manufacturer_warranty' => 'nullable|string|max:100',
+            'products.*.number_of_cells' => 'nullable|string|max:100',
+            'products.*.encapsulate' => 'nullable|string|max:100',
+            'products.*.country_of_origin' => 'nullable|string|max:100',
+            'products.*.input_voltage' => 'nullable|string|max:100',
+            'products.*.max_supported_panel_power' => 'nullable|string|max:100',
+            'products.*.image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:4096',
+            'products.*.gallery' => 'nullable|array|max:8',
+            'products.*.gallery.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:4096',
             'products.*.serials' => 'required|array|min:1',
             'products.*.serials.*' => 'required|string|max:100',
             'invoice_number' => 'nullable|string|max:100',
@@ -1028,7 +1048,7 @@ class InventoryController extends Controller
                     $product = Product::whereRaw('LOWER(item_name) = ?', [strtolower(trim($item['item_name']))])->first();
                 }
                 if (!$product) {
-                    // Create new
+                    // Create new — save every field admin provided
                     if (empty($item['category_id'])) {
                         throw new \Exception('Product "' . $item['item_name'] . '" is new: please assign a category.');
                     }
@@ -1036,12 +1056,41 @@ class InventoryController extends Controller
                     $product->category_id = $item['category_id'];
                     $product->sub_category_id = $item['sub_category_id'] ?? null;
                     $product->item_name = $item['item_name'];
-                    $product->item_code = $item['item_name'];
+                    $product->item_code = $item['item_code'] ?? $item['item_name'];
                     $product->uom = $item['uom'] ?? 'Piece';
+                    $product->description = $item['description'] ?? null;
+                    $product->current_sale_price = $item['sale_price'] ?? null;
                     $product->is_active = 1;
                     $product->is_serialNumber_required = 1;
                     $product->quantity = 0;
+
+                    foreach ([
+                        'type','brand','model','operating_voltage','solar_panel_type',
+                        'mnre_approved','certifications','manufacturer_warranty',
+                        'number_of_cells','encapsulate','country_of_origin',
+                        'input_voltage','max_supported_panel_power'
+                    ] as $f) {
+                        if (isset($item[$f])) $product->{$f} = $item[$f];
+                    }
+
+                    // Main image
+                    if (isset($item['image']) && $item['image']) {
+                        $product->image = $item['image']->store('products', 'public');
+                    }
+
                     $product->save();
+
+                    // Gallery images
+                    if (!empty($item['gallery']) && is_array($item['gallery'])) {
+                        foreach ($item['gallery'] as $gi => $g) {
+                            if ($gi >= 8) break;
+                            if (!$g) continue;
+                            $product->images()->create([
+                                'image' => $g->store('product-gallery', 'public'),
+                                'sort_order' => $gi,
+                            ]);
+                        }
+                    }
                 }
 
                 if (!$product->is_serialNumber_required) {
@@ -1172,19 +1221,16 @@ class InventoryController extends Controller
                  . ",3K6210826-2628-986705285P\n"
                  . ",3K6210826-2628-986705299P\n"
                  . ",\n"
-                 . ",8 YEAR WARRANTY BY POLYCAB INDIA LTD.\n"
                  . "2,POLYCAB SOLAR GRID TIE INVERTER 5000 WATT WITH RMS-SOLAR POWER BASED DEVICE\n"
                  . ",SR.NO.\n"
                  . ",5K0190826-2628-991803185P\n"
                  . ",5K0190826-2628-991803564P\n"
                  . ",\n"
-                 . ",8 YEAR WARRANTY BY POLYCAB INDIA LTD.\n"
                  . "3,POLYCAB SOLAR GRID TIE INVERTER 6000 WATT WITH RMS-SOLAR POWER BASED DEVICE\n"
                  . ",SR.NO.\n"
                  . ",6K0100826-2626-485601077P\n"
                  . ",6K0100826-2626-485601069P\n"
-                 . ",\n"
-                 . ",8 YEAR WARRANTY BY POLYCAB INDIA LTD.\n";
+                 . ",\n";
         return response($content, 200, [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',

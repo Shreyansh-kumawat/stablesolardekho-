@@ -1114,12 +1114,28 @@ function addBulkCard(data) {
         product_id: data.suggested_product ? data.suggested_product.id : null,
         category_id: data.suggested_product ? data.suggested_product.category_id : '',
         sub_category_id: data.suggested_product ? data.suggested_product.sub_category_id : '',
+        // Basic info
+        item_code: '',
+        uom: 'Piece',
+        description: '',
+        sale_price: '',
+        // Purchase pricing
         unit_price: '',
-        gst_percent: ''
+        gst_percent: '',
+        // Specifications
+        type: '', brand: '', model: '', operating_voltage: '',
+        solar_panel_type: '', mnre_approved: '', certifications: '',
+        manufacturer_warranty: '', number_of_cells: '', encapsulate: '',
+        country_of_origin: '', input_voltage: '', max_supported_panel_power: '',
+        // Photos (data URLs for preview + file objects stored in bulkCardFiles[idx])
+        image_preview: '', gallery_previews: []
     };
     bulkCards.push(card);
     renderBulkCards();
 }
+
+// Store File objects separately (not in card state which gets JSON-stringified)
+var bulkCardFiles = {}; // {idx: {image: File, gallery: [File]}}
 
 function removeBulkCard(idx) {
     bulkCards = bulkCards.filter(c => c.idx !== idx);
@@ -1332,32 +1348,64 @@ function renderBulkCards() {
                 + '</div>';
         }
 
-        return '<div class="sec-card" style="border-left:4px solid #3b82f6; position:relative;">'
+        var isExisting = !!c.suggested_product;
+        var readOnlyIfExisting = isExisting ? ' readonly' : '';
+        var disabledIfExisting = isExisting ? ' disabled' : '';
+        var existingNote = isExisting ? '<small style="color:#059669;font-weight:400;">(from existing product)</small>' : '';
+
+        // ── Card open ──
+        var out = '<div class="sec-card" style="border-left:4px solid #3b82f6; position:relative;">'
              + '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">'
              + '  <p class="sec-label" style="margin:0;">Product #' + (bulkCards.indexOf(c)+1) + '</p>'
              + '  <button type="button" onclick="removeBulkCard(' + c.idx + ')" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;padding:5px 12px;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;"><i class="fas fa-trash me-1"></i>Remove</button>'
              + '</div>'
-             + suggHtml
-             + warnHtml
-             + dupHtml
+             + suggHtml + warnHtml + dupHtml;
+
+        // ── Basic Info ──
+        out += '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;margin-bottom:12px;">'
+             + '<div style="font-size:.75rem;font-weight:700;color:#4b5563;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Basic Info</div>'
              + '<div class="row g-3">'
              + '  <div class="col-12">'
              + '    <label class="form-label">Product Name <span class="req">*</span> <small style="color:var(--txt2); font-weight:400;">(auto from Excel - editable)</small></label>'
              + '    <input type="text" class="form-control" value="' + escapeAttrBulk(c.product_name) + '" oninput="updateBulkField(' + c.idx + ', \'product_name\', this.value)">'
              + '  </div>'
-             + '  <div class="col-md-6">'
-             + '    <label class="form-label">Category ' + (c.suggested_product ? '<small style="color:#059669;font-weight:400;">(auto-set from existing)</small>' : '<span class="req">*</span>') + '</label>'
-             + '    <select class="form-select" onchange="updateBulkField(' + c.idx + ', \'category_id\', this.value)"' + (c.suggested_product ? ' disabled' : '') + '>' + catOptions + '</select>'
-             + '  </div>'
-             + '  <div class="col-md-6">'
-             + '    <label class="form-label">Sub Category</label>'
-             + '    <select class="form-select" onchange="updateBulkField(' + c.idx + ', \'sub_category_id\', this.value)"' + (c.suggested_product ? ' disabled' : '') + '>' + subOptions + '</select>'
+             + '  <div class="col-md-4">'
+             + '    <label class="form-label">Product Code ' + existingNote + '</label>'
+             + '    <input type="text" class="form-control" value="' + escapeAttrBulk(c.item_code) + '"' + readOnlyIfExisting + ' oninput="updateBulkField(' + c.idx + ', \'item_code\', this.value)" placeholder="e.g. SOL-001">'
              + '  </div>'
              + '  <div class="col-md-4">'
+             + '    <label class="form-label">Category ' + (isExisting ? existingNote : '<span class="req">*</span>') + '</label>'
+             + '    <select class="form-select" onchange="updateBulkField(' + c.idx + ', \'category_id\', this.value)"' + disabledIfExisting + '>' + catOptions + '</select>'
+             + '  </div>'
+             + '  <div class="col-md-4">'
+             + '    <label class="form-label">Sub Category</label>'
+             + '    <select class="form-select" onchange="updateBulkField(' + c.idx + ', \'sub_category_id\', this.value)"' + disabledIfExisting + '>' + subOptions + '</select>'
+             + '  </div>'
+             + '  <div class="col-md-4">'
+             + '    <label class="form-label">UOM ' + existingNote + '</label>'
+             + '    <select class="form-select"' + disabledIfExisting + ' onchange="updateBulkField(' + c.idx + ', \'uom\', this.value)">'
+             +        ['Piece','Kilogram','Liter','Meter','Box','Pack','Watt','KW','Set'].map(function(u){return '<option value="'+u+'"'+(c.uom===u?' selected':'')+'>'+u+'</option>';}).join('')
+             + '    </select>'
+             + '  </div>'
+             + '  <div class="col-md-8">'
+             + '    <label class="form-label">Description</label>'
+             + '    <textarea class="form-control" rows="2" oninput="updateBulkField(' + c.idx + ', \'description\', this.value)"' + readOnlyIfExisting + '>' + escapeHtmlBulk(c.description) + '</textarea>'
+             + '  </div>'
+             + '</div></div>';
+
+        // ── Pricing ──
+        out += '<div style="background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:14px;margin-bottom:12px;">'
+             + '<div style="font-size:.75rem;font-weight:700;color:#854d0e;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Pricing</div>'
+             + '<div class="row g-3">'
+             + '  <div class="col-md-3">'
+             + '    <label class="form-label">Sale Price (₹)</label>'
+             + '    <input type="text" class="form-control" value="' + escapeAttrBulk(c.sale_price) + '" oninput="updateBulkField(' + c.idx + ', \'sale_price\', this.value)" placeholder="Customer-facing">'
+             + '  </div>'
+             + '  <div class="col-md-3">'
              + '    <label class="form-label">Unit Price (Purchase)</label>'
              + '    <input type="number" step="0.01" min="0" class="form-control" value="' + (c.unit_price || '') + '" oninput="updateBulkField(' + c.idx + ', \'unit_price\', this.value); calcBulkGst(' + c.idx + ')">'
              + '  </div>'
-             + '  <div class="col-md-4">'
+             + '  <div class="col-md-2">'
              + '    <label class="form-label">GST %</label>'
              + '    <input type="number" step="0.01" min="0" max="100" class="form-control" value="' + (c.gst_percent || '') + '" oninput="updateBulkField(' + c.idx + ', \'gst_percent\', this.value); calcBulkGst(' + c.idx + ')">'
              + '  </div>'
@@ -1369,16 +1417,71 @@ function renderBulkCards() {
              + '      <div id="bulkTotalAmt_' + c.idx + '" style="color:#1d4ed8; font-weight:700; font-size:1.05rem;">-</div>'
              + '    </div>'
              + '  </div>'
-             + '  <div class="col-12">'
-             + '    <label class="form-label">Serial Numbers <span class="serial-count-badge" id="bulkSerCnt_' + c.idx + '" style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:.72rem;font-weight:600;margin-left:8px;">' + c.serials.length + ' serials</span></label>'
-             + '    <div style="display:flex; gap:6px; margin-bottom:6px;">'
-             + '      <button type="button" onclick="beautifyBulkSerials(' + c.idx + ')" style="padding:6px 12px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;"><i class="fas fa-magic me-1"></i>Beautify</button>'
-             + '    </div>'
-             + '    <textarea rows="5" class="form-control" id="bulkSerText_' + c.idx + '" oninput="updateBulkField(' + c.idx + ', \'serials_text\', this.value)" style="font-family:monospace; font-size:.82rem;" placeholder="Space, comma or new-line separated serials...">' + escapeHtmlBulk(c.serials.join('\n')) + '</textarea>'
-             + '  </div>'
+             + '</div></div>';
+
+        // ── Serial Numbers ──
+        out += '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px;margin-bottom:12px;">'
+             + '<div style="font-size:.75rem;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">'
+             + '  <span>Serial Numbers</span>'
+             + '  <span class="serial-count-badge" id="bulkSerCnt_' + c.idx + '" style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:.72rem;font-weight:600;">' + c.serials.length + ' serials</span>'
              + '</div>'
-             + skippedHtml
+             + '<div style="display:flex; gap:6px; margin-bottom:6px;">'
+             + '  <button type="button" onclick="beautifyBulkSerials(' + c.idx + ')" style="padding:6px 12px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;"><i class="fas fa-magic me-1"></i>Beautify</button>'
+             + '</div>'
+             + '<textarea rows="4" class="form-control" id="bulkSerText_' + c.idx + '" oninput="updateBulkField(' + c.idx + ', \'serials_text\', this.value)" style="font-family:monospace; font-size:.82rem;" placeholder="Space, comma or new-line separated serials...">' + escapeHtmlBulk(c.serials.join('\n')) + '</textarea>'
              + '</div>';
+
+        // ── Specifications (collapsible) — hidden if existing ──
+        if (!isExisting) {
+            out += '<details style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:0;margin-bottom:12px;">'
+                 + '<summary style="padding:12px 14px;cursor:pointer;font-size:.85rem;font-weight:600;color:#4b5563;">Specifications <small style="color:#94a3b8;font-weight:400;">(all optional - click to expand)</small></summary>'
+                 + '<div style="padding:0 14px 14px;">'
+                 + '<div class="row g-2">'
+                 + ['type', 'brand', 'model'].map(function (f) {
+                       return '<div class="col-md-4"><label class="form-label mb-1" style="font-size:.75rem;">' + f.charAt(0).toUpperCase()+f.slice(1) + '</label>'
+                           + '<input type="text" class="form-control form-control-sm" value="' + escapeAttrBulk(c[f]) + '" oninput="updateBulkField(' + c.idx + ', \'' + f + '\', this.value)"></div>';
+                   }).join('')
+                 + '</div><div class="row g-2 mt-1">'
+                 + ['operating_voltage', 'solar_panel_type', 'mnre_approved'].map(function (f) {
+                       return '<div class="col-md-4"><label class="form-label mb-1" style="font-size:.75rem;">' + f.replace(/_/g,' ').replace(/\b\w/g, c=>c.toUpperCase()) + '</label>'
+                           + '<input type="text" class="form-control form-control-sm" value="' + escapeAttrBulk(c[f]) + '" oninput="updateBulkField(' + c.idx + ', \'' + f + '\', this.value)"></div>';
+                   }).join('')
+                 + '</div><div class="row g-2 mt-1">'
+                 + ['certifications', 'manufacturer_warranty'].map(function (f) {
+                       return '<div class="col-md-6"><label class="form-label mb-1" style="font-size:.75rem;">' + f.replace(/_/g,' ').replace(/\b\w/g, c=>c.toUpperCase()) + '</label>'
+                           + '<input type="text" class="form-control form-control-sm" value="' + escapeAttrBulk(c[f]) + '" oninput="updateBulkField(' + c.idx + ', \'' + f + '\', this.value)"></div>';
+                   }).join('')
+                 + '</div><div class="row g-2 mt-1">'
+                 + ['number_of_cells', 'encapsulate', 'country_of_origin'].map(function (f) {
+                       return '<div class="col-md-4"><label class="form-label mb-1" style="font-size:.75rem;">' + f.replace(/_/g,' ').replace(/\b\w/g, c=>c.toUpperCase()) + '</label>'
+                           + '<input type="text" class="form-control form-control-sm" value="' + escapeAttrBulk(c[f]) + '" oninput="updateBulkField(' + c.idx + ', \'' + f + '\', this.value)"></div>';
+                   }).join('')
+                 + '</div><div class="row g-2 mt-1">'
+                 + ['input_voltage', 'max_supported_panel_power'].map(function (f) {
+                       return '<div class="col-md-6"><label class="form-label mb-1" style="font-size:.75rem;">' + f.replace(/_/g,' ').replace(/\b\w/g, c=>c.toUpperCase()) + '</label>'
+                           + '<input type="text" class="form-control form-control-sm" value="' + escapeAttrBulk(c[f]) + '" oninput="updateBulkField(' + c.idx + ', \'' + f + '\', this.value)"></div>';
+                   }).join('')
+                 + '</div></div></details>';
+
+            // ── Photos (collapsible) — only for new products ──
+            var imgPreview = c.image_preview ? '<img src="' + c.image_preview + '" style="height:60px;border-radius:6px;margin-top:6px;">' : '';
+            out += '<details style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:0;margin-bottom:12px;">'
+                 + '<summary style="padding:12px 14px;cursor:pointer;font-size:.85rem;font-weight:600;color:#4b5563;">Photos <small style="color:#94a3b8;font-weight:400;">(optional - click to expand)</small></summary>'
+                 + '<div style="padding:0 14px 14px;">'
+                 + '<div class="row g-3">'
+                 + '  <div class="col-md-6"><label class="form-label" style="font-size:.8rem;">Main Image</label>'
+                 + '    <input type="file" class="form-control form-control-sm" accept="image/*" onchange="handleBulkImage(' + c.idx + ', this, \'image\')">'
+                 +      imgPreview
+                 + '  </div>'
+                 + '  <div class="col-md-6"><label class="form-label" style="font-size:.8rem;">Gallery Images (max 8)</label>'
+                 + '    <input type="file" class="form-control form-control-sm" accept="image/*" multiple onchange="handleBulkImage(' + c.idx + ', this, \'gallery\')">'
+                 + (c.gallery_previews.length ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">' + c.gallery_previews.map(function(p){return '<img src="'+p+'" style="height:44px;border-radius:4px;">';}).join('') + '</div>' : '')
+                 + '  </div>'
+                 + '</div></div></details>';
+        }
+
+        out += skippedHtml + '</div>';
+        return out;
     }).join('');
 
     // Compute GST after render
@@ -1431,36 +1534,81 @@ function beautifyBulkSerials(idx) {
     renderBulkCardStats(idx);
 }
 
+function handleBulkImage(idx, input, type) {
+    var c = bulkCards.find(x => x.idx === idx);
+    if (!c) return;
+    if (!bulkCardFiles[idx]) bulkCardFiles[idx] = {image: null, gallery: []};
+
+    if (type === 'image') {
+        var f = input.files[0];
+        if (!f) return;
+        bulkCardFiles[idx].image = f;
+        var reader = new FileReader();
+        reader.onload = function (e) { c.image_preview = e.target.result; renderBulkCards(); };
+        reader.readAsDataURL(f);
+    } else if (type === 'gallery') {
+        var files = Array.from(input.files).slice(0, 8);
+        bulkCardFiles[idx].gallery = files;
+        c.gallery_previews = [];
+        var done = 0;
+        files.forEach(function (f) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                c.gallery_previews.push(e.target.result);
+                done++;
+                if (done === files.length) renderBulkCards();
+            };
+            reader.readAsDataURL(f);
+        });
+    }
+}
+
 function submitBulkUpload() {
     if (bulkCards.length === 0) { alert('No products to save.'); return; }
 
-    // Validate all
     for (var i = 0; i < bulkCards.length; i++) {
         var c = bulkCards[i];
         if (!c.product_name.trim()) { alert('Product #' + (i+1) + ': product name is required.'); return; }
-        // Category required only for NEW products (not when matched to existing)
         if (!c.product_id && !c.category_id) { alert('Product #' + (i+1) + ' ("' + c.product_name + '"): this is a NEW product, please select a category.'); return; }
         if (c.serials.length === 0) { alert('Product #' + (i+1) + ' ("' + c.product_name + '"): at least one serial number required.'); return; }
     }
 
-    var payload = {
-        _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-        destination_type: document.getElementById('bulkDestination').value ? 'warehouse' : 'main',
-        destination_warehouse_id: document.getElementById('bulkDestination').value || null,
-        supplier_name: document.getElementById('bulkSupplierName').value,
-        invoice_number: document.getElementById('bulkInvoiceNumber').value,
-        invoice_date: document.getElementById('bulkInvoiceDate').value,
-        products: bulkCards.map(c => ({
-            product_id: c.product_id || null,
-            item_name: c.product_name,
-            category_id: c.category_id,
-            sub_category_id: c.sub_category_id || null,
-            qty: c.serials.length,
-            unit_price: c.unit_price || null,
-            gst_percent: c.gst_percent || null,
-            serials: c.serials
-        }))
-    };
+    var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    var fd = new FormData();
+    fd.append('_token', token);
+    fd.append('destination_type', document.getElementById('bulkDestination').value ? 'warehouse' : 'main');
+    if (document.getElementById('bulkDestination').value) fd.append('destination_warehouse_id', document.getElementById('bulkDestination').value);
+    fd.append('supplier_name', document.getElementById('bulkSupplierName').value || '');
+    fd.append('invoice_number', document.getElementById('bulkInvoiceNumber').value || '');
+    fd.append('invoice_date', document.getElementById('bulkInvoiceDate').value || '');
+
+    bulkCards.forEach(function (c, i) {
+        var prefix = 'products[' + i + ']';
+        var scalarFields = [
+            'product_name','item_code','uom','description','sale_price',
+            'unit_price','gst_percent',
+            'type','brand','model','operating_voltage','solar_panel_type',
+            'mnre_approved','certifications','manufacturer_warranty',
+            'number_of_cells','encapsulate','country_of_origin',
+            'input_voltage','max_supported_panel_power'
+        ];
+        if (c.product_id) fd.append(prefix + '[product_id]', c.product_id);
+        fd.append(prefix + '[item_name]', c.product_name);
+        if (c.category_id) fd.append(prefix + '[category_id]', c.category_id);
+        if (c.sub_category_id) fd.append(prefix + '[sub_category_id]', c.sub_category_id);
+        fd.append(prefix + '[qty]', c.serials.length);
+        scalarFields.forEach(function (f) {
+            if (f === 'product_name') return;
+            if (c[f] !== '' && c[f] !== null && c[f] !== undefined) fd.append(prefix + '[' + f + ']', c[f]);
+        });
+        c.serials.forEach(function (sn) { fd.append(prefix + '[serials][]', sn); });
+
+        var files = bulkCardFiles[c.idx];
+        if (files) {
+            if (files.image) fd.append(prefix + '[image]', files.image);
+            (files.gallery || []).forEach(function (g) { fd.append(prefix + '[gallery][]', g); });
+        }
+    });
 
     var btn = document.getElementById('bulkSubmitBtn');
     btn.disabled = true;
@@ -1468,8 +1616,8 @@ function submitBulkUpload() {
 
     fetch("{{ route('inventorySerialsBulkStore') }}", {
         method: 'POST',
-        headers: {'Content-Type':'application/json','X-CSRF-TOKEN':payload._token,'Accept':'application/json'},
-        body: JSON.stringify(payload)
+        headers: {'X-CSRF-TOKEN': token, 'Accept':'application/json'},
+        body: fd
     })
     .then(r => r.json())
     .then(data => {
