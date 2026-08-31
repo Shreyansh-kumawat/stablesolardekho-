@@ -260,9 +260,9 @@
             <div class="sec-card" id="epSerialSection" style="display:none;">
                 <p class="sec-label">
                     Serial Numbers
-                    <span style="font-weight:400; font-size:.78rem; color:var(--txt2);">(this product requires unique serials per unit)</span>
+                    <span style="font-weight:400; font-size:.78rem; color:var(--txt2);">(add as many as needed - any gap = new serial)</span>
                 </p>
-                <div class="serial-tools" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+                <div class="serial-tools" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; align-items:center;">
                     <label class="btn-secondary" style="cursor:pointer; padding:8px 14px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:8px; font-weight:600; font-size:.85rem;">
                         <i class="fas fa-file-excel me-1"></i> Upload Excel
                         <input type="file" id="epSerialExcel" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleSerialExcelUpload('ep', this)">
@@ -270,10 +270,13 @@
                     <a href="{{ route('inventorySerialTemplate') }}" style="padding:8px 14px; background:#f3f4f6; color:#4b5563; border:1px solid #d1d5db; border-radius:8px; font-weight:600; font-size:.85rem; text-decoration:none;">
                         <i class="fas fa-download me-1"></i> Template
                     </a>
-                    <span id="epSerialSummary" style="align-self:center; font-size:.85rem; color:var(--txt2); font-weight:600;">0 / 0 serials</span>
+                    <button type="button" onclick="beautifySerialsText('ep')" style="padding:8px 14px; background:#fef3c7; color:#92400e; border:1px solid #fde68a; border-radius:8px; font-weight:600; font-size:.85rem; cursor:pointer;">
+                        <i class="fas fa-magic me-1"></i> Beautify
+                    </button>
+                    <span id="epSerialSummary" style="margin-left:auto; font-size:.85rem; color:var(--txt2); font-weight:600;">0 serial(s) detected</span>
                 </div>
                 <textarea name="serials_text" id="epSerialsText" rows="6" class="form-control"
-                          placeholder="Paste serial numbers here, one per line. Example:&#10;3K6210826-2628-986705182P&#10;3K6210826-2628-986705285P"
+                          placeholder="Paste serial numbers - separate by space, line break, or comma. Any gap creates a new serial. Example:&#10;3K6210826-2628-986705182P 3K6210826-2628-986705285P 3K6210826-2628-986705289P&#10;&#10;Click 'Beautify' to arrange one per line."
                           oninput="onSerialsTextChange('ep')"></textarea>
                 <div id="epSerialFeedback" style="margin-top:8px; font-size:.82rem;"></div>
             </div>
@@ -443,9 +446,9 @@
             <div class="sec-card" id="npSerialSection" style="display:none;">
                 <p class="sec-label">
                     Serial Numbers
-                    <span style="font-weight:400; font-size:.78rem; color:var(--txt2);">(one unique serial per unit; must match Quantity)</span>
+                    <span style="font-weight:400; font-size:.78rem; color:var(--txt2);">(add as many as needed - any gap = new serial)</span>
                 </p>
-                <div class="serial-tools" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+                <div class="serial-tools" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; align-items:center;">
                     <label class="btn-secondary" style="cursor:pointer; padding:8px 14px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:8px; font-weight:600; font-size:.85rem;">
                         <i class="fas fa-file-excel me-1"></i> Upload Excel
                         <input type="file" id="npSerialExcel" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleSerialExcelUpload('np', this)">
@@ -453,10 +456,13 @@
                     <a href="{{ route('inventorySerialTemplate') }}" style="padding:8px 14px; background:#f3f4f6; color:#4b5563; border:1px solid #d1d5db; border-radius:8px; font-weight:600; font-size:.85rem; text-decoration:none;">
                         <i class="fas fa-download me-1"></i> Template
                     </a>
-                    <span id="npSerialSummary" style="align-self:center; font-size:.85rem; color:var(--txt2); font-weight:600;">0 / 0 serials</span>
+                    <button type="button" onclick="beautifySerialsText('np')" style="padding:8px 14px; background:#fef3c7; color:#92400e; border:1px solid #fde68a; border-radius:8px; font-weight:600; font-size:.85rem; cursor:pointer;">
+                        <i class="fas fa-magic me-1"></i> Beautify
+                    </button>
+                    <span id="npSerialSummary" style="margin-left:auto; font-size:.85rem; color:var(--txt2); font-weight:600;">0 serial(s) detected</span>
                 </div>
                 <textarea name="serials_text" id="npSerialsText" rows="6" class="form-control"
-                          placeholder="Paste serial numbers here, one per line. Example:&#10;3K6210826-2628-986705182P&#10;3K6210826-2628-986705285P"
+                          placeholder="Paste serial numbers - separate by space, line break, or comma. Any gap creates a new serial. Example:&#10;3K6210826-2628-986705182P 3K6210826-2628-986705285P 3K6210826-2628-986705289P&#10;&#10;Click 'Beautify' to arrange one per line."
                           oninput="onSerialsTextChange('np')"></textarea>
                 <div id="npSerialFeedback" style="margin-top:8px; font-size:.82rem;"></div>
             </div>
@@ -902,10 +908,11 @@ function toggleNewProductSerials() {
 
 function parseSerialsFromText(text) {
     if (!text) return [];
-    var lines = text.split(/[\r\n,;\t]+/);
+    // Split on ANY whitespace, comma, semicolon — gap = new serial
+    var parts = text.split(/[\s,;]+/);
     var out = [];
     var seen = {};
-    lines.forEach(function(l) {
+    parts.forEach(function(l) {
         var t = l.trim();
         if (!t) return;
         if (seen[t.toUpperCase()]) return;
@@ -917,14 +924,21 @@ function parseSerialsFromText(text) {
 
 function findLocalDuplicates(text) {
     if (!text) return [];
-    var lines = text.split(/[\r\n,;\t]+/).map(function(l){return l.trim();}).filter(Boolean);
+    var parts = text.split(/[\s,;]+/).map(function(l){return l.trim();}).filter(Boolean);
     var seen = {}, dupes = [];
-    lines.forEach(function(l) {
+    parts.forEach(function(l) {
         var k = l.toUpperCase();
         if (seen[k]) dupes.push(l);
         else seen[k] = true;
     });
     return dupes;
+}
+
+function beautifySerialsText(prefix) {
+    var textEl = document.getElementById(prefix + 'SerialsText');
+    var serials = parseSerialsFromText(textEl.value);
+    textEl.value = serials.join('\n');
+    onSerialsTextChange(prefix);
 }
 
 var serialDupCheckTimer = null;
@@ -937,23 +951,12 @@ function onSerialsTextChange(prefix) {
     var serials = parseSerialsFromText(text);
     var localDupes = findLocalDuplicates(text);
 
-    var expected;
-    if (prefix === 'np') {
-        expected = parseInt(document.getElementById('npQuantity').value) || 0;
-    } else {
-        var current = parseInt(document.getElementById('epQuantity').value) || 0;
-        expected = Math.max(0, current - epOriginalQty);
-    }
-
-    summaryEl.textContent = serials.length + ' / ' + expected + ' serials';
-    summaryEl.style.color = (expected > 0 && serials.length === expected) ? '#059669' : '#6b7280';
+    summaryEl.textContent = serials.length + ' serial(s) detected';
+    summaryEl.style.color = serials.length > 0 ? '#059669' : '#6b7280';
 
     var msgs = [];
     if (localDupes.length) {
         msgs.push('<span style="color:#dc2626;font-weight:600;">Duplicates in your input: ' + localDupes.slice(0,5).join(', ') + (localDupes.length > 5 ? ' +' + (localDupes.length-5) + ' more' : '') + '</span>');
-    }
-    if (expected > 0 && serials.length !== expected) {
-        msgs.push('<span style="color:#b45309;">Need ' + expected + ' serials but you have ' + serials.length + '.</span>');
     }
     feedbackEl.innerHTML = msgs.join('<br>');
 
@@ -1016,23 +1019,8 @@ function handleSerialExcelUpload(prefix, input) {
         document.getElementById(prefix + 'SerialsText').value = allSerials.join('\n');
         onSerialsTextChange(prefix);
 
-        // Auto-fill GST + unit price from first parsed block (if present)
-        var first = data.products[0];
-        if (first) {
-            var priceInput = document.getElementById(prefix + 'UnitPrice');
-            var gstInput = document.getElementById(prefix + 'GstPercent');
-            if (priceInput && (first.unit_price_from_amount || first.rate) && !priceInput.value) {
-                priceInput.value = first.unit_price_from_amount || first.rate;
-            }
-            if (gstInput && first.gst_percent && !gstInput.value) {
-                gstInput.value = first.gst_percent;
-            }
-            if (prefix === 'np' && typeof calcNpGst === 'function') calcNpGst();
-            if (prefix === 'ep' && typeof calcEpGst === 'function') calcEpGst();
-        }
-
-        var msg = '<span style="color:#059669;font-weight:600;">Parsed ' + data.products.length + ' product block(s), ' + allSerials.length + ' serials.</span>';
-        if (data.products.length > 1) msg += '<br><span style="color:#b45309;">Note: Multiple product blocks were found. All serials merged into current product. For multi-product upload as separate entries, please add each separately.</span>';
+        var msg = '<span style="color:#059669;font-weight:600;">Parsed ' + data.products.length + ' product block(s), ' + allSerials.length + ' serial(s).</span>';
+        if (data.products.length > 1) msg += '<br><span style="color:#b45309;">Note: Multiple product blocks found - all serials merged into current selection.</span>';
         if (warnings.length) msg += '<br><span style="color:#b45309;">' + warnings.slice(0,3).join(' | ') + '</span>';
         feedbackEl.innerHTML = msg;
         input.value = '';

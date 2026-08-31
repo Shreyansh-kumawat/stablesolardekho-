@@ -348,13 +348,8 @@ class InventoryController extends Controller
             $oldQty = $inventory->available_qty;
 
             $serialsInput = $this->parseSerialsInput($request->serials_text);
-            // Only require serials when INCREASING stock (adding new units)
-            $addQtyForCheck = max(0, $qty - $oldQty);
-            if ($product->is_serialNumber_required && $addQtyForCheck > 0) {
-                if (count($serialsInput) !== $addQtyForCheck) {
-                    return redirect()->back()->withInput()->with('error',
-                        'Serial-tracked product: need ' . $addQtyForCheck . ' serials but got ' . count($serialsInput) . '.');
-                }
+            // Serial count is INDEPENDENT of quantity - admin can add any number
+            if ($product->is_serialNumber_required && !empty($serialsInput)) {
                 $dupes = ProductSerial::whereIn('serial_number', $serialsInput)->pluck('serial_number')->toArray();
                 if (!empty($dupes)) {
                     return redirect()->back()->withInput()->with('error',
@@ -555,12 +550,8 @@ class InventoryController extends Controller
             $warehouseId = $request->destination_warehouse_id;
 
             $serialsInput = $this->parseSerialsInput($request->serials_text);
-            if ($product->is_serialNumber_required && $qty > 0) {
-                if (count($serialsInput) !== $qty) {
-                    DB::rollBack();
-                    return redirect()->back()->withInput()->with('error',
-                        'Serial-tracked product: qty (' . $qty . ') must match serial count (' . count($serialsInput) . '). Add serials in the Serial Numbers section.');
-                }
+            // Serial count is INDEPENDENT of quantity - admin can add any number
+            if ($product->is_serialNumber_required && !empty($serialsInput)) {
                 $dupes = ProductSerial::whereIn('serial_number', $serialsInput)->pluck('serial_number')->toArray();
                 if (!empty($dupes)) {
                     DB::rollBack();
@@ -677,14 +668,15 @@ class InventoryController extends Controller
         }
     }
 
-    /** Parse serials from a pasted textarea (one per line, comma or space separated). */
+    /** Parse serials from a pasted textarea (split on ANY whitespace: space, tab, newline, comma, semicolon). */
     private function parseSerialsInput($input): array
     {
         if (!$input) return [];
-        $lines = preg_split('/[\r\n,;\t]+/', (string) $input);
+        // Split on any whitespace, comma, semicolon — gap = new serial
+        $parts = preg_split('/[\s,;]+/', (string) $input, -1, PREG_SPLIT_NO_EMPTY);
         $out = [];
-        foreach ($lines as $line) {
-            $t = trim($line);
+        foreach ($parts as $p) {
+            $t = trim($p);
             if ($t !== '') $out[] = $t;
         }
         return array_values(array_unique($out));
@@ -1113,22 +1105,20 @@ class InventoryController extends Controller
     public function downloadSerialTemplate()
     {
         $filename = 'serial_upload_template.csv';
-        $content = "# Serial Number Upload Template (with GST)\n"
-                 . "# Layout: numeric row starts a product block. Columns include CGST%, SGST% (added together = GST).\n"
-                 . "# Then a 'SR.NO' row, then serial numbers (one per row), then next product block.\n"
-                 . "# Rows like '8 YEAR WARRANTY...' are auto-skipped.\n"
+        $content = "# Serial Number Upload Template\n"
+                 . "# Format: Product Name in one row, then serial numbers below it (one per row).\n"
+                 . "# Everything after 'SR.NO' (or 'SERIAL') label is treated as serial numbers.\n"
+                 . "# Blank rows separate product blocks. Any other extra text is ignored.\n"
                  . "\n"
-                 . "#,Item & Description,HSN/SAC,Qty,Rate,CGST,%,SGST,%,Amount\n"
-                 . "1,SAMPLE PRODUCT NAME - 3600W INVERTER,85044090,3,10000,,9,,9,30000\n"
-                 . ",SR.NO,,,,,,,,\n"
-                 . ",SERIAL-001-ABC,,,,,,,,\n"
-                 . ",SERIAL-002-ABC,,,,,,,,\n"
-                 . ",SERIAL-003-ABC,,,,,,,,\n"
-                 . ",8 YEAR WARRANTY BY BRAND,,,,,,,,\n"
-                 . "2,ANOTHER PRODUCT - 5000W INVERTER,85044090,2,15000,,9,,9,30000\n"
-                 . ",SR.NO,,,,,,,,\n"
-                 . ",SERIAL-101-XYZ,,,,,,,,\n"
-                 . ",SERIAL-102-XYZ,,,,,,,,\n";
+                 . "Product Name,Serial Number\n"
+                 . "SAMPLE PRODUCT NAME - 3600W INVERTER,\n"
+                 . ",SERIAL-001-ABC\n"
+                 . ",SERIAL-002-ABC\n"
+                 . ",SERIAL-003-ABC\n"
+                 . "\n"
+                 . "ANOTHER PRODUCT - 5000W INVERTER,\n"
+                 . ",SERIAL-101-XYZ\n"
+                 . ",SERIAL-102-XYZ\n";
         return response($content, 200, [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
