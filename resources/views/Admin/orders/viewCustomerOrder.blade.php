@@ -38,8 +38,8 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
-        <!-- Left: Order Items + Payment -->
-        <div class="lg:col-span-2 space-y-6">
+        <!-- Left: Order Items only -->
+        <div class="lg:col-span-2 space-y-4">
 
             <!-- Payment Verification Card -->
             @if($order->payment_status === 'verification_pending' && $order->payment_screenshot)
@@ -504,55 +504,6 @@
                 }
             </script>
 
-            <!-- Payment Info -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-100">
-                    <h2 class="font-semibold text-gray-800">Payment Details</h2>
-                </div>
-                <div class="px-6 py-4 grid grid-cols-2 gap-4">
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase tracking-wide">Method</p>
-                        <p class="font-medium text-gray-800 mt-0.5">Online Transfer</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase tracking-wide">Payment Status</p>
-                        @php
-                            $payBadges = [
-                                'paid' => 'bg-green-100 text-green-800',
-                                'verification_pending' => 'bg-orange-100 text-orange-800',
-                                'pending' => 'bg-yellow-100 text-yellow-800',
-                                'failed' => 'bg-red-100 text-red-800',
-                            ];
-                            $payLabels = [
-                                'paid' => 'Verified',
-                                'verification_pending' => 'Verification Pending',
-                                'pending' => 'Not Paid',
-                                'failed' => 'Rejected',
-                            ];
-                        @endphp
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $payBadges[$order->payment_status] ?? 'bg-gray-100 text-gray-800' }} mt-0.5">
-                            {{ $payLabels[$order->payment_status] ?? ucfirst($order->payment_status) }}
-                        </span>
-                    </div>
-                    @if($order->payment_reference)
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase tracking-wide">Reference / UTR</p>
-                        <p class="font-mono text-xs text-gray-700 mt-0.5">{{ $order->payment_reference }}</p>
-                    </div>
-                    @endif
-                    @if($order->payment_screenshot && $order->payment_status !== 'verification_pending')
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase tracking-wide">Screenshot</p>
-                        <a href="{{ asset('storage/' . $order->payment_screenshot) }}" target="_blank" style="color:#4f46e5;font-size:12px;font-weight:500;text-decoration:underline;margin-top:2px;display:inline-block;">View Screenshot</a>
-                    </div>
-                    @endif
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase tracking-wide">Order Date</p>
-                        <p class="font-medium text-gray-800 mt-0.5">{{ $order->created_at->format('d M Y, h:i A') }}</p>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
         <!-- Right: Sticky sidebar with Status Action + Customer/Delivery combined -->
@@ -569,21 +520,26 @@
                 <div class="px-5 py-4">
                     <form action="{{ route('updateCustomerOrderStatus', $order->id) }}" method="POST">
                         @csrf
-                        <div class="grid grid-cols-2 gap-2">
-                            @php
-                                $dots = ['pending'=>'bg-yellow-400','confirmed'=>'bg-blue-400','shipped'=>'bg-purple-400','delivered'=>'bg-green-400','cancelled'=>'bg-red-400'];
-                                $activeBg = ['pending'=>'border-yellow-400 bg-yellow-50','confirmed'=>'border-blue-400 bg-blue-50','shipped'=>'border-purple-400 bg-purple-50','delivered'=>'border-green-400 bg-green-50','cancelled'=>'border-red-400 bg-red-50'];
-                            @endphp
+                        @php
+                            $stColors = [
+                                'pending'   => ['dot'=>'#facc15','bg'=>'#fefce8','br'=>'#facc15'],
+                                'confirmed' => ['dot'=>'#3b82f6','bg'=>'#eff6ff','br'=>'#3b82f6'],
+                                'shipped'   => ['dot'=>'#a855f7','bg'=>'#faf5ff','br'=>'#a855f7'],
+                                'delivered' => ['dot'=>'#22c55e','bg'=>'#f0fdf4','br'=>'#22c55e'],
+                                'cancelled' => ['dot'=>'#ef4444','bg'=>'#fef2f2','br'=>'#ef4444'],
+                            ];
+                        @endphp
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                             @foreach(['pending','confirmed','shipped','delivered','cancelled'] as $st)
-                            <label class="flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-all text-xs font-semibold
-                                {{ $order->status === $st ? ($activeBg[$st] ?? 'border-indigo-400 bg-indigo-50') . ' text-gray-800' : 'border-gray-200 text-gray-500 hover:border-gray-300' }}">
-                                <input type="radio" name="status" value="{{ $st }}" {{ $order->status === $st ? 'checked' : '' }} class="hidden peer">
-                                <span class="w-2 h-2 rounded-full {{ $dots[$st] ?? 'bg-gray-400' }} flex-shrink-0"></span>
-                                <span class="capitalize">{{ $st }}</span>
-                            </label>
+                                @php $c = $stColors[$st]; $active = $order->status === $st; @endphp
+                                <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid {{ $active ? $c['br'] : '#e5e7eb' }};background:{{ $active ? $c['bg'] : '#fff' }};border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:{{ $active ? '#111827' : '#6b7280' }};transition:all 0.15s;{{ $st === 'cancelled' ? 'grid-column:1/-1;' : '' }}">
+                                    <input type="radio" name="status" value="{{ $st }}" {{ $active ? 'checked' : '' }} style="display:none;">
+                                    <span style="width:8px;height:8px;border-radius:50%;background:{{ $c['dot'] }};flex-shrink:0;"></span>
+                                    <span style="text-transform:capitalize;">{{ $st }}</span>
+                                </label>
                             @endforeach
                         </div>
-                        <button type="submit" style="margin-top:14px;width:100%;padding:10px;background:linear-gradient(135deg,#4f46e5,#4338ca);color:#fff;font-size:13px;font-weight:700;border-radius:8px;border:none;cursor:pointer;box-shadow:0 4px 10px rgba(79,70,229,0.25);">
+                        <button type="submit" style="margin-top:14px;width:100%;padding:11px;background:linear-gradient(135deg,#4f46e5,#4338ca);color:#fff;font-size:13px;font-weight:700;border-radius:8px;border:none;cursor:pointer;box-shadow:0 4px 10px rgba(79,70,229,0.25);">
                             <i class="fas fa-check me-1"></i> Update Status
                         </button>
                     </form>
@@ -630,6 +586,58 @@
                         </div>
                         @endif
                     </div>
+                </div>
+            </div>
+
+            <!-- Payment Details -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-5 py-3 border-b border-gray-100 bg-gray-50">
+                    <h2 class="font-semibold text-gray-800 text-sm flex items-center gap-2">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                        Payment
+                    </h2>
+                </div>
+                <div class="px-5 py-4" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:13px;">
+                    @php
+                        $payColors = [
+                            'paid' => ['bg'=>'#d1fae5','color'=>'#065f46'],
+                            'verification_pending' => ['bg'=>'#ffedd5','color'=>'#9a3412'],
+                            'pending' => ['bg'=>'#fef9c3','color'=>'#854d0e'],
+                            'failed' => ['bg'=>'#fee2e2','color'=>'#991b1b'],
+                        ];
+                        $payLabels = [
+                            'paid' => 'Verified',
+                            'verification_pending' => 'Verification Pending',
+                            'pending' => 'Not Paid',
+                            'failed' => 'Rejected',
+                        ];
+                        $pc = $payColors[$order->payment_status] ?? ['bg'=>'#f3f4f6','color'=>'#374151'];
+                    @endphp
+                    <div>
+                        <p style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Method</p>
+                        <p style="font-weight:600;color:#111827;">Online</p>
+                    </div>
+                    <div>
+                        <p style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Status</p>
+                        <span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;background:{{ $pc['bg'] }};color:{{ $pc['color'] }};">{{ $payLabels[$order->payment_status] ?? ucfirst($order->payment_status) }}</span>
+                    </div>
+                    @if($order->payment_reference)
+                    <div style="grid-column:1/-1;">
+                        <p style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Reference / UTR</p>
+                        <p style="font-family:monospace;font-size:12px;color:#374151;">{{ $order->payment_reference }}</p>
+                    </div>
+                    @endif
+                    <div style="grid-column:1/-1;">
+                        <p style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Order Date</p>
+                        <p style="font-weight:600;color:#111827;">{{ $order->created_at->format('d M Y, h:i A') }}</p>
+                    </div>
+                    @if($order->payment_screenshot && $order->payment_status !== 'verification_pending')
+                    <div style="grid-column:1/-1;">
+                        <a href="{{ asset('storage/' . $order->payment_screenshot) }}" target="_blank" style="color:#4f46e5;font-size:12px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+                            <i class="fas fa-image"></i> View Payment Screenshot
+                        </a>
+                    </div>
+                    @endif
                 </div>
             </div>
 
