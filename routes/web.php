@@ -214,6 +214,18 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::post('/inventory/add-product', [InventoryController::class, 'storeProduct'])->name('inventoryStoreProduct');
     Route::put('/inventory/update-product/{id}', [InventoryController::class, 'updateProduct'])->name('inventoryUpdateProduct');
     Route::get('/inventory/product-json/{id}', [InventoryController::class, 'getProductJson'])->name('inventoryProductJson');
+    Route::get('/inventory/last-purchase/{id}', [InventoryController::class, 'getLastPurchase'])->name('inventoryLastPurchase');
+    Route::post('/inventory/entry/{id}/update-price', [InventoryController::class, 'updateEntryPrice'])->name('inventoryUpdateEntryPrice');
+    Route::get('/inventory/products-by-category/{categoryId}', [InventoryController::class, 'getProductsByCategory'])->name('inventoryProductsByCategory');
+    Route::get('/inventory/supplier-report', [InventoryController::class, 'supplierReport'])->name('inventorySupplierReport');
+    Route::get('/inventory/supplier-report/export', [InventoryController::class, 'supplierReportExport'])->name('inventorySupplierReportExport');
+    Route::post('/inventory/serials/parse-excel', [InventoryController::class, 'parseSerialExcel'])->name('inventorySerialsParseExcel');
+    Route::post('/inventory/serials/check-duplicates', [InventoryController::class, 'checkSerialDuplicates'])->name('inventorySerialsCheckDuplicates');
+    Route::post('/inventory/serials/bulk-store', [InventoryController::class, 'bulkStoreFromExcel'])->name('inventorySerialsBulkStore');
+    Route::get('/inventory/serials/template', [InventoryController::class, 'downloadSerialTemplate'])->name('inventorySerialTemplate');
+    Route::get('/inventory/serials/search', [InventoryController::class, 'serialSearchPage'])->name('inventorySerialSearch');
+    Route::get('/inventory/serials/for-product/{productId}', [InventoryController::class, 'getSerialsForProduct'])->name('inventorySerialsForProduct');
+    Route::get('/inventory/serials/{serialId}/history', [InventoryController::class, 'getSerialHistory'])->name('inventorySerialHistory');
     Route::get('/inventory/entries', [InventoryController::class, 'inventoryEntries'])->name('inventoryEntries');
     Route::post('/inventory/entry/{id}/update-remarks', [InventoryController::class, 'updateEntryRemarks'])->name('inventoryUpdateRemarks');
     Route::post('/inventory/quick-stock-update', [InventoryController::class, 'quickStockUpdate'])->name('inventoryQuickStockUpdate');
@@ -261,6 +273,8 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::post('/store-team', [AdminSettingController::class, 'storeTeam'])->name('storeTeam');
     Route::post('/update-team', [AdminSettingController::class, 'updateTeam'])->name('updateTeam');
     Route::delete('/delete-team/{id}', [AdminSettingController::class, 'deleteTeamMember'])->name('deleteTeamMember');
+    Route::post('/team/{id}/toggle-pin', [AdminSettingController::class, 'togglePinTeam'])->name('togglePinTeam');
+    Route::post('/team/reorder', [AdminSettingController::class, 'reorderTeam'])->name('reorderTeam');
     Route::get('/new-installations-story', [AdminSettingController::class, 'newInstallationStory'])->name('newInstallationStory');
     Route::post('/store-story', [AdminSettingController::class, 'storeStory'])->name('storeStory');
     Route::get('/list-stories', [AdminSettingController::class, 'listStories'])->name('listStories');
@@ -328,6 +342,7 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::get('/warehouses/w2w-transfer', [\App\Http\Controllers\AdminWarehouseController::class, 'warehouseTransferForm'])->name('admin.warehouses.w2wTransfer');
     Route::post('/warehouses/w2w-transfer', [\App\Http\Controllers\AdminWarehouseController::class, 'storeWarehouseTransfer'])->name('admin.warehouses.storeW2wTransfer');
     Route::get('/warehouses/get-warehouse-product-qty', [\App\Http\Controllers\AdminWarehouseController::class, 'getWarehouseProductQty'])->name('admin.warehouses.getWarehouseProductQty');
+    Route::get('/warehouses/get-available-serials', [\App\Http\Controllers\AdminWarehouseController::class, 'getAvailableSerials'])->name('admin.warehouses.getAvailableSerials');
     Route::get('/warehouses/get-warehouse-products', [\App\Http\Controllers\AdminWarehouseController::class, 'getWarehouseProducts'])->name('admin.warehouses.getWarehouseProducts');
     Route::get('/warehouses/get-main-inventory-products', [\App\Http\Controllers\AdminWarehouseController::class, 'getMainInventoryProducts'])->name('admin.warehouses.getMainInventoryProducts');
     Route::post('/warehouses', [\App\Http\Controllers\AdminWarehouseController::class, 'store'])->name('admin.warehouses.store');
@@ -414,6 +429,7 @@ Route::prefix('wh-manager')->middleware(['auth', WarehouseManagerMiddleware::cla
     Route::get('/transfer', [WarehouseManagerController::class, 'transferForm'])->name('wh.manager.transfer');
     Route::post('/transfer', [WarehouseManagerController::class, 'storeTransfer'])->name('wh.manager.storeTransfer');
     Route::get('/warehouse-qty', [WarehouseManagerController::class, 'getWarehouseQty'])->name('wh.manager.getWarehouseQty');
+    Route::get('/warehouse-serials', [WarehouseManagerController::class, 'getAvailableSerials'])->name('wh.manager.getAvailableSerials');
     Route::get('/my-warehouse-products', [WarehouseManagerController::class, 'getMyWarehouseProducts'])->name('wh.manager.getMyWarehouseProducts');
     Route::get('/get-sub-categories', [\App\Http\Controllers\ProductController::class, 'getSubCategories'])->name('wh.manager.getSubCategory');
     Route::get('/get-products', [\App\Http\Controllers\ProductController::class, 'getProducts'])->name('wh.manager.getProducts');

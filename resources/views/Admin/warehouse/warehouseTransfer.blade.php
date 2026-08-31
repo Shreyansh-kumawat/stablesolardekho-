@@ -167,6 +167,22 @@
                             <label class="form-label">Remarks</label>
                             <input type="text" name="remarks" class="form-control" placeholder="Optional remarks">
                         </div>
+
+                        <div class="col-12" id="w2wSerialWrap" style="display:none;">
+                            <label class="form-label">
+                                Serial Numbers <span style="color:#dc2626;">*</span>
+                                <small style="font-weight:400; color:#6b7280;">(serial-tracked product)</small>
+                            </label>
+                            <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px;">
+                                <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; align-items:center;">
+                                    <button type="button" class="btn btn-sm btn-primary" onclick="w2wAutoPick()">Auto-Pick First N</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="w2wClearPicks()">Clear All</button>
+                                    <span id="w2wSerialSummary" style="font-size:.85rem; color:#374151; font-weight:600;">0 selected</span>
+                                </div>
+                                <input type="text" id="w2wSerialSearch" class="form-control mb-2" placeholder="Search serials..." oninput="w2wRenderList()">
+                                <div id="w2wSerialList" style="max-height:220px; overflow-y:auto; background:#fff; border:1px solid #e5e7eb; border-radius:6px; padding:6px;"></div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mt-4 d-flex gap-2">
@@ -223,7 +239,64 @@
                 var price = $(this).find('option:selected').data('price') || '';
                 $('#unit_price').val(price);
                 fetchWarehouseQty();
+                loadW2wSerials();
             });
+
+            var w2wAvailableSerials = [];
+            var w2wSelected = new Set();
+            function loadW2wSerials() {
+                var pid = $('#product_id').val();
+                var whId = $('#from_warehouse_id').val();
+                $('#w2wSerialWrap').hide();
+                w2wAvailableSerials = [];
+                w2wSelected = new Set();
+                if (!pid || !whId) return;
+                $.get("{{ route('admin.warehouses.getAvailableSerials') }}", { product_id: pid, location: 'warehouse', warehouse_id: whId }, function(data) {
+                    if (data && data.is_serial_tracked) {
+                        w2wAvailableSerials = data.serials || [];
+                        $('#w2wSerialWrap').show();
+                        w2wRenderList();
+                    }
+                });
+            }
+            window.w2wRenderList = function() {
+                var q = ($('#w2wSerialSearch').val() || '').toLowerCase();
+                var filtered = w2wAvailableSerials.filter(function(s) { return !q || s.toLowerCase().indexOf(q) !== -1; });
+                var html = '';
+                filtered.forEach(function(sn) {
+                    var checked = w2wSelected.has(sn) ? 'checked' : '';
+                    html += '<label style="display:flex; align-items:center; gap:8px; padding:5px 8px; border-bottom:1px solid #f3f4f6; cursor:pointer; font-family:monospace; font-size:.82rem;">'
+                          + '<input type="checkbox" ' + checked + ' value="' + sn + '" onchange="w2wToggleSerial(this)"> ' + sn
+                          + '</label>';
+                });
+                if (!filtered.length) html = '<div style="padding:10px; text-align:center; color:#94a3b8; font-size:.85rem;">No matching serials</div>';
+                $('#w2wSerialList').html(html);
+                w2wSync();
+            };
+            window.w2wToggleSerial = function(cb) {
+                if (cb.checked) w2wSelected.add(cb.value); else w2wSelected.delete(cb.value);
+                w2wSync();
+            };
+            window.w2wAutoPick = function() {
+                var qty = parseInt($('#quantity').val(), 10) || 0;
+                if (qty <= 0) { alert('Enter quantity first.'); return; }
+                w2wSelected = new Set(w2wAvailableSerials.slice(0, qty));
+                w2wRenderList();
+            };
+            window.w2wClearPicks = function() {
+                w2wSelected = new Set();
+                w2wRenderList();
+            };
+            function w2wSync() {
+                $('#w2wForm input[name="serial_numbers[]"]').remove();
+                w2wSelected.forEach(function(sn) {
+                    $('#w2wForm').append('<input type="hidden" name="serial_numbers[]" value="' + sn + '">');
+                });
+                var qty = parseInt($('#quantity').val(), 10) || 0;
+                $('#w2wSerialSummary').text(w2wSelected.size + ' selected' + (qty > 0 ? ' / ' + qty + ' needed' : ''))
+                    .css('color', (qty > 0 && w2wSelected.size === qty) ? '#059669' : '#374151');
+            }
+            $('#quantity').on('input', w2wSync);
 
             const getWhProductsUrl = "{{ route('admin.warehouses.getWarehouseProducts') }}";
             let whProductsCache = [];

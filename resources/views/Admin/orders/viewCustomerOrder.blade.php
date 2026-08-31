@@ -209,13 +209,19 @@
                         </div>
                         @endif
 
-                        <form method="POST" action="{{ route('admin.order.fulfill', $order->id) }}" id="ffForm{{ $item->id }}">
+                        @if($info && ($info['is_serial_tracked'] ?? false))
+                        <div style="margin-bottom:10px; padding:8px 12px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px; font-size:.82rem; color:#0c4a6e;">
+                            <i class="fas fa-barcode me-1"></i> <strong>This product is serial-tracked.</strong> Pick specific serial numbers for each source below (or use Auto-Pick).
+                        </div>
+                        @endif
+
+                        <form method="POST" action="{{ route('admin.order.fulfill', $order->id) }}" id="ffForm{{ $item->id }}" data-item-id="{{ $item->id }}" data-is-serial="{{ $info && ($info['is_serial_tracked'] ?? false) ? 1 : 0 }}">
                             @csrf
                             <input type="hidden" name="item_id" value="{{ $item->id }}">
 
                             <div id="srcRows{{ $item->id }}">
-                                <div class="src-row">
-                                    <select name="sources[0][source]" onchange="recalcAlloc({{ $item->id }})">
+                                <div class="src-row" data-idx="0">
+                                    <select name="sources[0][source]" onchange="onSrcChange({{ $item->id }}, this, 0)">
                                         <option value="">-- Select source --</option>
                                         @if($mainStock > 0)
                                             <option value="main" data-max="{{ $mainStock }}">Main Inventory ({{ $mainStock }} available)</option>
@@ -227,9 +233,11 @@
                                             @endif
                                         @endforeach
                                     </select>
-                                    <input type="number" name="sources[0][qty]" min="1" placeholder="Qty" oninput="recalcAlloc({{ $item->id }})">
+                                    <input type="number" name="sources[0][qty]" min="1" placeholder="Qty" oninput="onQtyChange({{ $item->id }}, 0)">
                                 </div>
                             </div>
+
+                            <div id="serialPickers{{ $item->id }}" style="display:none;"></div>
 
                             <div style="display:flex;gap:8px;align-items:center;">
                                 <button type="button" class="add-src-btn" onclick="addSrcRow({{ $item->id }})">+ Add another source</button>
@@ -239,6 +247,18 @@
                             <button type="submit" class="ff-submit" id="ffBtn{{ $item->id }}" disabled>Deduct Stock &amp; Fulfill</button>
                         </form>
                     </div>
+                    @if($info && ($info['is_serial_tracked'] ?? false) && count($info['assigned_serials']) > 0)
+                    <div style="margin-top:10px; padding:10px 14px; background:#ecfdf5; border:1px solid #bbf7d0; border-radius:8px;">
+                        <div style="font-size:.78rem; font-weight:700; color:#065f46; margin-bottom:6px;">
+                            <i class="fas fa-check-circle me-1"></i> Serials Delivered to Customer:
+                        </div>
+                        <div style="display:flex; flex-wrap:wrap; gap:5px;">
+                            @foreach($info['assigned_serials'] as $sn)
+                            <span style="background:#fff; border:1px solid #86efac; color:#065f46; font-family:monospace; font-size:.72rem; padding:3px 8px; border-radius:4px;">{{ $sn }}</span>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
                     @else
                     <div class="ff-section done">
                         <div class="ff-title" style="text-align:center;">&#10003; Item fully fulfilled</div>
@@ -264,6 +284,26 @@
                     itemNeeds[{{ $item->id }}] = {{ $rem }};
                 @endforeach
 
+                // Available serials per item, keyed by source (main | wh:ID)
+                const availableSerialsByItem = {};
+                @foreach($order->items as $item)
+                    @if(isset($stockInfo[$item->id]) && ($stockInfo[$item->id]['is_serial_tracked'] ?? false))
+                    availableSerialsByItem[{{ $item->id }}] = {
+                        @foreach($stockInfo[$item->id]['available_serials'] as $srcKey => $ser)
+                        {!! json_encode((string)$srcKey) !!}: {!! json_encode($ser->values()->toArray()) !!},
+                        @endforeach
+                    };
+                    @endif
+                @endforeach
+
+                // Selected serials per (itemId, rowIdx)
+                const selectedSerialsByRow = {};
+
+                function isSerialTrackedItem(itemId) {
+                    var form = document.getElementById('ffForm' + itemId);
+                    return form && form.getAttribute('data-is-serial') === '1';
+                }
+
                 function addSrcRow(itemId) {
                     const idx = srcRowCounts[itemId]++;
                     const wrap = document.getElementById('srcRows' + itemId);
@@ -271,10 +311,135 @@
                     const optionsHtml = first ? first.innerHTML : '';
                     const row = document.createElement('div');
                     row.className = 'src-row';
-                    row.innerHTML = '<select name="sources[' + idx + '][source]" onchange="recalcAlloc(' + itemId + ')">' + optionsHtml + '</select>'
-                        + '<input type="number" name="sources[' + idx + '][qty]" min="1" placeholder="Qty" oninput="recalcAlloc(' + itemId + ')">'
-                        + '<button type="button" class="src-remove" onclick="this.parentElement.remove(); recalcAlloc(' + itemId + ');">&times;</button>';
+                    row.setAttribute('data-idx', idx);
+                    row.innerHTML = '<select name="sources[' + idx + '][source]" onchange="onSrcChange(' + itemId + ', this, ' + idx + ')">' + optionsHtml + '</select>'
+                        + '<input type="number" name="sources[' + idx + '][qty]" min="1" placeholder="Qty" oninput="onQtyChange(' + itemId + ', ' + idx + ')">'
+                        + '<button type="button" class="src-remove" onclick="removeSrcRow(this, ' + itemId + ', ' + idx + ')">&times;</button>';
                     wrap.appendChild(row);
+                }
+
+                function removeSrcRow(btn, itemId, idx) {
+                    btn.parentElement.remove();
+                    var picker = document.getElementById('srcSerials_' + itemId + '_' + idx);
+                    if (picker) picker.remove();
+                    delete selectedSerialsByRow[itemId + '_' + idx];
+                    recalcAlloc(itemId);
+                    syncSerialInputs(itemId);
+                }
+
+                function onSrcChange(itemId, sel, idx) {
+                    recalcAlloc(itemId);
+                    if (!isSerialTrackedItem(itemId)) return;
+                    rebuildSerialPicker(itemId, idx);
+                }
+                function onQtyChange(itemId, idx) {
+                    recalcAlloc(itemId);
+                    if (!isSerialTrackedItem(itemId)) return;
+                    rebuildSerialPicker(itemId, idx);
+                }
+
+                function rebuildSerialPicker(itemId, idx) {
+                    var wrap = document.getElementById('serialPickers' + itemId);
+                    var row = document.querySelector('#srcRows' + itemId + ' .src-row[data-idx="' + idx + '"]');
+                    if (!row || !wrap) return;
+                    var sel = row.querySelector('select');
+                    var qtyInput = row.querySelector('input[type=number]');
+                    var src = sel.value;
+                    var qty = parseInt(qtyInput.value) || 0;
+
+                    var existing = document.getElementById('srcSerials_' + itemId + '_' + idx);
+                    if (existing) existing.remove();
+                    delete selectedSerialsByRow[itemId + '_' + idx];
+                    if (!src || qty <= 0) { wrap.style.display = wrap.children.length ? '' : 'none'; syncSerialInputs(itemId); return; }
+
+                    var avail = (availableSerialsByItem[itemId] || {})[src] || [];
+                    // Auto-select first N by default
+                    var preSelected = avail.slice(0, Math.min(qty, avail.length));
+                    selectedSerialsByRow[itemId + '_' + idx] = new Set(preSelected);
+
+                    var srcLabel = sel.options[sel.selectedIndex].text.split(' (')[0];
+                    var block = document.createElement('div');
+                    block.id = 'srcSerials_' + itemId + '_' + idx;
+                    block.style.cssText = 'margin-top:10px; padding:12px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px;';
+                    block.innerHTML =
+                        '<div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items:center; flex-wrap:wrap; gap:6px;">'
+                      + '<span style="font-weight:600; font-size:.84rem; color:#0c4a6e;"><i class="fas fa-barcode me-1"></i> Serials from ' + srcLabel + ' (' + qty + ' needed)</span>'
+                      + '<div style="display:flex; gap:6px;">'
+                      + '<button type="button" onclick="autoPickSourceSerials(' + itemId + ',' + idx + ')" style="background:#2563eb;color:#fff;border:none;padding:4px 10px;border-radius:5px;font-size:.75rem;font-weight:600;cursor:pointer;">Auto-Pick First ' + qty + '</button>'
+                      + '<button type="button" onclick="clearSourceSerials(' + itemId + ',' + idx + ')" style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db;padding:4px 10px;border-radius:5px;font-size:.75rem;font-weight:600;cursor:pointer;">Clear</button>'
+                      + '</div>'
+                      + '</div>'
+                      + '<div id="srcSerialList_' + itemId + '_' + idx + '" style="max-height:180px; overflow-y:auto; background:#fff; border:1px solid #e5e7eb; border-radius:6px; padding:6px;"></div>'
+                      + '<div style="margin-top:6px; font-size:.78rem; color:#374151; font-weight:600;" id="srcSerialCount_' + itemId + '_' + idx + '">0 selected / ' + qty + ' needed</div>';
+                    wrap.appendChild(block);
+                    wrap.style.display = '';
+                    renderSerialCheckboxes(itemId, idx);
+                }
+
+                function renderSerialCheckboxes(itemId, idx) {
+                    var row = document.querySelector('#srcRows' + itemId + ' .src-row[data-idx="' + idx + '"]');
+                    var sel = row.querySelector('select');
+                    var qty = parseInt(row.querySelector('input[type=number]').value) || 0;
+                    var avail = (availableSerialsByItem[itemId] || {})[sel.value] || [];
+                    var selected = selectedSerialsByRow[itemId + '_' + idx] || new Set();
+                    var listEl = document.getElementById('srcSerialList_' + itemId + '_' + idx);
+                    if (!listEl) return;
+                    var html = '';
+                    avail.forEach(function(sn) {
+                        var checked = selected.has(sn) ? 'checked' : '';
+                        html += '<label style="display:flex; align-items:center; gap:8px; padding:4px 8px; border-bottom:1px solid #f3f4f6; cursor:pointer; font-family:monospace; font-size:.78rem;">'
+                              + '<input type="checkbox" ' + checked + ' value="' + sn + '" onchange="toggleSourceSerial(' + itemId + ',' + idx + ',this)"> ' + sn
+                              + '</label>';
+                    });
+                    if (!avail.length) html = '<div style="padding:8px; text-align:center; color:#94a3b8; font-size:.82rem;">No serials available at this source</div>';
+                    listEl.innerHTML = html;
+                    var countEl = document.getElementById('srcSerialCount_' + itemId + '_' + idx);
+                    if (countEl) {
+                        countEl.textContent = selected.size + ' selected / ' + qty + ' needed';
+                        countEl.style.color = (qty > 0 && selected.size === qty) ? '#059669' : '#dc2626';
+                    }
+                    syncSerialInputs(itemId);
+                }
+
+                function toggleSourceSerial(itemId, idx, cb) {
+                    var key = itemId + '_' + idx;
+                    if (!selectedSerialsByRow[key]) selectedSerialsByRow[key] = new Set();
+                    if (cb.checked) selectedSerialsByRow[key].add(cb.value);
+                    else selectedSerialsByRow[key].delete(cb.value);
+                    renderSerialCheckboxes(itemId, idx);
+                    recalcAlloc(itemId);
+                }
+                function autoPickSourceSerials(itemId, idx) {
+                    var row = document.querySelector('#srcRows' + itemId + ' .src-row[data-idx="' + idx + '"]');
+                    var sel = row.querySelector('select');
+                    var qty = parseInt(row.querySelector('input[type=number]').value) || 0;
+                    var avail = (availableSerialsByItem[itemId] || {})[sel.value] || [];
+                    selectedSerialsByRow[itemId + '_' + idx] = new Set(avail.slice(0, qty));
+                    renderSerialCheckboxes(itemId, idx);
+                    recalcAlloc(itemId);
+                }
+                function clearSourceSerials(itemId, idx) {
+                    selectedSerialsByRow[itemId + '_' + idx] = new Set();
+                    renderSerialCheckboxes(itemId, idx);
+                    recalcAlloc(itemId);
+                }
+
+                function syncSerialInputs(itemId) {
+                    var form = document.getElementById('ffForm' + itemId);
+                    if (!form) return;
+                    form.querySelectorAll('input.serial-hidden').forEach(function(el) { el.remove(); });
+                    Object.keys(selectedSerialsByRow).forEach(function(key) {
+                        if (!key.startsWith(itemId + '_')) return;
+                        var idx = key.split('_')[1];
+                        selectedSerialsByRow[key].forEach(function(sn) {
+                            var input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.className = 'serial-hidden';
+                            input.name = 'serials[' + idx + '][]';
+                            input.value = sn;
+                            form.appendChild(input);
+                        });
+                    });
                 }
 
                 function recalcAlloc(itemId) {
@@ -282,8 +447,11 @@
                     const rows = wrap.querySelectorAll('.src-row');
                     let total = 0;
                     let hasError = false;
+                    let serialMismatch = false;
                     const usedSources = {};
+                    const isSerial = isSerialTrackedItem(itemId);
                     rows.forEach(function(row) {
+                        const idx = row.getAttribute('data-idx');
                         const sel = row.querySelector('select');
                         const qtyInput = row.querySelector('input[type=number]');
                         const src = sel.value;
@@ -296,6 +464,10 @@
                             if (usedSources[src]) { hasError = true; sel.style.borderColor = '#dc2626'; }
                             else { sel.style.borderColor = '#d1d5db'; usedSources[src] = true; }
                             total += qty;
+                            if (isSerial) {
+                                var sel_set = selectedSerialsByRow[itemId + '_' + idx];
+                                if (!sel_set || sel_set.size !== qty) serialMismatch = true;
+                            }
                         } else {
                             qtyInput.style.borderColor = '#d1d5db';
                             sel.style.borderColor = '#d1d5db';
@@ -320,6 +492,10 @@
                     } else if (total > need) {
                         status.classList.add('err');
                         status.textContent += ' (over-allocated)';
+                        btn.disabled = true;
+                    } else if (isSerial && serialMismatch) {
+                        status.classList.add('warn');
+                        status.textContent += ' (pick serial numbers)';
                         btn.disabled = true;
                     } else {
                         status.classList.add('ok');

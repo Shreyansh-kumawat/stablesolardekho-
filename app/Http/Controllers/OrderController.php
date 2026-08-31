@@ -6,6 +6,7 @@ use App\Models\CpMaterialLedger;
 use App\Models\CpOrder;
 use App\Models\CustomerOrder;
 use App\Models\Product;
+use App\Models\ProductSerial;
 use App\Models\ProductCategory;
 use App\Models\ProductInventory;
 use App\Models\ProductInventoryTransaction;
@@ -437,6 +438,24 @@ class OrderController extends Controller
 
             $totalFulfilled = $fulfilledMain + array_sum($fulfilledWh);
 
+            $isSerialTracked = (bool) ($item->product->is_serialNumber_required ?? false);
+            $availableSerials = [];
+            $assignedSerials = [];
+            if ($isSerialTracked) {
+                $availableSerials['main'] = ProductSerial::where('product_id', $pid)
+                    ->where('status', 'in_stock')->where('current_location', 'main')
+                    ->orderBy('created_at')->pluck('serial_number');
+                foreach ($warehouses as $wh) {
+                    $availableSerials['wh:' . $wh->id] = ProductSerial::where('product_id', $pid)
+                        ->where('status', 'in_stock')->where('current_location', 'warehouse')
+                        ->where('warehouse_id', $wh->id)
+                        ->orderBy('created_at')->pluck('serial_number');
+                }
+                $assignedSerials = ProductSerial::where('customer_order_id', $order->id)
+                    ->where('product_id', $pid)
+                    ->pluck('serial_number')->toArray();
+            }
+
             $stockInfo[$item->id] = [
                 'main' => $mainQty,
                 'warehouses' => $whStocks,
@@ -444,6 +463,9 @@ class OrderController extends Controller
                 'fulfilled_wh' => $fulfilledWh,
                 'total_fulfilled' => $totalFulfilled,
                 'remaining' => max(0, $item->quantity - $totalFulfilled),
+                'is_serial_tracked' => $isSerialTracked,
+                'available_serials' => $availableSerials,
+                'assigned_serials' => $assignedSerials,
             ];
         }
 
@@ -457,10 +479,11 @@ class OrderController extends Controller
         $itemId = (int) $request->item_id;
         $item = $order->items()->where('id', $itemId)->firstOrFail();
 
-        $sources = $request->input('sources', []);
-        $sources = array_values(array_filter($sources, function ($s) {
+        $sourcesRaw = $request->input('sources', []);
+        // Preserve original keys so serials[idx] alignment stays correct
+        $sources = array_filter($sourcesRaw, function ($s) {
             return isset($s['source']) && $s['source'] !== '' && (int)($s['qty'] ?? 0) > 0;
-        }));
+        });
 
         if (empty($sources)) {
             return redirect()->back()->with('error', 'Please add at least one source with a quantity.');
@@ -488,10 +511,24 @@ class OrderController extends Controller
             DB::beginTransaction();
             $orderRef = $order->order_number ?? $order->id;
             $salePrice = $item->price ?? ($item->product->current_sale_price ?? 0);
+            $product = Product::find($item->product_id);
+            $isSerial = $product && $product->is_serialNumber_required;
 
-            foreach ($sources as $s) {
+            $serialsPerSource = $request->input('serials', []);
+            if ($isSerial) {
+                foreach ($sources as $idx => $s) {
+                    $ser = $serialsPerSource[$idx] ?? [];
+                    $ser = array_values(array_filter(array_map('trim', is_array($ser) ? $ser : [])));
+                    if (count($ser) !== (int) $s['qty']) {
+                        throw new \Exception('Source ' . ($idx + 1) . ': need ' . $s['qty'] . ' serials but got ' . count($ser) . '.');
+                    }
+                }
+            }
+
+            foreach ($sources as $idx => $s) {
                 $src = $s['source'];
                 $qty = (int) $s['qty'];
+                $selectedSerials = $isSerial ? array_values(array_filter($serialsPerSource[$idx] ?? [])) : [];
 
                 if ($src === 'main') {
                     $inv = ProductInventory::where('product_id', $item->product_id)->first();
@@ -504,16 +541,44 @@ class OrderController extends Controller
                         $inv->save();
                     }
                     Product::where('id', $item->product_id)->update(['quantity' => $inv ? $inv->available_qty : 0]);
+                    $txnId = $this->getTxnId();
 
-                    ProductInventoryTransaction::create([
-                        'product_id' => $item->product_id,
-                        'transaction_type' => 'OUT',
-                        'quantity' => $qty,
-                        'unit_price' => $salePrice,
-                        'performed_by' => Auth::id(),
-                        'txn_id' => $this->getTxnId(),
-                        'remarks' => 'Customer Order #' . $orderRef . ' fulfilled [from Main Inventory]',
-                    ]);
+                    if ($isSerial && !empty($selectedSerials)) {
+                        foreach ($selectedSerials as $sn) {
+                            $serial = ProductSerial::where('product_id', $item->product_id)
+                                ->where('serial_number', $sn)
+                                ->where('status', 'in_stock')
+                                ->where('current_location', 'main')
+                                ->first();
+                            if (!$serial) throw new \Exception("Serial '{$sn}' not available in Main Inventory.");
+                            $serial->update([
+                                'status' => 'sold',
+                                'current_location' => 'customer',
+                                'customer_order_id' => $order->id,
+                                'warehouse_id' => null,
+                            ]);
+                            ProductInventoryTransaction::create([
+                                'product_id' => $item->product_id,
+                                'serial_id' => $serial->id,
+                                'transaction_type' => 'OUT',
+                                'quantity' => 1,
+                                'unit_price' => $salePrice,
+                                'performed_by' => Auth::id(),
+                                'txn_id' => $txnId,
+                                'remarks' => 'Customer Order #' . $orderRef . ' fulfilled [from Main Inventory]',
+                            ]);
+                        }
+                    } else {
+                        ProductInventoryTransaction::create([
+                            'product_id' => $item->product_id,
+                            'transaction_type' => 'OUT',
+                            'quantity' => $qty,
+                            'unit_price' => $salePrice,
+                            'performed_by' => Auth::id(),
+                            'txn_id' => $txnId,
+                            'remarks' => 'Customer Order #' . $orderRef . ' fulfilled [from Main Inventory]',
+                        ]);
+                    }
                 } else {
                     $whId = (int) str_replace('wh:', '', $src);
                     $whInv = WarehouseInventory::where('warehouse_id', $whId)->where('product_id', $item->product_id)->first();
@@ -523,18 +588,48 @@ class OrderController extends Controller
                         throw new \Exception($whName . ' has only ' . $available . ' available.');
                     }
                     $whInv->decrement('available_qty', $qty);
-
                     $whName = Warehouse::where('id', $whId)->value('name') ?? ('Warehouse ' . $whId);
-                    WarehouseInventoryTransaction::create([
-                        'warehouse_id' => $whId,
-                        'product_id' => $item->product_id,
-                        'transaction_type' => 'OUT',
-                        'quantity' => $qty,
-                        'unit_price' => $salePrice,
-                        'performed_by' => Auth::id(),
-                        'txn_id' => $this->getTxnId(),
-                        'remarks' => 'Customer Order #' . $orderRef . ' fulfilled [from ' . $whName . ']',
-                    ]);
+                    $txnId = $this->getTxnId();
+
+                    if ($isSerial && !empty($selectedSerials)) {
+                        foreach ($selectedSerials as $sn) {
+                            $serial = ProductSerial::where('product_id', $item->product_id)
+                                ->where('serial_number', $sn)
+                                ->where('status', 'in_stock')
+                                ->where('current_location', 'warehouse')
+                                ->where('warehouse_id', $whId)
+                                ->first();
+                            if (!$serial) throw new \Exception("Serial '{$sn}' not available in {$whName}.");
+                            $serial->update([
+                                'status' => 'sold',
+                                'current_location' => 'customer',
+                                'customer_order_id' => $order->id,
+                                'warehouse_id' => null,
+                            ]);
+                            WarehouseInventoryTransaction::create([
+                                'warehouse_id' => $whId,
+                                'product_id' => $item->product_id,
+                                'serial_id' => $serial->id,
+                                'transaction_type' => 'OUT',
+                                'quantity' => 1,
+                                'unit_price' => $salePrice,
+                                'performed_by' => Auth::id(),
+                                'txn_id' => $txnId,
+                                'remarks' => 'Customer Order #' . $orderRef . ' fulfilled [from ' . $whName . ']',
+                            ]);
+                        }
+                    } else {
+                        WarehouseInventoryTransaction::create([
+                            'warehouse_id' => $whId,
+                            'product_id' => $item->product_id,
+                            'transaction_type' => 'OUT',
+                            'quantity' => $qty,
+                            'unit_price' => $salePrice,
+                            'performed_by' => Auth::id(),
+                            'txn_id' => $txnId,
+                            'remarks' => 'Customer Order #' . $orderRef . ' fulfilled [from ' . $whName . ']',
+                        ]);
+                    }
                 }
             }
 
@@ -544,6 +639,16 @@ class OrderController extends Controller
             DB::rollBack();
             return redirect()->back()->with('error', $e->getMessage());
         }
+    }
+
+    /** Return serials assigned to this customer order (for viewing) */
+    public function getOrderSerials($orderId)
+    {
+        $serials = ProductSerial::where('customer_order_id', $orderId)
+            ->with('product:id,item_name')
+            ->orderBy('product_id')
+            ->get(['id', 'product_id', 'serial_number', 'status']);
+        return response()->json(['serials' => $serials]);
     }
 
     private function getTxnId()

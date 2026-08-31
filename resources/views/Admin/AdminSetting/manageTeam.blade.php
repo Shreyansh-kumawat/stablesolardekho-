@@ -376,8 +376,13 @@
                     </thead>
                     <tbody>
                         @forelse ($solarTeam as $key => $teamMember)
-                            <tr>
-                                <td class="fw-bold">{{ $key + 1 }}</td>
+                            <tr data-member-id="{{ $teamMember->id }}" style="{{ $teamMember->is_pinned ? 'background:linear-gradient(90deg,#fef3c7,#fff);' : '' }}">
+                                <td class="fw-bold">
+                                    @if($teamMember->is_pinned)
+                                        <span title="Pinned to top" style="color:#f59e0b; margin-right:2px;"><i class="fas fa-thumbtack"></i></span>
+                                    @endif
+                                    {{ $key + 1 }}
+                                </td>
                                 <td><span class="fw-bold">{{ $teamMember->name ?? 'N/A' }}</span></td>
                                 <td><small class="text-muted-custom">{{ $teamMember->mobile_number ?? 'N/A' }}</small></td>
                                 <td><small class="text-muted-custom">{{ $teamMember->address ?? 'N/A' }}</small></td>
@@ -400,7 +405,12 @@
                                 </td>
 
                                 <td>
-                                    <div class="d-flex gap-2">
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <button type="button" class="btn btn-sm {{ $teamMember->is_pinned ? 'btn-warning' : 'btn-outline-warning' }}"
+                                                onclick="togglePinMember({{ $teamMember->id }}, this)"
+                                                title="{{ $teamMember->is_pinned ? 'Unpin from top' : 'Pin to top' }}">
+                                            <i class="fas fa-thumbtack"></i>
+                                        </button>
                                         <button type="button" class="btn btn-primary btn-sm edit-team-btn"
                                             data-id="{{ $teamMember->id }}"
                                             data-name="{{ $teamMember->name }}"
@@ -822,5 +832,19 @@
                 addModalEl.addEventListener('hidden.bs.modal', () => setPosValue('add', ''));
             }
         })();
+
+        function togglePinMember(id, btn) {
+            var token = document.querySelector('meta[name="csrf-token"]');
+            fetch("{{ url('/admin/team') }}/" + id + "/toggle-pin", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token ? token.getAttribute('content') : '',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(r => r.json())
+            .then(data => { if (data.success) location.reload(); })
+            .catch(() => alert('Failed to update pin state.'));
+        }
     </script>
 @endsection

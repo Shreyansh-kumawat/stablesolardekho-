@@ -16,8 +16,34 @@ class AdminSettingController extends Controller
         $districts = $stateController->getCities();
 
         $positions = ['Channel Partner', 'Installation Partner', 'Manager', 'Project Manager', 'Lead Engineer', 'Sales Manager', 'Marketing Manager', 'Customer Support'];
-        $solarTeam = SolarTeam::all();
+        $solarTeam = SolarTeam::orderByDesc('is_pinned')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
         return view('Admin.AdminSetting.manageTeam', compact('solarTeam', 'positions', 'states', 'districts'));
+    }
+
+    public function togglePinTeam(Request $request, $id)
+    {
+        $member = SolarTeam::findOrFail($id);
+        $member->is_pinned = !$member->is_pinned;
+        if ($member->is_pinned) {
+            $minOrder = (int) SolarTeam::where('is_pinned', true)->min('sort_order');
+            $member->sort_order = $minOrder - 1;
+        } else {
+            $member->sort_order = null;
+        }
+        $member->save();
+        return response()->json(['success' => true, 'is_pinned' => (bool) $member->is_pinned]);
+    }
+
+    public function reorderTeam(Request $request)
+    {
+        $order = $request->input('order', []);
+        foreach ($order as $i => $memberId) {
+            SolarTeam::where('id', (int) $memberId)->update(['sort_order' => (int) $i]);
+        }
+        return response()->json(['success' => true]);
     }
 
     public function storeTeam(Request $request)

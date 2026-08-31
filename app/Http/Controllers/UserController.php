@@ -104,7 +104,11 @@ class UserController extends Controller
 
     public function ourTeam()
     {
-        $teamMembers = SolarTeam::where('status', 1)->orderBy('created_at', 'desc')->get();
+        $teamMembers = SolarTeam::where('status', 1)
+            ->orderByDesc('is_pinned')
+            ->orderBy('sort_order')
+            ->orderByDesc('created_at')
+            ->get();
         return view('publicPages.solarTeam')->with('teamMembers', $teamMembers);
     }
 

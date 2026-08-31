@@ -9,7 +9,7 @@ class Product extends Model
     protected $fillable = [
         'item_name', 'item_code', 'slug', 'description', 'image',
         'current_sale_price', 'quantity', 'uom', 'category_id', 'sub_category_id',
-        'is_featured', 'is_active', 'is_kit',
+        'is_featured', 'is_active', 'is_kit', 'is_serialNumber_required',
         'type', 'brand', 'model', 'operating_voltage', 'solar_panel_type',
         'mnre_approved', 'certifications', 'manufacturer_warranty',
         'number_of_cells', 'encapsulate', 'country_of_origin',

@@ -240,6 +240,13 @@ class CheckoutController extends Controller
     public function orderDetail($id)
     {
         $order = CustomerOrder::where('id', $id)->where('user_id', Auth::id())->with('items.product')->firstOrFail();
-        return view('user.order-detail', compact('order'));
+
+        // Attach serials assigned to this order, grouped by product
+        $serialsByProduct = \App\Models\ProductSerial::where('customer_order_id', $order->id)
+            ->get()
+            ->groupBy('product_id')
+            ->map(function ($group) { return $group->pluck('serial_number')->values()->toArray(); });
+
+        return view('user.order-detail', compact('order', 'serialsByProduct'));
     }
 }

@@ -220,16 +220,17 @@ class AdminWarehouseController extends Controller
                     $serial = ProductSerial::where('product_id', $productId)
                         ->where('serial_number', $sn)
                         ->where('status', 'in_stock')
-                        ->whereNull('issue_to')
+                        ->where('current_location', 'main')
                         ->first();
 
                     if (!$serial) {
-                        throw new Exception("Serial number {$sn} is not available in stock.");
+                        throw new Exception("Serial number {$sn} is not available in main inventory.");
                     }
 
                     $serial->update([
-                        'status' => 'issue_to_warehouse',
+                        'status' => 'in_stock',
                         'current_location' => 'warehouse',
+                        'warehouse_id' => $warehouseId,
                         'issue_to' => $warehouseId,
                     ]);
 
@@ -634,6 +635,7 @@ class AdminWarehouseController extends Controller
             'quantity' => 'required|integer|min:1',
             'unit_price' => 'nullable|numeric|min:0',
             'remarks' => 'nullable|string|max:500',
+            'serial_numbers' => 'nullable|array',
         ]);
 
         DB::beginTransaction();
@@ -642,6 +644,14 @@ class AdminWarehouseController extends Controller
             $toId = $request->to_warehouse_id;
             $productId = $request->product_id;
             $qty = (int) $request->quantity;
+            $product = Product::findOrFail($productId);
+            $serialsRequested = array_values(array_filter($request->serial_numbers ?? []));
+
+            if ($product->is_serialNumber_required) {
+                if (count($serialsRequested) !== $qty) {
+                    throw new Exception('Serial count (' . count($serialsRequested) . ') must match quantity (' . $qty . ').');
+                }
+            }
 
             $fromInv = WarehouseInventory::where('warehouse_id', $fromId)
                 ->where('product_id', $productId)
@@ -659,31 +669,74 @@ class AdminWarehouseController extends Controller
 
             $txnId = 'W2W-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
 
-            WarehouseInventoryTransaction::create([
-                'warehouse_id' => $fromId,
-                'product_id' => $productId,
-                'transaction_type' => 'OUT',
-                'quantity' => $qty,
-                'transfer_type' => 'to_warehouse',
-                'transfer_to' => $toId,
-                'unit_price' => $request->unit_price,
-                'performed_by' => Auth::id(),
-                'txn_id' => $txnId,
-                'remarks' => $request->remarks ?? 'Transferred to another warehouse',
-            ]);
+            if ($product->is_serialNumber_required && !empty($serialsRequested)) {
+                foreach ($serialsRequested as $sn) {
+                    $serial = ProductSerial::where('product_id', $productId)
+                        ->where('serial_number', $sn)
+                        ->where('warehouse_id', $fromId)
+                        ->where('status', 'in_stock')
+                        ->first();
+                    if (!$serial) {
+                        throw new Exception("Serial '{$sn}' not available in source warehouse.");
+                    }
+                    $serial->update([
+                        'warehouse_id' => $toId,
+                        'current_location' => 'warehouse',
+                    ]);
+                    WarehouseInventoryTransaction::create([
+                        'warehouse_id' => $fromId,
+                        'product_id' => $productId,
+                        'serial_id' => $serial->id,
+                        'transaction_type' => 'OUT',
+                        'quantity' => 1,
+                        'transfer_type' => 'to_warehouse',
+                        'transfer_to' => $toId,
+                        'unit_price' => $request->unit_price,
+                        'performed_by' => Auth::id(),
+                        'txn_id' => $txnId,
+                        'remarks' => $request->remarks ?? 'Transferred to another warehouse',
+                    ]);
+                    WarehouseInventoryTransaction::create([
+                        'warehouse_id' => $toId,
+                        'product_id' => $productId,
+                        'serial_id' => $serial->id,
+                        'transaction_type' => 'IN',
+                        'quantity' => 1,
+                        'transfer_type' => 'from_warehouse',
+                        'transfer_to' => $fromId,
+                        'unit_price' => $request->unit_price,
+                        'performed_by' => Auth::id(),
+                        'txn_id' => $txnId,
+                        'remarks' => $request->remarks ?? 'Received from another warehouse',
+                    ]);
+                }
+            } else {
+                WarehouseInventoryTransaction::create([
+                    'warehouse_id' => $fromId,
+                    'product_id' => $productId,
+                    'transaction_type' => 'OUT',
+                    'quantity' => $qty,
+                    'transfer_type' => 'to_warehouse',
+                    'transfer_to' => $toId,
+                    'unit_price' => $request->unit_price,
+                    'performed_by' => Auth::id(),
+                    'txn_id' => $txnId,
+                    'remarks' => $request->remarks ?? 'Transferred to another warehouse',
+                ]);
 
-            WarehouseInventoryTransaction::create([
-                'warehouse_id' => $toId,
-                'product_id' => $productId,
-                'transaction_type' => 'IN',
-                'quantity' => $qty,
-                'transfer_type' => 'from_warehouse',
-                'transfer_to' => $fromId,
-                'unit_price' => $request->unit_price,
-                'performed_by' => Auth::id(),
-                'txn_id' => $txnId,
-                'remarks' => $request->remarks ?? 'Received from another warehouse',
-            ]);
+                WarehouseInventoryTransaction::create([
+                    'warehouse_id' => $toId,
+                    'product_id' => $productId,
+                    'transaction_type' => 'IN',
+                    'quantity' => $qty,
+                    'transfer_type' => 'from_warehouse',
+                    'transfer_to' => $fromId,
+                    'unit_price' => $request->unit_price,
+                    'performed_by' => Auth::id(),
+                    'txn_id' => $txnId,
+                    'remarks' => $request->remarks ?? 'Received from another warehouse',
+                ]);
+            }
 
             $fromInv->decrement('available_qty', $qty);
             $toInv->increment('available_qty', $qty);
@@ -704,6 +757,28 @@ class AdminWarehouseController extends Controller
             ->value('available_qty') ?? 0;
 
         return response()->json(['available_qty' => $qty]);
+    }
+
+    public function getAvailableSerials(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'location' => 'required|in:main,warehouse',
+            'warehouse_id' => 'nullable|exists:warehouses,id',
+        ]);
+        $product = Product::find($request->product_id);
+        if (!$product || !$product->is_serialNumber_required) {
+            return response()->json(['is_serial_tracked' => false, 'serials' => []]);
+        }
+        $query = ProductSerial::where('product_id', $request->product_id)
+            ->where('status', 'in_stock');
+        if ($request->location === 'main') {
+            $query->where('current_location', 'main')->whereNull('warehouse_id');
+        } else {
+            $query->where('current_location', 'warehouse')->where('warehouse_id', $request->warehouse_id);
+        }
+        $serials = $query->orderBy('created_at')->pluck('serial_number');
+        return response()->json(['is_serial_tracked' => true, 'serials' => $serials]);
     }
 
     public function getMainInventoryProducts(Request $request)

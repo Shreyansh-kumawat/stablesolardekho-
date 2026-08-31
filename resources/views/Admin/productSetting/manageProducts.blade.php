@@ -547,6 +547,12 @@
                         <div class="pcard-meta">
                             @if($product->current_sale_price)
                                 <span class="pcard-price">&#8377;{{ $product->current_sale_price }}</span>
+                                @if(!empty($product->last_purchase_price))
+                                    <div style="margin-top:4px; font-size:0.75rem; color:#0369a1; font-weight:600;">
+                                        <i class="fas fa-shopping-cart me-1"></i> Purchase: &#8377;{{ number_format($product->last_purchase_price, 2) }}
+                                        @if(!empty($product->last_gst_percent)) + {{ rtrim(rtrim(number_format($product->last_gst_percent, 2), '0'), '.') }}% GST @endif
+                                    </div>
+                                @endif
                             @else
                                 <span class="pcard-price-na">Price on request</span>
                             @endif
@@ -588,6 +594,7 @@
                                 data-qty="{{ $product->quantity ?? 0 }}"
                                 data-description="{{ $product->description }}"
                                 data-featured="{{ $product->is_featured ? 1 : 0 }}"
+                                data-serial-tracked="{{ $product->is_serialNumber_required ? 1 : 0 }}"
                                 data-image="{{ $product->image ? Storage::url($product->image) : '' }}"
                                 data-spec-type="{{ $product->type }}"
                                 data-spec-brand="{{ $product->brand }}"
@@ -786,6 +793,17 @@
                             <label class="form-check-label" for="addIsFeatured" style="font-size:0.88rem;font-weight:600;cursor:pointer;">Mark as Featured</label>
                         </div>
 
+                        {{-- Serial Tracked --}}
+                        <div class="form-check form-switch" style="padding-left:2.5rem; margin-top:8px;">
+                            <input class="form-check-input" type="checkbox" id="addIsSerialTracked" name="is_serialNumber_required" value="1">
+                            <label class="form-check-label" for="addIsSerialTracked" style="font-size:0.88rem;font-weight:600;cursor:pointer;">
+                                Serial Number Tracked
+                                <span style="display:block;font-weight:400;font-size:0.75rem;color:#868e96;margin-top:2px;">
+                                    Enable if every unit of this product has a unique serial (e.g., panels, inverters)
+                                </span>
+                            </label>
+                        </div>
+
                     </div>
                     <div class="modal-footer justify-content-end">
                         <button type="button" class="btn-cancel" data-bs-dismiss="modal">
@@ -951,6 +969,17 @@
                         <div class="form-check form-switch" style="padding-left:2.5rem;">
                             <input class="form-check-input" type="checkbox" id="editIsFeatured" name="is_featured" value="1">
                             <label class="form-check-label" for="editIsFeatured" style="font-size:0.88rem;font-weight:600;cursor:pointer;">Mark as Featured</label>
+                        </div>
+
+                        {{-- Serial Tracked --}}
+                        <div class="form-check form-switch" style="padding-left:2.5rem; margin-top:8px;">
+                            <input class="form-check-input" type="checkbox" id="editIsSerialTracked" name="is_serialNumber_required" value="1">
+                            <label class="form-check-label" for="editIsSerialTracked" style="font-size:0.88rem;font-weight:600;cursor:pointer;">
+                                Serial Number Tracked
+                                <span style="display:block;font-weight:400;font-size:0.75rem;color:#868e96;margin-top:2px;">
+                                    Enable if every unit of this product has a unique serial (e.g., panels, inverters)
+                                </span>
+                            </label>
                         </div>
 
                     </div>
@@ -1401,6 +1430,7 @@
                 $('#editProductQty').val(btn.data('qty') || 0);
                 $('#editProductDesc').val(btn.data('description') || '');
                 $('#editIsFeatured').prop('checked', btn.data('featured') == 1);
+                $('#editIsSerialTracked').prop('checked', btn.data('serial-tracked') == 1);
 
                 // Populate spec fields
                 $('#editSpecType').val(btn.data('spec-type') || '');

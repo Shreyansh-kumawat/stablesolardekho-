@@ -155,6 +155,22 @@
                             <label class="form-label">Remarks</label>
                             <input type="text" name="remarks" class="form-control" placeholder="Optional remarks">
                         </div>
+
+                        <div class="col-12" id="serialPickerWrap" style="display:none;">
+                            <label class="form-label">
+                                Serial Numbers <span style="color:#dc2626;">*</span>
+                                <small style="font-weight:400; color:#6b7280;">(this product is serial-tracked)</small>
+                            </label>
+                            <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px;">
+                                <div style="display:flex; gap:8px; margin-bottom:10px; align-items:center; flex-wrap:wrap;">
+                                    <button type="button" class="btn btn-sm btn-primary" onclick="autoPickSerials()">Auto-Pick First N</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSerialPicks()">Clear All</button>
+                                    <span id="serialPickSummary" style="font-size:.85rem; color:#374151; font-weight:600;">0 selected</span>
+                                </div>
+                                <input type="text" id="serialSearch" class="form-control mb-2" placeholder="Search serials..." oninput="filterSerialList()">
+                                <div id="serialList" style="max-height:220px; overflow-y:auto; background:#fff; border:1px solid #e5e7eb; border-radius:6px; padding:6px;"></div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mt-4 d-flex gap-2">
@@ -215,6 +231,9 @@
                 $('#uom').val(uom);
                 $('#unit_price').val(price);
                 $('#quantity').val('');
+                $('#serialPickerWrap').hide();
+                availableSerials = [];
+                selectedSerials = new Set();
 
                 if (!$(this).val()) { resetFields(); return; }
 
@@ -222,6 +241,14 @@
                     availableQty = parseInt(data?.available_qty ?? data ?? 0, 10) || 0;
                     $('#available_qty_hint').text(`Available in main inventory: ${availableQty}`);
                     if (availableQty > 0) $('#quantity').attr('max', availableQty);
+                });
+
+                $.get("{{ route('admin.warehouses.getAvailableSerials') }}", { product_id: $(this).val(), location: 'main' }, function(data) {
+                    if (data && data.is_serial_tracked) {
+                        availableSerials = data.serials || [];
+                        $('#serialPickerWrap').show();
+                        renderSerialList();
+                    }
                 });
             });
 
@@ -235,7 +262,54 @@
                 }
                 this.setCustomValidity('');
                 $(this).removeClass('is-invalid');
+                updateSerialSummary();
             });
+
+            var availableSerials = [];
+            var selectedSerials = new Set();
+
+            window.renderSerialList = function() {
+                var q = ($('#serialSearch').val() || '').toLowerCase();
+                var filtered = availableSerials.filter(function(s) { return !q || s.toLowerCase().indexOf(q) !== -1; });
+                var html = '';
+                filtered.forEach(function(sn) {
+                    var checked = selectedSerials.has(sn) ? 'checked' : '';
+                    html += '<label style="display:flex; align-items:center; gap:8px; padding:5px 8px; border-bottom:1px solid #f3f4f6; cursor:pointer; font-family:monospace; font-size:.82rem;">'
+                          + '<input type="checkbox" ' + checked + ' value="' + sn + '" onchange="toggleSerialPick(this)"> ' + sn
+                          + '</label>';
+                });
+                if (!filtered.length) html = '<div style="padding:10px; text-align:center; color:#94a3b8; font-size:.85rem;">No matching serials</div>';
+                $('#serialList').html(html);
+                syncSerialHiddenInputs();
+                updateSerialSummary();
+            };
+            window.filterSerialList = function() { renderSerialList(); };
+            window.toggleSerialPick = function(cb) {
+                if (cb.checked) selectedSerials.add(cb.value); else selectedSerials.delete(cb.value);
+                syncSerialHiddenInputs();
+                updateSerialSummary();
+            };
+            window.autoPickSerials = function() {
+                var qty = parseInt($('#quantity').val(), 10) || 0;
+                if (qty <= 0) { alert('Enter quantity first.'); return; }
+                selectedSerials = new Set(availableSerials.slice(0, qty));
+                renderSerialList();
+            };
+            window.clearSerialPicks = function() {
+                selectedSerials = new Set();
+                renderSerialList();
+            };
+            function syncSerialHiddenInputs() {
+                $('#transferForm input[name="serial_numbers[]"]').remove();
+                selectedSerials.forEach(function(sn) {
+                    $('#transferForm').append('<input type="hidden" name="serial_numbers[]" value="' + sn + '">');
+                });
+            }
+            function updateSerialSummary() {
+                var qty = parseInt($('#quantity').val(), 10) || 0;
+                $('#serialPickSummary').text(selectedSerials.size + ' selected' + (qty > 0 ? ' / ' + qty + ' needed' : ''))
+                    .css('color', (qty > 0 && selectedSerials.size === qty) ? '#059669' : '#374151');
+            }
 
             function resetFields() {
                 $('#uom').val('');

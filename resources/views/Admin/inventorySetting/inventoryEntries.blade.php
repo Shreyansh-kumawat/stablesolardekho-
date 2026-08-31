@@ -62,7 +62,7 @@
     @endif
 
     <div class="search-bar">
-        <input type="text" id="entrySearch" placeholder="Search by product, code, supplier, person, invoice, or txn ID...">
+        <input type="text" id="entrySearch" placeholder="Search by product, code, supplier, person, invoice, txn ID, or serial number...">
         <select id="entryTypeFilter">
             <option value="">All Types</option>
             <option value="IN">Stock IN</option>
@@ -72,7 +72,7 @@
 
     <div id="entriesContainer">
     @forelse($entries as $entry)
-        <div class="entry-card" data-type="{{ $entry->transaction_type }}" data-search="{{ strtolower(($entry->product->item_name ?? '').' '.($entry->product->item_code ?? '').' '.($entry->performer_name ?? '').' '.($entry->supplier_name ?? '').' '.($entry->channelPartner->cp_name ?? '').' '.($entry->invoice_number ?? '').' '.($entry->txn_id ?? '')) }}">
+        <div class="entry-card" data-type="{{ $entry->transaction_type }}" data-search="{{ strtolower(($entry->product->item_name ?? '').' '.($entry->product->item_code ?? '').' '.($entry->performer_name ?? '').' '.($entry->supplier_name ?? '').' '.($entry->channelPartner->cp_name ?? '').' '.($entry->invoice_number ?? '').' '.($entry->txn_id ?? '').' '.(isset($entry->batch_serials) ? $entry->batch_serials->pluck('serial_number')->implode(' ') : '')) }}">
             <div class="entry-top">
                 <div class="entry-product">
                     @if($entry->product && $entry->product->image)
@@ -102,10 +102,34 @@
                     <div class="lbl">Added By</div>
                     <div class="val">{{ $entry->performer_name ?? '-' }}</div>
                 </div>
-                @if($entry->unit_price)
-                <div class="entry-field">
-                    <div class="lbl">Unit Price</div>
-                    <div class="val">&#8377;{{ number_format($entry->unit_price, 2) }}</div>
+                @if($entry->transaction_type === 'IN')
+                <div class="entry-field price-wrap" data-id="{{ $entry->id }}">
+                    <div class="lbl">Purchase Price
+                        <button type="button" onclick="togglePriceEdit(this)" style="background:none;border:none;color:#4A90E2;cursor:pointer;font-size:.72rem;margin-left:6px;">
+                            <i class="fas fa-pencil-alt"></i> Edit
+                        </button>
+                    </div>
+                    <div class="val price-display">
+                        @if($entry->unit_price)
+                            &#8377;{{ number_format($entry->unit_price, 2) }}
+                            @if($entry->gst_percent) <span style="color:#0369a1;font-size:.75rem;font-weight:600;"> + {{ rtrim(rtrim(number_format($entry->gst_percent, 2), '0'), '.') }}% GST</span> @endif
+                            @if($entry->total_with_gst) <div style="font-size:.75rem;color:#059669;font-weight:600;">Total: &#8377;{{ number_format($entry->total_with_gst, 2) }}</div> @endif
+                        @else
+                            <span style="color:#9ca3af;font-style:italic;">Not set</span>
+                        @endif
+                    </div>
+                    <div class="price-edit-form" style="display:none;">
+                        <div style="display:flex;gap:6px;align-items:center;">
+                            <input type="number" step="0.01" min="0" class="price-input" placeholder="Unit Price"
+                                   value="{{ $entry->unit_price }}"
+                                   style="width:100px;padding:4px 8px;border:1.5px solid #4A90E2;border-radius:6px;font-size:.82rem;">
+                            <input type="number" step="0.01" min="0" max="100" class="gst-input" placeholder="GST %"
+                                   value="{{ $entry->gst_percent }}"
+                                   style="width:70px;padding:4px 8px;border:1.5px solid #4A90E2;border-radius:6px;font-size:.82rem;">
+                            <button type="button" onclick="savePriceEdit(this)" style="background:#059669;color:#fff;border:none;padding:5px 10px;border-radius:5px;font-size:.72rem;font-weight:600;cursor:pointer;">Save</button>
+                            <button type="button" onclick="cancelPriceEdit(this)" style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db;padding:5px 10px;border-radius:5px;font-size:.72rem;font-weight:600;cursor:pointer;">Cancel</button>
+                        </div>
+                    </div>
                 </div>
                 @endif
                 @if($entry->invoice_number)
@@ -145,6 +169,26 @@
                     </div>
                 </div>
             </div>
+
+            @if(isset($entry->batch_serials) && $entry->batch_serials->count())
+            <div class="entry-serials" style="margin-top:12px; padding:12px 14px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:.78rem; font-weight:700; color:#0369a1; text-transform:uppercase; letter-spacing:.05em;">
+                        <i class="fas fa-barcode me-1"></i> Serial Numbers ({{ $entry->batch_serials->count() }})
+                    </span>
+                    <button type="button" onclick="this.parentElement.nextElementSibling.classList.toggle('collapsed')" style="background:none; border:1px solid #7dd3fc; color:#0369a1; padding:3px 10px; border-radius:5px; font-size:.72rem; font-weight:600; cursor:pointer;">
+                        Toggle
+                    </button>
+                </div>
+                <div class="serial-chip-wrap" style="display:flex; flex-wrap:wrap; gap:5px;">
+                    @foreach($entry->batch_serials as $sn)
+                    <span style="display:inline-flex; align-items:center; gap:4px; background:#fff; border:1px solid #bae6fd; color:#075985; font-family:monospace; font-size:.72rem; padding:3px 8px; border-radius:4px;" title="Status: {{ $sn->status }}">
+                        {{ $sn->serial_number }}
+                    </span>
+                    @endforeach
+                </div>
+            </div>
+            @endif
 
             @if($entry->product && ($entry->product->brand || $entry->product->manufacturer_warranty || $entry->product->type || $entry->product->customSpecs->count()))
             <div class="entry-specs">
@@ -217,6 +261,46 @@ function saveRemark(input) {
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
         body: JSON.stringify({ remarks: val })
     });
+}
+
+function togglePriceEdit(btn) {
+    const wrap = btn.closest('.price-wrap');
+    wrap.querySelector('.price-display').style.display = 'none';
+    wrap.querySelector('.price-edit-form').style.display = '';
+    wrap.querySelector('.price-input').focus();
+}
+function cancelPriceEdit(btn) {
+    const wrap = btn.closest('.price-wrap');
+    wrap.querySelector('.price-display').style.display = '';
+    wrap.querySelector('.price-edit-form').style.display = 'none';
+}
+function savePriceEdit(btn) {
+    const wrap = btn.closest('.price-wrap');
+    const id = wrap.getAttribute('data-id');
+    const price = wrap.querySelector('.price-input').value;
+    const gst = wrap.querySelector('.gst-input').value;
+
+    fetch(`/admin/inventory/entry/${id}/update-price`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+        body: JSON.stringify({ unit_price: price, gst_percent: gst })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            var displayHtml = '';
+            if (price) {
+                displayHtml = '&#8377;' + Number(price).toLocaleString('en-IN', {minimumFractionDigits:2});
+                if (gst) displayHtml += ' <span style="color:#0369a1;font-size:.75rem;font-weight:600;"> + ' + gst + '% GST</span>';
+                if (data.total_with_gst) displayHtml += '<div style="font-size:.75rem;color:#059669;font-weight:600;">Total: &#8377;' + Number(data.total_with_gst).toLocaleString('en-IN', {minimumFractionDigits:2}) + '</div>';
+            } else {
+                displayHtml = '<span style="color:#9ca3af;font-style:italic;">Not set</span>';
+            }
+            wrap.querySelector('.price-display').innerHTML = displayHtml;
+            cancelPriceEdit(btn);
+        }
+    })
+    .catch(() => alert('Failed to update.'));
 }
 </script>
 @endsection

@@ -15,6 +15,7 @@ use App\Models\WarehouseInventory;
 use App\Models\WarehouseInventoryTransaction;
 use App\Services\cpInventoryService;
 use App\Services\InventoryService;
+use App\Services\SerialExcelParser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -346,10 +347,26 @@ class InventoryController extends Controller
             );
             $oldQty = $inventory->available_qty;
 
+            $serialsInput = $this->parseSerialsInput($request->serials_text);
+            // Only require serials when INCREASING stock (adding new units)
+            $addQtyForCheck = max(0, $qty - $oldQty);
+            if ($product->is_serialNumber_required && $addQtyForCheck > 0) {
+                if (count($serialsInput) !== $addQtyForCheck) {
+                    return redirect()->back()->withInput()->with('error',
+                        'Serial-tracked product: need ' . $addQtyForCheck . ' serials but got ' . count($serialsInput) . '.');
+                }
+                $dupes = ProductSerial::whereIn('serial_number', $serialsInput)->pluck('serial_number')->toArray();
+                if (!empty($dupes)) {
+                    return redirect()->back()->withInput()->with('error',
+                        'These serials already exist: ' . implode(', ', array_slice($dupes, 0, 10)));
+                }
+            }
+
             if ($warehouseId) {
                 $addQty = $qty - $oldQty;
                 if ($addQty > 0) {
                     $txn_id = $this->getTxnId();
+                    [$gstAmt, $totWithGst] = $this->gstFields($request->unit_price, $request->gst_percent);
 
                     ProductInventoryTransaction::create([
                         'product_id' => $product->id,
@@ -357,6 +374,9 @@ class InventoryController extends Controller
                         'quantity' => $addQty,
                         'supplier_name' => $request->supplier_name ?: null,
                         'unit_price' => $request->unit_price ?: null,
+                        'gst_percent' => $request->gst_percent ?: null,
+                        'gst_amount' => $gstAmt,
+                        'total_with_gst' => $totWithGst,
                         'invoice_number' => $request->invoice_number ?: null,
                         'invoice_date' => $request->invoice_date ?: null,
                         'performed_by' => Auth::id(),
@@ -387,17 +407,39 @@ class InventoryController extends Controller
                         'quantity' => $addQty,
                         'transfer_type' => 'direct_purchase',
                         'unit_price' => $request->unit_price ?: null,
+                        'gst_percent' => $request->gst_percent ?: null,
+                        'gst_amount' => $gstAmt,
+                        'total_with_gst' => $totWithGst,
                         'invoice_number' => $request->invoice_number ?: null,
                         'invoice_date' => $request->invoice_date ?: null,
                         'performed_by' => Auth::id(),
                         'txn_id' => $txn_id,
                         'remarks' => 'Stock received directly at warehouse',
                     ]);
+
+                    if ($product->is_serialNumber_required && !empty($serialsInput)) {
+                        foreach ($serialsInput as $sn) {
+                            ProductSerial::create([
+                                'product_id' => $product->id,
+                                'serial_number' => $sn,
+                                'status' => 'in_stock',
+                                'current_location' => 'warehouse',
+                                'warehouse_id' => $warehouseId,
+                                'batch_txn_id' => $txn_id,
+                                'purchase_price' => $request->unit_price ?: null,
+                                'invoice_number' => $request->invoice_number ?: null,
+                                'invoice_date' => $request->invoice_date ?: null,
+                                'supplier_name' => $request->supplier_name ?: null,
+                            ]);
+                        }
+                    }
                 }
             } else if ($qty !== $oldQty) {
                 $diff = $qty - $oldQty;
                 $inventory->update(['available_qty' => $qty]);
                 $product->update(['quantity' => $qty]);
+                $txnIdMain = $this->getTxnId();
+                [$gstAmtMain, $totWithGstMain] = $this->gstFields($request->unit_price, $request->gst_percent);
 
                 ProductInventoryTransaction::create([
                     'product_id' => $product->id,
@@ -405,12 +447,33 @@ class InventoryController extends Controller
                     'quantity' => abs($diff),
                     'supplier_name' => $request->supplier_name ?: null,
                     'unit_price' => $request->unit_price ?: null,
+                    'gst_percent' => $request->gst_percent ?: null,
+                    'gst_amount' => $gstAmtMain,
+                    'total_with_gst' => $totWithGstMain,
                     'invoice_number' => $request->invoice_number ?: null,
                     'invoice_date' => $request->invoice_date ?: null,
                     'performed_by' => Auth::id(),
-                    'txn_id' => $this->getTxnId(),
+                    'txn_id' => $txnIdMain,
                     'remarks' => 'Product updated: stock ' . $oldQty . ' > ' . $qty,
                 ]);
+
+                if ($product->is_serialNumber_required && $diff > 0 && !empty($serialsInput)) {
+                    foreach ($serialsInput as $sn) {
+                        ProductSerial::create([
+                            'product_id' => $product->id,
+                            'serial_number' => $sn,
+                            'status' => 'in_stock',
+                            'current_location' => 'main',
+                            'warehouse_id' => null,
+                            'batch_txn_id' => $txnIdMain,
+                            'purchase_price' => $request->unit_price ?: null,
+                            'gst_percent' => $request->gst_percent ?: null,
+                            'invoice_number' => $request->invoice_number ?: null,
+                            'invoice_date' => $request->invoice_date ?: null,
+                            'supplier_name' => $request->supplier_name ?: null,
+                        ]);
+                    }
+                }
             }
 
             return redirect()->route('inventoryAddProduct')->with('success', $product->item_name . ' has been updated successfully.');
@@ -460,6 +523,7 @@ class InventoryController extends Controller
             $product->country_of_origin = $request->country_of_origin;
             $product->input_voltage = $request->input_voltage;
             $product->max_supported_panel_power = $request->max_supported_panel_power;
+            $product->is_serialNumber_required = $request->has('is_serial_tracked') ? 1 : 0;
             if ($request->hasFile('image')) {
                 $product->image = $request->file('image')->store('products', 'public');
             }
@@ -490,6 +554,21 @@ class InventoryController extends Controller
             $qty = (int) ($request->quantity ?? 0);
             $warehouseId = $request->destination_warehouse_id;
 
+            $serialsInput = $this->parseSerialsInput($request->serials_text);
+            if ($product->is_serialNumber_required && $qty > 0) {
+                if (count($serialsInput) !== $qty) {
+                    DB::rollBack();
+                    return redirect()->back()->withInput()->with('error',
+                        'Serial-tracked product: qty (' . $qty . ') must match serial count (' . count($serialsInput) . '). Add serials in the Serial Numbers section.');
+                }
+                $dupes = ProductSerial::whereIn('serial_number', $serialsInput)->pluck('serial_number')->toArray();
+                if (!empty($dupes)) {
+                    DB::rollBack();
+                    return redirect()->back()->withInput()->with('error',
+                        'These serials already exist in database: ' . implode(', ', array_slice($dupes, 0, 10)));
+                }
+            }
+
             if ($qty > 0) {
                 $txn_id = $this->getTxnId();
 
@@ -499,12 +578,16 @@ class InventoryController extends Controller
                         ['available_qty' => 0]
                     );
 
+                    [$gstAmt, $totWithGst] = $this->gstFields($request->unit_price, $request->gst_percent);
                     ProductInventoryTransaction::create([
                         'product_id' => $product->id,
                         'transaction_type' => 'IN',
                         'quantity' => $qty,
                         'supplier_name' => $request->supplier_name ?: null,
                         'unit_price' => $request->unit_price ?: null,
+                        'gst_percent' => $request->gst_percent ?: null,
+                        'gst_amount' => $gstAmt,
+                        'total_with_gst' => $totWithGst,
                         'invoice_number' => $request->invoice_number ?: null,
                         'invoice_date' => $request->invoice_date ?: null,
                         'performed_by' => Auth::id(),
@@ -535,6 +618,9 @@ class InventoryController extends Controller
                         'quantity' => $qty,
                         'transfer_type' => 'direct_purchase',
                         'unit_price' => $request->unit_price ?: null,
+                        'gst_percent' => $request->gst_percent ?: null,
+                        'gst_amount' => $gstAmt,
+                        'total_with_gst' => $totWithGst,
                         'invoice_number' => $request->invoice_number ?: null,
                         'invoice_date' => $request->invoice_date ?: null,
                         'performed_by' => Auth::id(),
@@ -542,6 +628,7 @@ class InventoryController extends Controller
                         'remarks' => 'Stock received directly at warehouse',
                     ]);
                 } else {
+                    [$gstAmt, $totWithGst] = $this->gstFields($request->unit_price, $request->gst_percent);
                     ProductInventory::create([
                         'product_id' => $product->id,
                         'available_qty' => $qty,
@@ -552,12 +639,33 @@ class InventoryController extends Controller
                         'quantity' => $qty,
                         'supplier_name' => $request->supplier_name ?: null,
                         'unit_price' => $request->unit_price ?: null,
+                        'gst_percent' => $request->gst_percent ?: null,
+                        'gst_amount' => $gstAmt,
+                        'total_with_gst' => $totWithGst,
                         'invoice_number' => $request->invoice_number ?: null,
                         'invoice_date' => $request->invoice_date ?: null,
                         'performed_by' => Auth::id(),
                         'txn_id' => $txn_id,
                         'remarks' => 'Product added to inventory',
                     ]);
+                }
+
+                if ($product->is_serialNumber_required && !empty($serialsInput)) {
+                    foreach ($serialsInput as $sn) {
+                        ProductSerial::create([
+                            'product_id' => $product->id,
+                            'serial_number' => $sn,
+                            'status' => 'in_stock',
+                            'current_location' => $warehouseId ? 'warehouse' : 'main',
+                            'warehouse_id' => $warehouseId ?: null,
+                            'batch_txn_id' => $txn_id,
+                            'purchase_price' => $request->unit_price ?: null,
+                            'gst_percent' => $request->gst_percent ?: null,
+                            'invoice_number' => $request->invoice_number ?: null,
+                            'invoice_date' => $request->invoice_date ?: null,
+                            'supplier_name' => $request->supplier_name ?: null,
+                        ]);
+                    }
                 }
             }
 
@@ -567,6 +675,19 @@ class InventoryController extends Controller
             DB::rollBack();
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
+    }
+
+    /** Parse serials from a pasted textarea (one per line, comma or space separated). */
+    private function parseSerialsInput($input): array
+    {
+        if (!$input) return [];
+        $lines = preg_split('/[\r\n,;\t]+/', (string) $input);
+        $out = [];
+        foreach ($lines as $line) {
+            $t = trim($line);
+            if ($t !== '') $out[] = $t;
+        }
+        return array_values(array_unique($out));
     }
 
     public function quickStockUpdate(Request $request)
@@ -629,6 +750,17 @@ class InventoryController extends Controller
             ->orderByDesc('product_inventory_transactions.created_at')
             ->get();
 
+        // Attach batch serials (serials created in same txn_id as this entry)
+        $batchTxns = $entries->pluck('txn_id')->filter()->unique()->values()->toArray();
+        $batchSerials = ProductSerial::whereIn('batch_txn_id', $batchTxns)
+            ->get()
+            ->groupBy(function ($s) { return $s->batch_txn_id . '_' . $s->product_id; });
+
+        foreach ($entries as $entry) {
+            $key = ($entry->txn_id ?? '') . '_' . ($entry->product_id ?? '');
+            $entry->batch_serials = $batchSerials->get($key, collect())->values();
+        }
+
         return view('Admin.inventorySetting.inventoryEntries', compact('entries'));
     }
 
@@ -639,5 +771,452 @@ class InventoryController extends Controller
         $entry->remarks = $request->remarks;
         $entry->save();
         return response()->json(['success' => true]);
+    }
+
+    /** Compute GST amount + total_with_gst from unit_price & gst_percent */
+    private function gstFields($unitPrice, $gstPercent): array
+    {
+        $up = $unitPrice !== null && $unitPrice !== '' ? (float) $unitPrice : null;
+        $gp = $gstPercent !== null && $gstPercent !== '' ? (float) $gstPercent : null;
+        if ($up === null) return [null, null];
+        $amt = $gp !== null ? round($up * $gp / 100, 2) : null;
+        $tot = $gp !== null ? round($up + $amt, 2) : round($up, 2);
+        return [$amt, $tot];
+    }
+
+    public function getLastPurchase($productId)
+    {
+        $entry = ProductInventoryTransaction::where('product_id', $productId)
+            ->where('transaction_type', 'IN')
+            ->whereNotNull('unit_price')
+            ->orderByDesc('created_at')
+            ->first(['unit_price', 'gst_percent', 'gst_amount', 'total_with_gst', 'supplier_name', 'created_at']);
+        if (!$entry) return response()->json(null);
+        return response()->json([
+            'unit_price' => $entry->unit_price,
+            'gst_percent' => $entry->gst_percent,
+            'gst_amount' => $entry->gst_amount,
+            'total_with_gst' => $entry->total_with_gst,
+            'supplier_name' => $entry->supplier_name,
+            'when' => $entry->created_at ? $entry->created_at->format('d M Y') : null,
+        ]);
+    }
+
+    public function updateEntryPrice(Request $request, $id)
+    {
+        $request->validate([
+            'unit_price' => 'nullable|numeric|min:0',
+            'gst_percent' => 'nullable|numeric|min:0|max:100',
+        ]);
+        $entry = ProductInventoryTransaction::findOrFail($id);
+        $entry->unit_price = $request->unit_price ?: null;
+        $entry->gst_percent = $request->gst_percent ?: null;
+        if ($request->filled('unit_price')) {
+            $price = (float) $request->unit_price;
+            $gstPct = (float) ($request->gst_percent ?? 0);
+            $entry->gst_amount = round($price * $gstPct / 100, 2);
+            $entry->total_with_gst = round($price + $entry->gst_amount, 2);
+        } else {
+            $entry->gst_amount = null;
+            $entry->total_with_gst = null;
+        }
+        $entry->save();
+
+        // Also update linked serials and warehouse transactions in same batch
+        if ($entry->txn_id) {
+            ProductSerial::where('batch_txn_id', $entry->txn_id)
+                ->update([
+                    'purchase_price' => $request->unit_price ?: null,
+                    'gst_percent' => $request->gst_percent ?: null,
+                ]);
+            WarehouseInventoryTransaction::where('txn_id', $entry->txn_id)
+                ->where('transaction_type', 'IN')
+                ->update([
+                    'unit_price' => $request->unit_price ?: null,
+                    'gst_percent' => $request->gst_percent ?: null,
+                    'gst_amount' => $entry->gst_amount,
+                    'total_with_gst' => $entry->total_with_gst,
+                ]);
+        }
+        return response()->json([
+            'success' => true,
+            'gst_amount' => $entry->gst_amount,
+            'total_with_gst' => $entry->total_with_gst,
+        ]);
+    }
+
+    public function supplierReport(Request $request)
+    {
+        $from = $request->input('from');
+        $to = $request->input('to');
+        $q = ProductInventoryTransaction::where('transaction_type', 'IN')
+            ->whereNotNull('supplier_name')
+            ->where('supplier_name', '!=', '');
+        if ($from) $q->whereDate('created_at', '>=', $from);
+        if ($to) $q->whereDate('created_at', '<=', $to);
+
+        $summary = (clone $q)
+            ->selectRaw("supplier_name, COUNT(DISTINCT product_id) as product_count, SUM(quantity) as total_qty, SUM(COALESCE(total_with_gst, unit_price * quantity, 0)) as total_value")
+            ->groupBy('supplier_name')
+            ->orderBy('supplier_name')
+            ->get();
+
+        $selectedSupplier = $request->input('supplier');
+        $details = collect();
+        if ($selectedSupplier) {
+            $details = ProductInventoryTransaction::with(['product:id,item_name,item_code'])
+                ->where('transaction_type', 'IN')
+                ->where('supplier_name', $selectedSupplier)
+                ->when($from, fn($q) => $q->whereDate('created_at', '>=', $from))
+                ->when($to, fn($q) => $q->whereDate('created_at', '<=', $to))
+                ->orderByDesc('created_at')
+                ->get();
+        }
+
+        return view('Admin.inventorySetting.supplierReport', compact('summary', 'details', 'selectedSupplier', 'from', 'to'));
+    }
+
+    public function supplierReportExport(Request $request)
+    {
+        $from = $request->input('from');
+        $to = $request->input('to');
+        $supplier = $request->input('supplier');
+        $q = ProductInventoryTransaction::with('product')->where('transaction_type', 'IN')
+            ->whereNotNull('supplier_name')
+            ->where('supplier_name', '!=', '');
+        if ($from) $q->whereDate('created_at', '>=', $from);
+        if ($to) $q->whereDate('created_at', '<=', $to);
+        if ($supplier) $q->where('supplier_name', $supplier);
+        $rows = $q->orderBy('supplier_name')->orderByDesc('created_at')->get();
+
+        $filename = 'supplier_purchase_report_' . date('Y-m-d') . '.csv';
+
+        return new \Symfony\Component\HttpFoundation\StreamedResponse(function () use ($rows) {
+            $h = fopen('php://output', 'w');
+            fputcsv($h, ['Date', 'Supplier', 'Product', 'Product Code', 'Qty', 'Unit Price', 'GST %', 'GST Amount', 'Total with GST', 'Invoice #', 'Invoice Date', 'Txn ID', 'Remarks']);
+            foreach ($rows as $r) {
+                fputcsv($h, [
+                    $r->created_at ? $r->created_at->format('d-m-Y H:i') : '',
+                    $r->supplier_name,
+                    $r->product->item_name ?? '-',
+                    $r->product->item_code ?? '-',
+                    $r->quantity,
+                    $r->unit_price ?? '-',
+                    $r->gst_percent ?? '-',
+                    $r->gst_amount ?? '-',
+                    $r->total_with_gst ?? '-',
+                    $r->invoice_number ?? '-',
+                    $r->invoice_date ?? '-',
+                    $r->txn_id ?? '-',
+                    $r->remarks ?? '-',
+                ]);
+            }
+            fclose($h);
+        }, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function getProductsByCategory($categoryId)
+    {
+        $products = Product::where('category_id', $categoryId)
+            ->orderBy('item_name')
+            ->get(['id', 'item_name', 'item_code', 'sub_category_id', 'uom', 'current_sale_price', 'is_serialNumber_required']);
+        return response()->json($products);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SERIAL NUMBER TRACKING
+       ═══════════════════════════════════════════════════════════ */
+
+    public function parseSerialExcel(Request $request, SerialExcelParser $parser)
+    {
+        $request->validate(['file' => 'required|file|mimes:xlsx,xls,csv,txt|max:10240']);
+        try {
+            $data = $parser->parse($request->file('file')->getRealPath());
+            $matches = $parser->suggestProductMatches($data);
+            $allSerials = collect($data)->flatMap(fn($p) => $p['serials'])->unique()->values()->toArray();
+            $dbDupes = $parser->checkDbDuplicates($allSerials);
+            foreach ($data as &$block) {
+                $block['db_duplicates'] = array_values(array_intersect($block['serials'], $dbDupes));
+                if (!empty($block['db_duplicates'])) {
+                    $block['warnings'][] = 'These serials already exist in database: ' . implode(', ', array_slice($block['db_duplicates'], 0, 5)) . (count($block['db_duplicates']) > 5 ? ' (+more)' : '');
+                }
+                $block['suggested_product'] = $matches[$block['product_name']] ?? null;
+            }
+            return response()->json(['success' => true, 'products' => $data]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to parse Excel: ' . $e->getMessage()], 422);
+        }
+    }
+
+    public function checkSerialDuplicates(Request $request)
+    {
+        $serials = $request->input('serials', []);
+        if (!is_array($serials)) $serials = [];
+        $serials = array_values(array_filter(array_map('trim', $serials)));
+        $existing = ProductSerial::whereIn('serial_number', $serials)->pluck('serial_number')->toArray();
+        return response()->json(['duplicates' => $existing]);
+    }
+
+    public function bulkStoreFromExcel(Request $request)
+    {
+        $request->validate([
+            'destination_type' => 'required|in:main,warehouse',
+            'destination_warehouse_id' => 'nullable|exists:warehouses,id',
+            'products' => 'required|array|min:1',
+            'products.*.product_id' => 'nullable|exists:products,id',
+            'products.*.item_name' => 'required|string|max:255',
+            'products.*.category_id' => 'nullable|exists:product_categories,id',
+            'products.*.sub_category_id' => 'nullable|exists:product_sub_categories,id',
+            'products.*.qty' => 'required|integer|min:1',
+            'products.*.unit_price' => 'nullable|numeric|min:0',
+            'products.*.serials' => 'required|array|min:1',
+            'products.*.serials.*' => 'required|string|max:100',
+            'invoice_number' => 'nullable|string|max:100',
+            'invoice_date' => 'nullable|date',
+            'supplier_name' => 'nullable|string|max:255',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $destType = $request->destination_type;
+            $whId = $destType === 'warehouse' ? $request->destination_warehouse_id : null;
+            if ($destType === 'warehouse' && !$whId) {
+                throw new \Exception('Warehouse must be selected for warehouse destination.');
+            }
+
+            $allSerials = collect($request->products)->flatMap(fn($p) => $p['serials'])->map('trim')->filter()->values()->toArray();
+            $existing = ProductSerial::whereIn('serial_number', $allSerials)->pluck('serial_number')->toArray();
+            if (!empty($existing)) {
+                throw new \Exception('These serial numbers already exist: ' . implode(', ', array_slice($existing, 0, 10)));
+            }
+            $dupeCheck = array_count_values($allSerials);
+            $dupes = array_keys(array_filter($dupeCheck, fn($c) => $c > 1));
+            if (!empty($dupes)) {
+                throw new \Exception('Duplicate serials in upload: ' . implode(', ', array_slice($dupes, 0, 10)));
+            }
+
+            $results = [];
+            foreach ($request->products as $item) {
+                $serials = array_values(array_filter(array_map('trim', $item['serials'])));
+                if (count($serials) !== (int) $item['qty']) {
+                    throw new \Exception('Product "' . $item['item_name'] . '": qty (' . $item['qty'] . ') does not match serial count (' . count($serials) . ').');
+                }
+
+                $product = null;
+                if (!empty($item['product_id'])) {
+                    $product = Product::find($item['product_id']);
+                }
+                if (!$product) {
+                    if (empty($item['category_id'])) {
+                        throw new \Exception('Product "' . $item['item_name'] . '" is new: please assign a category.');
+                    }
+                    $product = new Product();
+                    $product->category_id = $item['category_id'];
+                    $product->sub_category_id = $item['sub_category_id'] ?? null;
+                    $product->item_name = $item['item_name'];
+                    $product->item_code = $item['item_name'];
+                    $product->uom = $item['uom'] ?? 'Piece';
+                    $product->is_active = 1;
+                    $product->is_serialNumber_required = 1;
+                    $product->quantity = 0;
+                    $product->save();
+                }
+
+                if (!$product->is_serialNumber_required) {
+                    $product->update(['is_serialNumber_required' => 1]);
+                }
+
+                $qty = (int) $item['qty'];
+                $unitPrice = $item['unit_price'] !== null ? (float) $item['unit_price'] : null;
+                $txnId = 'BULK-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -5));
+
+                $inventory = ProductInventory::firstOrCreate(
+                    ['product_id' => $product->id],
+                    ['available_qty' => 0]
+                );
+
+                ProductInventoryTransaction::create([
+                    'product_id' => $product->id,
+                    'transaction_type' => 'IN',
+                    'quantity' => $qty,
+                    'supplier_name' => $request->supplier_name ?: null,
+                    'unit_price' => $unitPrice,
+                    'invoice_number' => $request->invoice_number ?: null,
+                    'invoice_date' => $request->invoice_date ?: null,
+                    'performed_by' => Auth::id(),
+                    'txn_id' => $txnId,
+                    'remarks' => 'Bulk upload with ' . $qty . ' serials',
+                ]);
+
+                if ($destType === 'warehouse') {
+                    ProductInventoryTransaction::create([
+                        'product_id' => $product->id,
+                        'transaction_type' => 'OUT',
+                        'quantity' => $qty,
+                        'performed_by' => Auth::id(),
+                        'txn_id' => $txnId,
+                        'remarks' => 'Transferred to warehouse (bulk upload)',
+                    ]);
+                    $whInv = WarehouseInventory::firstOrCreate(
+                        ['warehouse_id' => $whId, 'product_id' => $product->id],
+                        ['available_qty' => 0]
+                    );
+                    $whInv->increment('available_qty', $qty);
+
+                    WarehouseInventoryTransaction::create([
+                        'warehouse_id' => $whId,
+                        'product_id' => $product->id,
+                        'transaction_type' => 'IN',
+                        'quantity' => $qty,
+                        'transfer_type' => 'direct_purchase',
+                        'unit_price' => $unitPrice,
+                        'invoice_number' => $request->invoice_number ?: null,
+                        'invoice_date' => $request->invoice_date ?: null,
+                        'performed_by' => Auth::id(),
+                        'txn_id' => $txnId,
+                        'remarks' => 'Bulk upload with serials',
+                    ]);
+                } else {
+                    $inventory->increment('available_qty', $qty);
+                    Product::where('id', $product->id)->update(['quantity' => $inventory->fresh()->available_qty]);
+                }
+
+                foreach ($serials as $sn) {
+                    ProductSerial::create([
+                        'product_id' => $product->id,
+                        'serial_number' => $sn,
+                        'status' => 'in_stock',
+                        'current_location' => $destType === 'warehouse' ? 'warehouse' : 'main',
+                        'warehouse_id' => $whId,
+                        'batch_txn_id' => $txnId,
+                        'purchase_price' => $unitPrice,
+                        'invoice_number' => $request->invoice_number ?: null,
+                        'invoice_date' => $request->invoice_date ?: null,
+                        'supplier_name' => $request->supplier_name ?: null,
+                    ]);
+                }
+
+                $results[] = ['product_id' => $product->id, 'item_name' => $product->item_name, 'qty' => $qty, 'txn_id' => $txnId];
+            }
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Bulk stock uploaded successfully.', 'results' => $results]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function downloadSerialTemplate()
+    {
+        $filename = 'serial_upload_template.csv';
+        $content = "# Serial Number Upload Template (with GST)\n"
+                 . "# Layout: numeric row starts a product block. Columns include CGST%, SGST% (added together = GST).\n"
+                 . "# Then a 'SR.NO' row, then serial numbers (one per row), then next product block.\n"
+                 . "# Rows like '8 YEAR WARRANTY...' are auto-skipped.\n"
+                 . "\n"
+                 . "#,Item & Description,HSN/SAC,Qty,Rate,CGST,%,SGST,%,Amount\n"
+                 . "1,SAMPLE PRODUCT NAME - 3600W INVERTER,85044090,3,10000,,9,,9,30000\n"
+                 . ",SR.NO,,,,,,,,\n"
+                 . ",SERIAL-001-ABC,,,,,,,,\n"
+                 . ",SERIAL-002-ABC,,,,,,,,\n"
+                 . ",SERIAL-003-ABC,,,,,,,,\n"
+                 . ",8 YEAR WARRANTY BY BRAND,,,,,,,,\n"
+                 . "2,ANOTHER PRODUCT - 5000W INVERTER,85044090,2,15000,,9,,9,30000\n"
+                 . ",SR.NO,,,,,,,,\n"
+                 . ",SERIAL-101-XYZ,,,,,,,,\n"
+                 . ",SERIAL-102-XYZ,,,,,,,,\n";
+        return response($content, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function serialSearchPage()
+    {
+        $products = Product::where('is_serialNumber_required', 1)
+            ->orderBy('item_name')
+            ->get(['id', 'item_name', 'item_code']);
+        return view('Admin.inventorySetting.serialSearch', compact('products'));
+    }
+
+    public function getSerialsForProduct($productId)
+    {
+        $product = Product::findOrFail($productId);
+        $serials = ProductSerial::where('product_id', $productId)
+            ->with('warehouse:id,name')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'id' => $s->id,
+                    'serial_number' => $s->serial_number,
+                    'status' => $s->status,
+                    'current_location' => $s->current_location,
+                    'warehouse_name' => $s->warehouse->name ?? null,
+                    'customer_order_id' => $s->customer_order_id,
+                    'batch_txn_id' => $s->batch_txn_id,
+                    'purchase_price' => $s->purchase_price,
+                    'invoice_number' => $s->invoice_number,
+                    'invoice_date' => $s->invoice_date ? $s->invoice_date->format('d-m-Y') : null,
+                    'supplier_name' => $s->supplier_name,
+                    'created_at' => $s->created_at->format('d-m-Y H:i'),
+                ];
+            });
+        return response()->json(['product' => $product, 'serials' => $serials]);
+    }
+
+    public function getSerialHistory($serialId)
+    {
+        $serial = ProductSerial::with(['product', 'warehouse'])->findOrFail($serialId);
+        $txns = ProductInventoryTransaction::where('serial_id', $serialId)
+            ->orWhere('txn_id', $serial->batch_txn_id)
+            ->orderBy('created_at')
+            ->get(['id','transaction_type','quantity','txn_id','remarks','supplier_name','unit_price','invoice_number','created_at']);
+        $whTxns = WarehouseInventoryTransaction::where('serial_id', $serialId)
+            ->orWhere('txn_id', $serial->batch_txn_id)
+            ->with('warehouse:id,name')
+            ->orderBy('created_at')
+            ->get();
+        $timeline = collect();
+        foreach ($txns as $t) {
+            $timeline->push([
+                'date' => $t->created_at->format('d M Y, h:i A'),
+                'ts' => $t->created_at->timestamp,
+                'title' => 'Main Inventory: ' . $t->transaction_type,
+                'detail' => $t->remarks ?: '-',
+                'meta' => 'TXN: ' . $t->txn_id,
+            ]);
+        }
+        foreach ($whTxns as $t) {
+            $timeline->push([
+                'date' => $t->created_at->format('d M Y, h:i A'),
+                'ts' => $t->created_at->timestamp,
+                'title' => ($t->warehouse->name ?? 'Warehouse') . ': ' . $t->transaction_type,
+                'detail' => $t->remarks ?: '-',
+                'meta' => 'TXN: ' . $t->txn_id,
+            ]);
+        }
+        $timeline = $timeline->sortBy('ts')->values();
+
+        return response()->json([
+            'serial' => [
+                'id' => $serial->id,
+                'serial_number' => $serial->serial_number,
+                'product' => $serial->product->item_name ?? '',
+                'status' => $serial->status,
+                'current_location' => $serial->current_location,
+                'warehouse' => $serial->warehouse->name ?? null,
+                'customer_order_id' => $serial->customer_order_id,
+                'purchase_price' => $serial->purchase_price,
+                'supplier_name' => $serial->supplier_name,
+                'invoice_number' => $serial->invoice_number,
+                'invoice_date' => $serial->invoice_date ? $serial->invoice_date->format('d-m-Y') : null,
+            ],
+            'timeline' => $timeline,
+        ]);
     }
 }

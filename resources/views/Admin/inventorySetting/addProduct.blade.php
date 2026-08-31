@@ -204,8 +204,20 @@
                         <input type="text" class="form-control" name="supplier_name" placeholder="e.g. Shreyansh Energies">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Unit Price (Purchase)</label>
-                        <input type="number" step="0.01" min="0" class="form-control" name="unit_price" placeholder="Purchase price per unit">
+                        <label class="form-label">Unit Price (Purchase)
+                            <small style="color:#0369a1; font-weight:500;" id="epLastPriceHint"></small>
+                        </label>
+                        <input type="number" step="0.01" min="0" class="form-control" name="unit_price" id="epUnitPrice" placeholder="Purchase price per unit" oninput="calcEpGst()">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">GST %</label>
+                        <input type="number" step="0.01" min="0" max="100" class="form-control" name="gst_percent" id="epGstPercent" placeholder="e.g. 18" oninput="calcEpGst()">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Amount with GST (per unit)</label>
+                        <input type="text" class="form-control" id="epAmountWithGst" readonly placeholder="Auto-calculated" style="background:#f0fdf4; color:#065f46; font-weight:600;">
+                        <input type="hidden" name="gst_amount" id="epGstAmountHidden">
+                        <input type="hidden" name="total_with_gst" id="epTotalWithGstHidden">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Invoice Number</label>
@@ -215,7 +227,7 @@
                         <label class="form-label">Invoice Date</label>
                         <input type="date" class="form-control" name="invoice_date">
                     </div>
-                    <div class="col-md-8">
+                    <div class="col-md-4">
                         <label class="form-label">Destination <span class="req">*</span></label>
                         <input type="hidden" name="destination_warehouse_id" id="existDestWarehouseId" value="">
                         <div class="dest-select" id="existDestSelect">
@@ -242,6 +254,28 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {{-- Serial Numbers section (shown only when selected product is serial-tracked) --}}
+            <div class="sec-card" id="epSerialSection" style="display:none;">
+                <p class="sec-label">
+                    Serial Numbers
+                    <span style="font-weight:400; font-size:.78rem; color:var(--txt2);">(this product requires unique serials per unit)</span>
+                </p>
+                <div class="serial-tools" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+                    <label class="btn-secondary" style="cursor:pointer; padding:8px 14px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:8px; font-weight:600; font-size:.85rem;">
+                        <i class="fas fa-file-excel me-1"></i> Upload Excel
+                        <input type="file" id="epSerialExcel" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleSerialExcelUpload('ep', this)">
+                    </label>
+                    <a href="{{ route('inventorySerialTemplate') }}" style="padding:8px 14px; background:#f3f4f6; color:#4b5563; border:1px solid #d1d5db; border-radius:8px; font-weight:600; font-size:.85rem; text-decoration:none;">
+                        <i class="fas fa-download me-1"></i> Template
+                    </a>
+                    <span id="epSerialSummary" style="align-self:center; font-size:.85rem; color:var(--txt2); font-weight:600;">0 / 0 serials</span>
+                </div>
+                <textarea name="serials_text" id="epSerialsText" rows="6" class="form-control"
+                          placeholder="Paste serial numbers here, one per line. Example:&#10;3K6210826-2628-986705182P&#10;3K6210826-2628-986705285P"
+                          oninput="onSerialsTextChange('ep')"></textarea>
+                <div id="epSerialFeedback" style="margin-top:8px; font-size:.82rem;"></div>
             </div>
 
             <div style="display:flex;gap:.75rem;margin-bottom:2rem;">
@@ -293,7 +327,16 @@
                 <div class="row g-3">
                     <div class="col-md-8">
                         <label class="form-label">Product Name <span class="req">*</span></label>
-                        <input type="text" class="form-control" name="product_name" required placeholder="e.g. Solar Panel 400W" maxlength="100" value="{{ old('product_name') }}">
+                        <div style="position:relative;">
+                            <input type="text" class="form-control" name="product_name" id="npProductName" required placeholder="Select category first, or type new name" maxlength="100" value="{{ old('product_name') }}" autocomplete="off"
+                                   oninput="npProductNameInput()" onfocus="npShowProductSuggestions()">
+                            <div id="npProductSuggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #e5e7eb; border-radius:8px; margin-top:2px; max-height:280px; overflow-y:auto; z-index:100; box-shadow:0 8px 20px rgba(0,0,0,0.08);"></div>
+                            <div id="npMatchedProductHint" style="display:none; margin-top:6px; padding:8px 12px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:.8rem; color:#78350f;">
+                                <i class="fas fa-info-circle me-1"></i>
+                                <span id="npMatchedProductMsg"></span>
+                                <button type="button" onclick="npSwitchToExisting()" style="margin-left:8px; background:#f97316; color:#fff; border:none; padding:3px 10px; border-radius:5px; font-size:.72rem; font-weight:600; cursor:pointer;">Switch to Existing</button>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Product Code <span class="req">*</span></label>
@@ -305,7 +348,7 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Quantity <span class="req">*</span></label>
-                        <input type="number" min="0" class="form-control" name="quantity" placeholder="0" value="{{ old('quantity', 0) }}" required>
+                        <input type="number" min="0" id="npQuantity" class="form-control" name="quantity" placeholder="0" value="{{ old('quantity', 0) }}" required>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">UOM <span class="req">*</span></label>
@@ -322,7 +365,13 @@
                             <input class="form-check-input" type="checkbox" name="is_featured" value="1" id="isFeatured">
                             <label class="form-check-label" for="isFeatured" style="font-size:.85rem;">Mark as Featured</label>
                         </div>
-                        
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Serial Tracked</label>
+                        <div class="form-check form-switch mt-1">
+                            <input class="form-check-input" type="checkbox" name="is_serial_tracked" value="1" id="npIsSerialTracked" onchange="toggleNewProductSerials()">
+                            <label class="form-check-label" for="npIsSerialTracked" style="font-size:.85rem;">Enable Serial Tracking</label>
+                        </div>
                     </div>
                     <div class="col-12">
                         <label class="form-label">Description</label>
@@ -341,7 +390,17 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Unit Price (Purchase)</label>
-                        <input type="number" step="0.01" min="0" class="form-control" name="unit_price" placeholder="Purchase price per unit" value="{{ old('unit_price') }}">
+                        <input type="number" step="0.01" min="0" class="form-control" name="unit_price" id="npUnitPrice" placeholder="Purchase price per unit" value="{{ old('unit_price') }}" oninput="calcNpGst()">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">GST %</label>
+                        <input type="number" step="0.01" min="0" max="100" class="form-control" name="gst_percent" id="npGstPercent" placeholder="e.g. 18" value="{{ old('gst_percent') }}" oninput="calcNpGst()">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Amount with GST (per unit)</label>
+                        <input type="text" class="form-control" id="npAmountWithGst" readonly placeholder="Auto-calculated" style="background:#f0fdf4; color:#065f46; font-weight:600;">
+                        <input type="hidden" name="gst_amount" id="npGstAmountHidden">
+                        <input type="hidden" name="total_with_gst" id="npTotalWithGstHidden">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Invoice Number</label>
@@ -351,7 +410,7 @@
                         <label class="form-label">Invoice Date</label>
                         <input type="date" class="form-control" name="invoice_date" value="{{ old('invoice_date') }}">
                     </div>
-                    <div class="col-md-8">
+                    <div class="col-md-4">
                         <label class="form-label">Destination <span class="req">*</span></label>
                         <input type="hidden" name="destination_warehouse_id" id="newDestWarehouseId" value="">
                         <div class="dest-select" id="newDestSelect">
@@ -378,6 +437,28 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {{-- Serial Numbers section (shown when Serial Tracked is enabled) --}}
+            <div class="sec-card" id="npSerialSection" style="display:none;">
+                <p class="sec-label">
+                    Serial Numbers
+                    <span style="font-weight:400; font-size:.78rem; color:var(--txt2);">(one unique serial per unit; must match Quantity)</span>
+                </p>
+                <div class="serial-tools" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+                    <label class="btn-secondary" style="cursor:pointer; padding:8px 14px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:8px; font-weight:600; font-size:.85rem;">
+                        <i class="fas fa-file-excel me-1"></i> Upload Excel
+                        <input type="file" id="npSerialExcel" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleSerialExcelUpload('np', this)">
+                    </label>
+                    <a href="{{ route('inventorySerialTemplate') }}" style="padding:8px 14px; background:#f3f4f6; color:#4b5563; border:1px solid #d1d5db; border-radius:8px; font-weight:600; font-size:.85rem; text-decoration:none;">
+                        <i class="fas fa-download me-1"></i> Template
+                    </a>
+                    <span id="npSerialSummary" style="align-self:center; font-size:.85rem; color:var(--txt2); font-weight:600;">0 / 0 serials</span>
+                </div>
+                <textarea name="serials_text" id="npSerialsText" rows="6" class="form-control"
+                          placeholder="Paste serial numbers here, one per line. Example:&#10;3K6210826-2628-986705182P&#10;3K6210826-2628-986705285P"
+                          oninput="onSerialsTextChange('np')"></textarea>
+                <div id="npSerialFeedback" style="margin-top:8px; font-size:.82rem;"></div>
             </div>
 
             {{-- Specifications --}}
@@ -553,6 +634,36 @@ function onProductSelect() {
             form.querySelector('input[name="unit_price"]').value = '';
             form.querySelector('input[name="invoice_number"]').value = '';
             form.querySelector('input[name="invoice_date"]').value = '';
+            document.getElementById('epGstPercent').value = '';
+            document.getElementById('epAmountWithGst').value = '';
+            document.getElementById('epGstAmountHidden').value = '';
+            document.getElementById('epTotalWithGstHidden').value = '';
+
+            // Prefill last purchase price + gst from most recent IN transaction
+            var hint = document.getElementById('epLastPriceHint');
+            hint.textContent = '';
+            fetch("{{ url('/admin/inventory/last-purchase') }}/" + p.id)
+                .then(r => r.json())
+                .then(function(data) {
+                    if (data && data.unit_price) {
+                        document.getElementById('epUnitPrice').value = data.unit_price;
+                        if (data.gst_percent) document.getElementById('epGstPercent').value = data.gst_percent;
+                        var when = data.when ? ' (last on ' + data.when + ')' : '';
+                        hint.textContent = ' - previously ₹' + Number(data.unit_price).toLocaleString('en-IN') + when;
+                        calcEpGst();
+                    }
+                }).catch(function(){});
+
+            // Show / hide Serial Numbers section based on product
+            const epSerialSection = document.getElementById('epSerialSection');
+            if (p.is_serialNumber_required == 1 || p.is_serialNumber_required === true) {
+                epSerialSection.style.display = '';
+                document.getElementById('epSerialsText').value = '';
+                onSerialsTextChange('ep');
+            } else {
+                epSerialSection.style.display = 'none';
+                document.getElementById('epSerialsText').value = '';
+            }
         })
         .catch(() => {
             document.getElementById('existingProductLoading').style.display = 'none';
@@ -581,7 +692,83 @@ document.getElementById('categorySelect').addEventListener('change', function() 
     (subCats[this.value] || []).forEach(s => {
         sel.innerHTML += '<option value="'+s.id+'">'+s.name+'</option>';
     });
+    // Load products in this category for smart name suggestions
+    npCategoryProducts = [];
+    if (this.value) {
+        fetch("{{ url('/admin/inventory/products-by-category') }}/" + this.value)
+            .then(r => r.json())
+            .then(data => { npCategoryProducts = data || []; })
+            .catch(() => { npCategoryProducts = []; });
+    }
 });
+
+var npCategoryProducts = [];
+function npShowProductSuggestions() {
+    var input = document.getElementById('npProductName');
+    var box = document.getElementById('npProductSuggestions');
+    var q = (input.value || '').toLowerCase();
+    if (!npCategoryProducts.length) { box.style.display = 'none'; return; }
+    var matches = npCategoryProducts.filter(function(p) {
+        return !q || (p.item_name || '').toLowerCase().includes(q) || (p.item_code || '').toLowerCase().includes(q);
+    });
+    if (!matches.length) { box.style.display = 'none'; return; }
+    box.innerHTML = matches.slice(0, 20).map(function(p) {
+        return '<div style="padding:8px 12px; cursor:pointer; border-bottom:1px solid #f3f4f6; font-size:.85rem;" onmouseenter="this.style.background=\'#f1f5fb\'" onmouseleave="this.style.background=\'\'" onclick="npPickProduct(' + p.id + ', ' + JSON.stringify(p.item_name).replace(/"/g,'&quot;') + ')">'
+             + '<strong>' + escapeHtmlInline(p.item_name) + '</strong>'
+             + (p.item_code ? '<span style="color:#6b7280; font-size:.75rem; margin-left:6px;">(' + escapeHtmlInline(p.item_code) + ')</span>' : '')
+             + '</div>';
+    }).join('');
+    box.style.display = 'block';
+}
+function npProductNameInput() {
+    npShowProductSuggestions();
+    // Check exact match => hint switch to Existing
+    var input = document.getElementById('npProductName');
+    var val = (input.value || '').trim().toLowerCase();
+    var match = npCategoryProducts.find(function(p) { return (p.item_name || '').toLowerCase() === val; });
+    var hint = document.getElementById('npMatchedProductHint');
+    if (match) {
+        document.getElementById('npMatchedProductMsg').textContent = 'A product with this name already exists in this category. Switch to "Existing Product" tab to add stock.';
+        hint.style.display = '';
+        hint.dataset.matchId = match.id;
+    } else {
+        hint.style.display = 'none';
+        hint.dataset.matchId = '';
+    }
+}
+function npPickProduct(id, name) {
+    document.getElementById('npProductName').value = name;
+    document.getElementById('npProductSuggestions').style.display = 'none';
+    npProductNameInput();
+}
+function npSwitchToExisting() {
+    var hint = document.getElementById('npMatchedProductHint');
+    var pid = hint.dataset.matchId;
+    if (!pid) return;
+    // Switch tab to existing
+    if (typeof setMode === 'function') {
+        setMode('existing');
+    } else {
+        var existingBtn = document.getElementById('modeExisting');
+        if (existingBtn) existingBtn.click();
+    }
+    // Trigger product selection
+    setTimeout(function() {
+        var selector = document.getElementById('productSelector');
+        if (selector) { selector.value = pid; if (typeof onProductSelect === 'function') onProductSelect(); }
+    }, 200);
+}
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#npProductName') && !e.target.closest('#npProductSuggestions')) {
+        var box = document.getElementById('npProductSuggestions');
+        if (box) box.style.display = 'none';
+    }
+});
+function escapeHtmlInline(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+}
 
 document.getElementById('mainImageInput').addEventListener('change', function() {
     const p = document.getElementById('mainPreview');
@@ -685,5 +872,182 @@ function pickDest(prefix, value, text, type) {
         opt.classList.toggle('selected', opt.getAttribute('data-value') === value);
     });
 }
+
+/* ─────────────── GST calc + last purchase price ─────────────── */
+function calcEpGst() {
+    var price = parseFloat(document.getElementById('epUnitPrice').value) || 0;
+    var gst = parseFloat(document.getElementById('epGstPercent').value) || 0;
+    var gstAmt = +(price * gst / 100).toFixed(2);
+    var total = +(price + gstAmt).toFixed(2);
+    document.getElementById('epAmountWithGst').value = total > 0 ? '₹ ' + total.toLocaleString('en-IN') : '';
+    document.getElementById('epGstAmountHidden').value = gstAmt;
+    document.getElementById('epTotalWithGstHidden').value = total;
+}
+function calcNpGst() {
+    var price = parseFloat(document.getElementById('npUnitPrice').value) || 0;
+    var gst = parseFloat(document.getElementById('npGstPercent').value) || 0;
+    var gstAmt = +(price * gst / 100).toFixed(2);
+    var total = +(price + gstAmt).toFixed(2);
+    document.getElementById('npAmountWithGst').value = total > 0 ? '₹ ' + total.toLocaleString('en-IN') : '';
+    document.getElementById('npGstAmountHidden').value = gstAmt;
+    document.getElementById('npTotalWithGstHidden').value = total;
+}
+
+/* ─────────────── SERIAL NUMBER HANDLING ─────────────── */
+function toggleNewProductSerials() {
+    var checked = document.getElementById('npIsSerialTracked').checked;
+    document.getElementById('npSerialSection').style.display = checked ? '' : 'none';
+    if (checked) onSerialsTextChange('np');
+}
+
+function parseSerialsFromText(text) {
+    if (!text) return [];
+    var lines = text.split(/[\r\n,;\t]+/);
+    var out = [];
+    var seen = {};
+    lines.forEach(function(l) {
+        var t = l.trim();
+        if (!t) return;
+        if (seen[t.toUpperCase()]) return;
+        seen[t.toUpperCase()] = true;
+        out.push(t);
+    });
+    return out;
+}
+
+function findLocalDuplicates(text) {
+    if (!text) return [];
+    var lines = text.split(/[\r\n,;\t]+/).map(function(l){return l.trim();}).filter(Boolean);
+    var seen = {}, dupes = [];
+    lines.forEach(function(l) {
+        var k = l.toUpperCase();
+        if (seen[k]) dupes.push(l);
+        else seen[k] = true;
+    });
+    return dupes;
+}
+
+var serialDupCheckTimer = null;
+function onSerialsTextChange(prefix) {
+    var textEl = document.getElementById(prefix + 'SerialsText');
+    var summaryEl = document.getElementById(prefix + 'SerialSummary');
+    var feedbackEl = document.getElementById(prefix + 'SerialFeedback');
+    var text = textEl.value;
+
+    var serials = parseSerialsFromText(text);
+    var localDupes = findLocalDuplicates(text);
+
+    var expected;
+    if (prefix === 'np') {
+        expected = parseInt(document.getElementById('npQuantity').value) || 0;
+    } else {
+        var current = parseInt(document.getElementById('epQuantity').value) || 0;
+        expected = Math.max(0, current - epOriginalQty);
+    }
+
+    summaryEl.textContent = serials.length + ' / ' + expected + ' serials';
+    summaryEl.style.color = (expected > 0 && serials.length === expected) ? '#059669' : '#6b7280';
+
+    var msgs = [];
+    if (localDupes.length) {
+        msgs.push('<span style="color:#dc2626;font-weight:600;">Duplicates in your input: ' + localDupes.slice(0,5).join(', ') + (localDupes.length > 5 ? ' +' + (localDupes.length-5) + ' more' : '') + '</span>');
+    }
+    if (expected > 0 && serials.length !== expected) {
+        msgs.push('<span style="color:#b45309;">Need ' + expected + ' serials but you have ' + serials.length + '.</span>');
+    }
+    feedbackEl.innerHTML = msgs.join('<br>');
+
+    // Debounced DB duplicate check
+    clearTimeout(serialDupCheckTimer);
+    if (serials.length > 0) {
+        serialDupCheckTimer = setTimeout(function() { checkSerialsAgainstDb(prefix, serials); }, 700);
+    }
+}
+
+function checkSerialsAgainstDb(prefix, serials) {
+    var feedbackEl = document.getElementById(prefix + 'SerialFeedback');
+    var token = document.querySelector('meta[name="csrf-token"]');
+    var csrf = token ? token.getAttribute('content') : '';
+    fetch("{{ route('inventorySerialsCheckDuplicates') }}", {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRF-TOKEN':csrf,'Accept':'application/json'},
+        body: JSON.stringify({serials: serials})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+        if (data.duplicates && data.duplicates.length) {
+            var current = feedbackEl.innerHTML;
+            var dbDupeMsg = '<span style="color:#dc2626;font-weight:600;">Already in database: ' + data.duplicates.slice(0,5).join(', ') + (data.duplicates.length > 5 ? ' +' + (data.duplicates.length-5) + ' more' : '') + '</span>';
+            feedbackEl.innerHTML = current ? current + '<br>' + dbDupeMsg : dbDupeMsg;
+        }
+    })
+    .catch(function(){});
+}
+
+function handleSerialExcelUpload(prefix, input) {
+    var file = input.files[0];
+    if (!file) return;
+    var feedbackEl = document.getElementById(prefix + 'SerialFeedback');
+    feedbackEl.innerHTML = '<span style="color:#2563eb;">Parsing Excel...</span>';
+
+    var fd = new FormData();
+    fd.append('file', file);
+    var token = document.querySelector('meta[name="csrf-token"]');
+    fd.append('_token', token ? token.getAttribute('content') : '');
+
+    fetch("{{ route('inventorySerialsParseExcel') }}", {
+        method: 'POST',
+        headers: {'X-CSRF-TOKEN': token ? token.getAttribute('content') : '', 'Accept':'application/json'},
+        body: fd
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+        if (!data.success) { feedbackEl.innerHTML = '<span style="color:#dc2626;">' + (data.message || 'Failed to parse') + '</span>'; return; }
+        if (!data.products || !data.products.length) { feedbackEl.innerHTML = '<span style="color:#dc2626;">No products detected in file.</span>'; return; }
+
+        // Merge all serials from all product blocks
+        var allSerials = [];
+        var warnings = [];
+        data.products.forEach(function(p) {
+            (p.serials || []).forEach(function(s){ if (allSerials.indexOf(s) === -1) allSerials.push(s); });
+            if (p.warnings && p.warnings.length) warnings = warnings.concat(p.warnings);
+        });
+
+        document.getElementById(prefix + 'SerialsText').value = allSerials.join('\n');
+        onSerialsTextChange(prefix);
+
+        // Auto-fill GST + unit price from first parsed block (if present)
+        var first = data.products[0];
+        if (first) {
+            var priceInput = document.getElementById(prefix + 'UnitPrice');
+            var gstInput = document.getElementById(prefix + 'GstPercent');
+            if (priceInput && (first.unit_price_from_amount || first.rate) && !priceInput.value) {
+                priceInput.value = first.unit_price_from_amount || first.rate;
+            }
+            if (gstInput && first.gst_percent && !gstInput.value) {
+                gstInput.value = first.gst_percent;
+            }
+            if (prefix === 'np' && typeof calcNpGst === 'function') calcNpGst();
+            if (prefix === 'ep' && typeof calcEpGst === 'function') calcEpGst();
+        }
+
+        var msg = '<span style="color:#059669;font-weight:600;">Parsed ' + data.products.length + ' product block(s), ' + allSerials.length + ' serials.</span>';
+        if (data.products.length > 1) msg += '<br><span style="color:#b45309;">Note: Multiple product blocks were found. All serials merged into current product. For multi-product upload as separate entries, please add each separately.</span>';
+        if (warnings.length) msg += '<br><span style="color:#b45309;">' + warnings.slice(0,3).join(' | ') + '</span>';
+        feedbackEl.innerHTML = msg;
+        input.value = '';
+    })
+    .catch(function(){
+        feedbackEl.innerHTML = '<span style="color:#dc2626;">Upload failed.</span>';
+    });
+}
+
+// Recalculate on qty changes
+document.addEventListener('DOMContentLoaded', function() {
+    var qtyInput = document.getElementById('npQuantity');
+    if (qtyInput) qtyInput.addEventListener('input', function() { if (document.getElementById('npSerialSection').style.display !== 'none') onSerialsTextChange('np'); });
+    var epQtyBtns = document.querySelectorAll('.qty-adj-btn');
+    epQtyBtns.forEach(function(b) { b.addEventListener('click', function() { setTimeout(function(){ if (document.getElementById('epSerialSection').style.display !== 'none') onSerialsTextChange('ep'); }, 100); }); });
+});
 </script>
 @endsection

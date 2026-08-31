@@ -256,6 +256,19 @@
             <div class="od-item-info">
                 <p class="od-item-name">{{ $item->product_name }}</p>
                 <p class="od-item-qty">Qty: {{ $item->quantity }} x &#8377;{{ number_format($item->price, 0) }}</p>
+                @php $itemSerials = isset($serialsByProduct) ? ($serialsByProduct[$item->product_id] ?? []) : []; @endphp
+                @if(!empty($itemSerials))
+                <div style="margin-top:8px; padding:8px 10px; background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.25); border-radius:6px;">
+                    <div style="font-size:0.7rem; font-weight:700; color:#15803d; margin-bottom:4px; letter-spacing:0.03em; text-transform:uppercase;">
+                        &#10003; Serial Numbers Delivered
+                    </div>
+                    <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                        @foreach($itemSerials as $sn)
+                        <span style="background:rgba(255,255,255,0.9); border:1px solid rgba(34,197,94,0.35); color:#166534; font-family:monospace; font-size:0.68rem; padding:2px 7px; border-radius:4px;">{{ $sn }}</span>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
             </div>
             <p class="od-item-total">&#8377;{{ number_format($item->subtotal, 0) }}</p>
         </div>

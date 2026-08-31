@@ -108,6 +108,24 @@
             <span>Inventory Entries</span>
         </a>
     </li>
+    <li>
+        <a href="{{ route('inventorySerialSearch') }}"
+            class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('inventorySerialSearch') ? 'ec-active' : '' }}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 3v18M9 3v18M12 3v18M15 3v18M18 3v18" />
+            </svg>
+            <span>Serial Search</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ route('inventorySupplierReport') }}"
+            class="flex items-center gap-2 px-3 py-1.5 rounded transition-colors {{ request()->routeIs('inventorySupplierReport') ? 'ec-active' : '' }}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13v6M9 17H4M9 17v4h13v-4M22 11H4v-4h18v4z" />
+            </svg>
+            <span>Supplier Report</span>
+        </a>
+    </li>
     @endif
 
 

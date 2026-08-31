@@ -144,10 +144,26 @@
                             <label class="form-label">Remarks</label>
                             <input type="text" name="remarks" class="form-control" placeholder="Optional">
                         </div>
+
+                        <div class="col-12" id="whmSerialWrap" style="display:none;">
+                            <label class="form-label">
+                                Serial Numbers <span style="color:#dc2626;">*</span>
+                                <small style="font-weight:400; color:#6b7280;">(serial-tracked product)</small>
+                            </label>
+                            <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px;">
+                                <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; align-items:center;">
+                                    <button type="button" class="btn btn-sm btn-primary" onclick="whmAutoPick()">Auto-Pick First N</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="whmClearPicks()">Clear All</button>
+                                    <span id="whmSerialSummary" style="font-size:.85rem; color:#374151; font-weight:600;">0 selected</span>
+                                </div>
+                                <input type="text" id="whmSerialSearch" class="form-control mb-2" placeholder="Search serials..." oninput="whmRenderList()">
+                                <div id="whmSerialList" style="max-height:220px; overflow-y:auto; background:#fff; border:1px solid #e5e7eb; border-radius:6px; padding:6px;"></div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mt-4 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-exchange-alt me-1"></i> Transfer</button>
+                        <button type="submit" class="btn btn-primary" id="whmTransferSubmit"><i class="fas fa-exchange-alt me-1"></i> Transfer</button>
                         <button type="reset" class="btn btn-secondary">Clear</button>
                     </div>
                 </form>
@@ -194,7 +210,17 @@
             $('#product_id').on('change', function () {
                 var price = $(this).find('option:selected').data('price') || '';
                 $('#unit_price').val(price);
+                whmAvailableSerials = [];
+                whmSelected = new Set();
+                $('#whmSerialWrap').hide();
                 if (!$(this).val()) { reset(); return; }
+                $.get("{{ route('wh.manager.getAvailableSerials') }}", { product_id: $(this).val() }, function(data) {
+                    if (data && data.is_serial_tracked) {
+                        whmAvailableSerials = data.serials || [];
+                        $('#whmSerialWrap').show();
+                        whmRenderList();
+                    }
+                });
                 $.get(getWhQtyUrl, { product_id: $(this).val() }, function (data) {
                     availableQty = parseInt(data.available_qty || 0, 10) || 0;
                     $('#available_qty_hint').text('Available in your warehouse: ' + availableQty);
@@ -211,6 +237,7 @@
                     this.setCustomValidity('');
                     $(this).removeClass('is-invalid');
                 }
+                whmSync();
             });
 
             function reset() {
@@ -218,6 +245,46 @@
                 $('#unit_price').val('');
                 $('#available_qty_hint').text('');
                 availableQty = null;
+            }
+
+            var whmAvailableSerials = [];
+            var whmSelected = new Set();
+            window.whmRenderList = function() {
+                var q = ($('#whmSerialSearch').val() || '').toLowerCase();
+                var filtered = whmAvailableSerials.filter(function(s) { return !q || s.toLowerCase().indexOf(q) !== -1; });
+                var html = '';
+                filtered.forEach(function(sn) {
+                    var checked = whmSelected.has(sn) ? 'checked' : '';
+                    html += '<label style="display:flex; align-items:center; gap:8px; padding:5px 8px; border-bottom:1px solid #f3f4f6; cursor:pointer; font-family:monospace; font-size:.82rem;">'
+                          + '<input type="checkbox" ' + checked + ' value="' + sn + '" onchange="whmToggleSerial(this)"> ' + sn
+                          + '</label>';
+                });
+                if (!filtered.length) html = '<div style="padding:10px; text-align:center; color:#94a3b8; font-size:.85rem;">No matching serials</div>';
+                $('#whmSerialList').html(html);
+                whmSync();
+            };
+            window.whmToggleSerial = function(cb) {
+                if (cb.checked) whmSelected.add(cb.value); else whmSelected.delete(cb.value);
+                whmSync();
+            };
+            window.whmAutoPick = function() {
+                var qty = parseInt($('#quantity').val(), 10) || 0;
+                if (qty <= 0) { alert('Enter quantity first.'); return; }
+                whmSelected = new Set(whmAvailableSerials.slice(0, qty));
+                whmRenderList();
+            };
+            window.whmClearPicks = function() {
+                whmSelected = new Set();
+                whmRenderList();
+            };
+            function whmSync() {
+                $('form input[name="serial_numbers[]"]').remove();
+                whmSelected.forEach(function(sn) {
+                    $('#whmTransferSubmit').closest('form').append('<input type="hidden" name="serial_numbers[]" value="' + sn + '">');
+                });
+                var qty = parseInt($('#quantity').val(), 10) || 0;
+                $('#whmSerialSummary').text(whmSelected.size + ' selected' + (qty > 0 ? ' / ' + qty + ' needed' : ''))
+                    .css('color', (qty > 0 && whmSelected.size === qty) ? '#059669' : '#374151');
             }
 
             const getMyWhProductsUrl = "{{ route('wh.manager.getMyWarehouseProducts') }}";

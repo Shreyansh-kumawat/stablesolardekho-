@@ -301,6 +301,23 @@ class ProductController extends Controller
         if (Schema::hasColumn('products', 'is_kit')) $product_list->where('is_kit', false);
         $product_list = $product_list->latest()->get();
         $categories = ProductCategory::all();
+
+        // Attach last purchase price per product
+        $productIds = $product_list->pluck('id');
+        $lastPurchase = \App\Models\ProductInventoryTransaction::whereIn('product_id', $productIds)
+            ->where('transaction_type', 'IN')
+            ->whereNotNull('unit_price')
+            ->select('product_id', 'unit_price', 'gst_percent', 'total_with_gst', 'created_at')
+            ->get()
+            ->groupBy('product_id')
+            ->map(function ($rows) { return $rows->sortByDesc('created_at')->first(); });
+        foreach ($product_list as $p) {
+            $lp = $lastPurchase->get($p->id);
+            $p->last_purchase_price = $lp->unit_price ?? null;
+            $p->last_gst_percent = $lp->gst_percent ?? null;
+            $p->last_total_with_gst = $lp->total_with_gst ?? null;
+        }
+
         return view('Admin.productSetting.manageProducts')
             ->with('product_list', $product_list)
             ->with('categories', $categories);
@@ -379,6 +396,7 @@ class ProductController extends Controller
             $product->country_of_origin = $request->country_of_origin;
             $product->input_voltage = $request->input_voltage;
             $product->max_supported_panel_power = $request->max_supported_panel_power;
+            $product->is_serialNumber_required = $request->has('is_serialNumber_required') ? 1 : 0;
             if ($request->hasFile('image')) {
                 $product->image = $request->file('image')->store('products', 'public');
             }
@@ -429,6 +447,7 @@ class ProductController extends Controller
             $product->country_of_origin = $request->country_of_origin;
             $product->input_voltage = $request->input_voltage;
             $product->max_supported_panel_power = $request->max_supported_panel_power;
+            $product->is_serialNumber_required = $request->has('is_serialNumber_required') ? 1 : 0;
             if ($request->hasFile('image')) {
                 if ($product->image) Storage::disk('public')->delete($product->image);
                 $product->image = $request->file('image')->store('products', 'public');
