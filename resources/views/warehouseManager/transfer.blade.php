@@ -213,11 +213,15 @@
                 whmAvailableSerials = [];
                 whmSelected = new Set();
                 $('#whmSerialWrap').hide();
+                $('#quantity').prop('readonly', false);
+                $('#whmQtyHint').remove();
                 if (!$(this).val()) { reset(); return; }
                 $.get("{{ route('wh.manager.getAvailableSerials') }}", { product_id: $(this).val() }, function(data) {
                     if (data && data.is_serial_tracked) {
                         whmAvailableSerials = data.serials || [];
                         $('#whmSerialWrap').show();
+                        $('#quantity').prop('readonly', true).val(0).attr('placeholder', 'Auto from serials');
+                        $('#quantity').after('<small id="whmQtyHint" style="color:#0369a1;font-weight:600;display:block;margin-top:4px;">Quantity auto-set from selected serials below</small>');
                         whmRenderList();
                     }
                 });
@@ -282,6 +286,9 @@
                 whmSelected.forEach(function(sn) {
                     $('#whmTransferSubmit').closest('form').append('<input type="hidden" name="serial_numbers[]" value="' + sn + '">');
                 });
+                if ($('#whmSerialWrap').is(':visible')) {
+                    $('#quantity').val(whmSelected.size > 0 ? whmSelected.size : '');
+                }
                 var qty = parseInt($('#quantity').val(), 10) || 0;
                 $('#whmSerialSummary').text(whmSelected.size + ' selected' + (qty > 0 ? ' / ' + qty + ' needed' : ''))
                     .css('color', (qty > 0 && whmSelected.size === qty) ? '#059669' : '#374151');

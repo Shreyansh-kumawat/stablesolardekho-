@@ -230,8 +230,9 @@
 
                 $('#uom').val(uom);
                 $('#unit_price').val(price);
-                $('#quantity').val('');
+                $('#quantity').val('').prop('readonly', false).prop('required', true);
                 $('#serialPickerWrap').hide();
+                $('#qtyHint').remove();
                 availableSerials = [];
                 selectedSerials = new Set();
 
@@ -247,6 +248,9 @@
                     if (data && data.is_serial_tracked) {
                         availableSerials = data.serials || [];
                         $('#serialPickerWrap').show();
+                        // Auto-managed quantity: readonly + hint
+                        $('#quantity').prop('readonly', true).val(0).attr('placeholder', 'Auto from serials');
+                        $('#quantity').after('<small id="qtyHint" style="color:#0369a1;font-weight:600;display:block;margin-top:4px;">Quantity auto-set from selected serials below</small>');
                         renderSerialList();
                     }
                 });
@@ -306,6 +310,10 @@
                 });
             }
             function updateSerialSummary() {
+                // Auto-sync quantity to selected serial count
+                if ($('#serialPickerWrap').is(':visible')) {
+                    $('#quantity').val(selectedSerials.size > 0 ? selectedSerials.size : '');
+                }
                 var qty = parseInt($('#quantity').val(), 10) || 0;
                 $('#serialPickSummary').text(selectedSerials.size + ' selected' + (qty > 0 ? ' / ' + qty + ' needed' : ''))
                     .css('color', (qty > 0 && selectedSerials.size === qty) ? '#059669' : '#374151');

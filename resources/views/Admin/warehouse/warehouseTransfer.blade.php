@@ -248,6 +248,8 @@
                 var pid = $('#product_id').val();
                 var whId = $('#from_warehouse_id').val();
                 $('#w2wSerialWrap').hide();
+                $('#quantity').prop('readonly', false);
+                $('#w2wQtyHint').remove();
                 w2wAvailableSerials = [];
                 w2wSelected = new Set();
                 if (!pid || !whId) return;
@@ -255,6 +257,8 @@
                     if (data && data.is_serial_tracked) {
                         w2wAvailableSerials = data.serials || [];
                         $('#w2wSerialWrap').show();
+                        $('#quantity').prop('readonly', true).val(0).attr('placeholder', 'Auto from serials');
+                        $('#quantity').after('<small id="w2wQtyHint" style="color:#0369a1;font-weight:600;display:block;margin-top:4px;">Quantity auto-set from selected serials below</small>');
                         w2wRenderList();
                     }
                 });
@@ -292,6 +296,9 @@
                 w2wSelected.forEach(function(sn) {
                     $('#w2wForm').append('<input type="hidden" name="serial_numbers[]" value="' + sn + '">');
                 });
+                if ($('#w2wSerialWrap').is(':visible')) {
+                    $('#quantity').val(w2wSelected.size > 0 ? w2wSelected.size : '');
+                }
                 var qty = parseInt($('#quantity').val(), 10) || 0;
                 $('#w2wSerialSummary').text(w2wSelected.size + ' selected' + (qty > 0 ? ' / ' + qty + ' needed' : ''))
                     .css('color', (qty > 0 && w2wSelected.size === qty) ? '#059669' : '#374151');
