@@ -666,6 +666,71 @@
     <script src="/assets/js/sweetalert2.all.min.js"></script>
     <script src="/assets/js/jquery.dataTables.min.js"></script>
     <script src="/assets/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        /* ─────────────────────────────────────────────────────
+           Global DataTables safety patch
+           Prevents column-count mismatch crashes when empty
+           tables use <td colspan="N">No data</td> pattern.
+           ───────────────────────────────────────────────────── */
+        (function () {
+            if (!window.jQuery || !jQuery.fn.DataTable) return;
+
+            // Suppress alert popup, log to console instead
+            jQuery.fn.DataTable.ext.errMode = 'throw';
+
+            var _origDataTable = jQuery.fn.DataTable;
+            var _origDataTableLower = jQuery.fn.dataTable;
+
+            function isBadDataTable($table) {
+                var headerCells = $table.find('thead tr').first().find('th, td').length;
+                var $bodyRows = $table.find('tbody tr');
+                if ($bodyRows.length === 0) return true; // empty tbody
+                // If ANY body row has a different cell count than headers → skip init
+                var mismatch = false;
+                $bodyRows.each(function () {
+                    var cells = 0;
+                    jQuery(this).find('td, th').each(function () {
+                        var cs = parseInt(jQuery(this).attr('colspan')) || 1;
+                        cells += cs;
+                    });
+                    if (headerCells > 0 && cells !== headerCells) {
+                        mismatch = true;
+                        return false;
+                    }
+                });
+                return mismatch;
+            }
+
+            function guardedInit(orig) {
+                return function () {
+                    var $this = this;
+                    if ($this && $this.length) {
+                        var skipAny = false;
+                        $this.each(function () {
+                            if (isBadDataTable(jQuery(this))) skipAny = true;
+                        });
+                        if (skipAny) {
+                            // Skip DataTable init on bad tables — just return jQuery obj
+                            console.warn('[DataTables] Init skipped — empty tbody or column-count mismatch on', $this.selector || $this.get());
+                            return $this;
+                        }
+                    }
+                    try {
+                        return orig.apply(this, arguments);
+                    } catch (e) {
+                        console.error('[DataTables] Init failed silently:', e.message);
+                        return $this;
+                    }
+                };
+            }
+
+            jQuery.fn.DataTable = guardedInit(_origDataTable);
+            jQuery.fn.dataTable = guardedInit(_origDataTableLower);
+            // Preserve statics (ext, etc.)
+            for (var k in _origDataTable) { if (Object.prototype.hasOwnProperty.call(_origDataTable, k)) jQuery.fn.DataTable[k] = _origDataTable[k]; }
+            for (var k2 in _origDataTableLower) { if (Object.prototype.hasOwnProperty.call(_origDataTableLower, k2)) jQuery.fn.dataTable[k2] = _origDataTableLower[k2]; }
+        })();
+    </script>
     <script src="/assets/js/bootstrap.bundle.min.js"></script>
     <script src="/assets/js/dataTables.buttons.min.js"></script>
     <script src="/assets/js/buttons.bootstrap5.min.js"></script>
