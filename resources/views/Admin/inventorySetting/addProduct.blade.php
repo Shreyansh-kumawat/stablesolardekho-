@@ -111,6 +111,9 @@
                 <div class="mode-toggle">
                     <button type="button" class="mode-btn active" id="modeNew" onclick="setMode('new')">New Product</button>
                     <button type="button" class="mode-btn" id="modeExisting" onclick="setMode('existing')">Existing Product</button>
+                    <button type="button" class="mode-btn" id="modeBulk" onclick="setMode('bulk')" style="background:#fef3c7 !important; color:#92400e !important;">
+                        <i class="fas fa-file-excel me-1"></i> Bulk Serial Upload
+                    </button>
                 </div>
             </div>
             <div class="col-md-6" id="productSelectorWrap" style="display:none;">
@@ -534,6 +537,70 @@
             </div>
         </form>
     </div>
+
+    {{-- ═══════════════════════════════════════════════════════════
+         BULK SERIAL UPLOAD SECTION
+         ═══════════════════════════════════════════════════════════ --}}
+    <div id="bulkUploadSection" style="display:none;">
+        <div class="sec-card">
+            <p class="sec-label">Bulk Serial Upload</p>
+            <p style="font-size:.85rem; color:var(--txt2); margin-bottom:16px;">
+                Upload an invoice Excel/CSV with multiple products - each product block auto-detected, serials extracted, and rendered as separate cards below.
+                Only the <strong>"Item &amp; Description"</strong> column matters: product name lines, then <strong>SR.NO</strong> header, then serials until a blank line. Anything after the gap is shown as a warning.
+            </p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <label style="cursor:pointer; padding:10px 18px; background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; border:none; border-radius:8px; font-weight:700; font-size:.9rem;">
+                    <i class="fas fa-file-excel me-1"></i> Choose Excel File
+                    <input type="file" id="bulkExcelInput" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleBulkExcelUpload(this)">
+                </label>
+                <a href="{{ route('inventorySerialTemplate') }}" style="padding:10px 18px; background:#f3f4f6; color:#4b5563; border:1px solid #d1d5db; border-radius:8px; font-weight:600; font-size:.9rem; text-decoration:none;">
+                    <i class="fas fa-download me-1"></i> Download Template
+                </a>
+                <button type="button" onclick="addManualBulkCard()" style="padding:10px 18px; background:#ecfdf5; color:#065f46; border:1px solid #86efac; border-radius:8px; font-weight:600; font-size:.9rem; cursor:pointer;">
+                    <i class="fas fa-plus me-1"></i> Add Product Manually
+                </button>
+                <span id="bulkParseStatus" style="font-size:.85rem; color:var(--txt2); font-weight:600;"></span>
+            </div>
+        </div>
+
+        {{-- Common invoice details --}}
+        <div class="sec-card">
+            <p class="sec-label">Common Invoice Details <span style="font-weight:400; font-size:.78rem; color:var(--txt2);">(applied to all products below)</span></p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Supplier Name</label>
+                    <input type="text" class="form-control" id="bulkSupplierName" placeholder="e.g. Polycab India Ltd.">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Invoice Number</label>
+                    <input type="text" class="form-control" id="bulkInvoiceNumber" placeholder="Invoice #">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Invoice Date</label>
+                    <input type="date" class="form-control" id="bulkInvoiceDate">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Destination <span class="req">*</span></label>
+                    <select class="form-select" id="bulkDestination">
+                        <option value="">Main Inventory</option>
+                        @foreach($warehouses as $wh)
+                        <option value="{{ $wh->id }}">Warehouse: {{ $wh->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        {{-- Rendered product cards go here --}}
+        <div id="bulkProductCards"></div>
+
+        <div style="display:flex; gap:10px; margin-bottom:2rem;" id="bulkSubmitWrap" hidden>
+            <button type="button" class="btn-green" onclick="submitBulkUpload()" id="bulkSubmitBtn">
+                <i class="fas fa-check me-1"></i> Save All Products
+            </button>
+            <button type="button" class="btn-outline" onclick="clearBulkCards()">Clear All</button>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -542,9 +609,11 @@
 function setMode(mode) {
     document.getElementById('modeNew').classList.toggle('active', mode === 'new');
     document.getElementById('modeExisting').classList.toggle('active', mode === 'existing');
+    document.getElementById('modeBulk').classList.toggle('active', mode === 'bulk');
+
     document.getElementById('productSelectorWrap').style.display = mode === 'existing' ? '' : 'none';
     document.getElementById('newProductSection').style.display = mode === 'new' ? '' : 'none';
-    document.getElementById('existingProductSection').style.display = mode === 'existing' ? 'none' : 'none';
+    document.getElementById('bulkUploadSection').style.display = mode === 'bulk' ? '' : 'none';
 
     if (mode === 'new') {
         document.getElementById('existingProductSection').style.display = 'none';
@@ -553,10 +622,13 @@ function setMode(mode) {
         document.getElementById('existingProductInfo').style.display = 'none';
         document.getElementById('pageTitle').textContent = 'Add Stock';
         document.getElementById('pageDesc').textContent = 'Add a new product or add stock to existing product';
-    } else {
-        document.getElementById('newProductSection').style.display = 'none';
+    } else if (mode === 'existing') {
         document.getElementById('pageTitle').textContent = 'Add Stock';
         document.getElementById('pageDesc').textContent = 'Select an existing product to update stock';
+    } else if (mode === 'bulk') {
+        document.getElementById('existingProductSection').style.display = 'none';
+        document.getElementById('pageTitle').textContent = 'Bulk Serial Upload';
+        document.getElementById('pageDesc').textContent = 'Upload one invoice Excel — multiple products auto-detected and saved together';
     }
 }
 
@@ -1037,5 +1109,289 @@ document.addEventListener('DOMContentLoaded', function() {
     var epQtyBtns = document.querySelectorAll('.qty-adj-btn');
     epQtyBtns.forEach(function(b) { b.addEventListener('click', function() { setTimeout(function(){ if (document.getElementById('epSerialSection').style.display !== 'none') onSerialsTextChange('ep'); }, 100); }); });
 });
+
+/* ═══════════════════════════════════════════════════════════
+   BULK SERIAL UPLOAD
+   ═══════════════════════════════════════════════════════════ */
+
+var bulkCards = []; // Array of {idx, product_name, serials, skipped, product_id, category_id, sub_category_id, unit_price, gst_percent}
+var bulkCardIdxSeq = 0;
+var allCategoriesForBulk = @json($categories->map(fn($c) => ['id' => $c->id, 'name' => $c->category_name, 'subs' => $c->subCategories->map(fn($s) => ['id' => $s->id, 'name' => $s->sub_category_name])->values()])->values());
+
+function handleBulkExcelUpload(input) {
+    var file = input.files[0];
+    if (!file) return;
+    var status = document.getElementById('bulkParseStatus');
+    status.innerHTML = '<span style="color:#2563eb;">Parsing Excel...</span>';
+
+    var fd = new FormData();
+    fd.append('file', file);
+    var token = document.querySelector('meta[name="csrf-token"]');
+
+    fetch("{{ route('inventorySerialsParseExcel') }}", {
+        method: 'POST',
+        headers: {'X-CSRF-TOKEN': token ? token.getAttribute('content') : '', 'Accept': 'application/json'},
+        body: fd
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) { status.innerHTML = '<span style="color:#dc2626;">' + (data.message || 'Failed to parse') + '</span>'; return; }
+        if (!data.products || !data.products.length) { status.innerHTML = '<span style="color:#dc2626;">No products detected in file.</span>'; return; }
+
+        data.products.forEach(function(p) {
+            addBulkCard({
+                product_name: p.product_name || '',
+                serials: p.serials || [],
+                skipped_text: p.skipped_text || '',
+                warnings: p.warnings || [],
+                db_duplicates: p.db_duplicates || [],
+                suggested_product: p.suggested_product || null
+            });
+        });
+        status.innerHTML = '<span style="color:#059669;font-weight:600;">Parsed ' + data.products.length + ' product block(s) - review each card below.</span>';
+        input.value = '';
+    })
+    .catch(err => {
+        status.innerHTML = '<span style="color:#dc2626;">Upload failed: ' + err.message + '</span>';
+    });
+}
+
+function addManualBulkCard() {
+    addBulkCard({ product_name: '', serials: [], skipped_text: '', warnings: [], suggested_product: null });
+}
+
+function addBulkCard(data) {
+    var idx = bulkCardIdxSeq++;
+    var card = {
+        idx: idx,
+        product_name: data.product_name || '',
+        serials: data.serials || [],
+        skipped_text: data.skipped_text || '',
+        warnings: data.warnings || [],
+        db_duplicates: data.db_duplicates || [],
+        suggested_product: data.suggested_product || null,
+        product_id: data.suggested_product ? data.suggested_product.id : null,
+        category_id: data.suggested_product ? data.suggested_product.category_id : '',
+        sub_category_id: data.suggested_product ? data.suggested_product.sub_category_id : '',
+        unit_price: '',
+        gst_percent: ''
+    };
+    bulkCards.push(card);
+    renderBulkCards();
+}
+
+function removeBulkCard(idx) {
+    bulkCards = bulkCards.filter(c => c.idx !== idx);
+    renderBulkCards();
+}
+
+function clearBulkCards() {
+    bulkCards = [];
+    renderBulkCards();
+    document.getElementById('bulkParseStatus').innerHTML = '';
+}
+
+function updateBulkField(idx, field, value) {
+    var c = bulkCards.find(x => x.idx === idx);
+    if (!c) return;
+    c[field] = value;
+    if (field === 'category_id') {
+        c.sub_category_id = '';
+        renderBulkCards();
+    }
+    if (field === 'serials_text') {
+        c.serials = parseSerialsFromText(value);
+        renderBulkCardStats(idx);
+    }
+}
+
+function renderBulkCards() {
+    var wrap = document.getElementById('bulkProductCards');
+    document.getElementById('bulkSubmitWrap').hidden = bulkCards.length === 0;
+    if (bulkCards.length === 0) {
+        wrap.innerHTML = '';
+        return;
+    }
+    wrap.innerHTML = bulkCards.map(function(c) {
+        var subOptions = '<option value="">Select</option>';
+        if (c.category_id) {
+            var cat = allCategoriesForBulk.find(x => x.id == c.category_id);
+            if (cat) subOptions = '<option value="">Select</option>' + cat.subs.map(s =>
+                '<option value="' + s.id + '"' + (c.sub_category_id == s.id ? ' selected' : '') + '>' + escapeHtmlBulk(s.name) + '</option>'
+            ).join('');
+        }
+        var catOptions = '<option value="">Select</option>' + allCategoriesForBulk.map(cat =>
+            '<option value="' + cat.id + '"' + (c.category_id == cat.id ? ' selected' : '') + '>' + escapeHtmlBulk(cat.name) + '</option>'
+        ).join('');
+
+        var warnHtml = '';
+        if (c.warnings && c.warnings.length) {
+            warnHtml = '<div style="background:#fef3c7;border:1px solid #fde68a;color:#92400e;padding:8px 12px;border-radius:6px;font-size:.78rem;margin-bottom:10px;">'
+                + c.warnings.map(w => '<div><i class="fas fa-exclamation-triangle me-1"></i>' + escapeHtmlBulk(w) + '</div>').join('')
+                + '</div>';
+        }
+        var dupHtml = '';
+        if (c.db_duplicates && c.db_duplicates.length) {
+            dupHtml = '<div style="background:#fee2e2;border:1px solid #fecaca;color:#991b1b;padding:8px 12px;border-radius:6px;font-size:.78rem;margin-bottom:10px;">'
+                + '<i class="fas fa-times-circle me-1"></i> Serials already in DB: ' + c.db_duplicates.slice(0,5).join(', ')
+                + (c.db_duplicates.length > 5 ? ' +' + (c.db_duplicates.length-5) + ' more' : '')
+                + '</div>';
+        }
+        var skippedHtml = '';
+        if (c.skipped_text) {
+            skippedHtml = '<div style="background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:8px 12px;border-radius:6px;font-size:.78rem;margin-bottom:10px;">'
+                + '<strong><i class="fas fa-info-circle me-1"></i> Skipped after line gap (not counted):</strong>'
+                + '<pre style="margin:6px 0 0;font-size:.72rem;white-space:pre-wrap;font-family:monospace;color:#78350f;">' + escapeHtmlBulk(c.skipped_text) + '</pre>'
+                + '<div style="margin-top:6px;font-style:italic;">If any of these should be included, copy and paste into the Serial Numbers box above.</div>'
+                + '</div>';
+        }
+        var suggHtml = '';
+        if (c.suggested_product) {
+            suggHtml = '<div style="background:#ecfdf5;border:1px solid #86efac;color:#065f46;padding:6px 10px;border-radius:6px;font-size:.75rem;margin-bottom:8px;">'
+                + '<i class="fas fa-lightbulb me-1"></i> Matched existing product: <strong>' + escapeHtmlBulk(c.suggested_product.item_name) + '</strong> (code: ' + escapeHtmlBulk(c.suggested_product.item_code || '-') + ')'
+                + '</div>';
+        }
+
+        return '<div class="sec-card" style="border-left:4px solid #3b82f6; position:relative;">'
+             + '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">'
+             + '  <p class="sec-label" style="margin:0;">Product #' + (bulkCards.indexOf(c)+1) + '</p>'
+             + '  <button type="button" onclick="removeBulkCard(' + c.idx + ')" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;padding:5px 12px;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;"><i class="fas fa-trash me-1"></i>Remove</button>'
+             + '</div>'
+             + suggHtml
+             + warnHtml
+             + dupHtml
+             + '<div class="row g-3">'
+             + '  <div class="col-12">'
+             + '    <label class="form-label">Product Name <span class="req">*</span> <small style="color:var(--txt2); font-weight:400;">(auto from Excel - editable)</small></label>'
+             + '    <input type="text" class="form-control" value="' + escapeAttrBulk(c.product_name) + '" oninput="updateBulkField(' + c.idx + ', \'product_name\', this.value)">'
+             + '  </div>'
+             + '  <div class="col-md-6">'
+             + '    <label class="form-label">Category <span class="req">*</span></label>'
+             + '    <select class="form-select" onchange="updateBulkField(' + c.idx + ', \'category_id\', this.value)">' + catOptions + '</select>'
+             + '  </div>'
+             + '  <div class="col-md-6">'
+             + '    <label class="form-label">Sub Category</label>'
+             + '    <select class="form-select" onchange="updateBulkField(' + c.idx + ', \'sub_category_id\', this.value)">' + subOptions + '</select>'
+             + '  </div>'
+             + '  <div class="col-md-4">'
+             + '    <label class="form-label">Unit Price (Purchase)</label>'
+             + '    <input type="number" step="0.01" min="0" class="form-control" value="' + (c.unit_price || '') + '" oninput="updateBulkField(' + c.idx + ', \'unit_price\', this.value); calcBulkGst(' + c.idx + ')">'
+             + '  </div>'
+             + '  <div class="col-md-4">'
+             + '    <label class="form-label">GST %</label>'
+             + '    <input type="number" step="0.01" min="0" max="100" class="form-control" value="' + (c.gst_percent || '') + '" oninput="updateBulkField(' + c.idx + ', \'gst_percent\', this.value); calcBulkGst(' + c.idx + ')">'
+             + '  </div>'
+             + '  <div class="col-md-4">'
+             + '    <label class="form-label">Amount with GST (per unit)</label>'
+             + '    <input type="text" class="form-control" readonly id="bulkAmtGst_' + c.idx + '" style="background:#f0fdf4;color:#065f46;font-weight:600;" placeholder="Auto">'
+             + '  </div>'
+             + '  <div class="col-12">'
+             + '    <label class="form-label">Serial Numbers <span class="serial-count-badge" id="bulkSerCnt_' + c.idx + '" style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:12px;font-size:.72rem;font-weight:600;margin-left:8px;">' + c.serials.length + ' serials</span></label>'
+             + '    <div style="display:flex; gap:6px; margin-bottom:6px;">'
+             + '      <button type="button" onclick="beautifyBulkSerials(' + c.idx + ')" style="padding:6px 12px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;"><i class="fas fa-magic me-1"></i>Beautify</button>'
+             + '    </div>'
+             + '    <textarea rows="5" class="form-control" id="bulkSerText_' + c.idx + '" oninput="updateBulkField(' + c.idx + ', \'serials_text\', this.value)" style="font-family:monospace; font-size:.82rem;" placeholder="Space, comma or new-line separated serials...">' + escapeHtmlBulk(c.serials.join('\n')) + '</textarea>'
+             + '  </div>'
+             + '</div>'
+             + skippedHtml
+             + '</div>';
+    }).join('');
+
+    // Compute GST after render
+    bulkCards.forEach(c => calcBulkGst(c.idx));
+}
+
+function renderBulkCardStats(idx) {
+    var c = bulkCards.find(x => x.idx === idx);
+    if (!c) return;
+    var badge = document.getElementById('bulkSerCnt_' + idx);
+    if (badge) badge.textContent = c.serials.length + ' serials';
+}
+
+function calcBulkGst(idx) {
+    var c = bulkCards.find(x => x.idx === idx);
+    if (!c) return;
+    var price = parseFloat(c.unit_price) || 0;
+    var gst = parseFloat(c.gst_percent) || 0;
+    var total = +(price + (price * gst / 100)).toFixed(2);
+    var el = document.getElementById('bulkAmtGst_' + idx);
+    if (el) el.value = total > 0 ? '₹ ' + total.toLocaleString('en-IN') : '';
+}
+
+function beautifyBulkSerials(idx) {
+    var c = bulkCards.find(x => x.idx === idx);
+    if (!c) return;
+    var textEl = document.getElementById('bulkSerText_' + idx);
+    var serials = parseSerialsFromText(textEl.value);
+    c.serials = serials;
+    textEl.value = serials.join('\n');
+    renderBulkCardStats(idx);
+}
+
+function submitBulkUpload() {
+    if (bulkCards.length === 0) { alert('No products to save.'); return; }
+
+    // Validate all
+    for (var i = 0; i < bulkCards.length; i++) {
+        var c = bulkCards[i];
+        if (!c.product_name.trim()) { alert('Product #' + (i+1) + ': product name is required.'); return; }
+        if (!c.category_id) { alert('Product #' + (i+1) + ' ("' + c.product_name + '"): category is required.'); return; }
+        if (c.serials.length === 0) { alert('Product #' + (i+1) + ' ("' + c.product_name + '"): at least one serial number required.'); return; }
+    }
+
+    var payload = {
+        _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        destination_type: document.getElementById('bulkDestination').value ? 'warehouse' : 'main',
+        destination_warehouse_id: document.getElementById('bulkDestination').value || null,
+        supplier_name: document.getElementById('bulkSupplierName').value,
+        invoice_number: document.getElementById('bulkInvoiceNumber').value,
+        invoice_date: document.getElementById('bulkInvoiceDate').value,
+        products: bulkCards.map(c => ({
+            product_id: c.product_id || null,
+            item_name: c.product_name,
+            category_id: c.category_id,
+            sub_category_id: c.sub_category_id || null,
+            qty: c.serials.length,
+            unit_price: c.unit_price || null,
+            gst_percent: c.gst_percent || null,
+            serials: c.serials
+        }))
+    };
+
+    var btn = document.getElementById('bulkSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+
+    fetch("{{ route('inventorySerialsBulkStore') }}", {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRF-TOKEN':payload._token,'Accept':'application/json'},
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check me-1"></i> Save All Products';
+        if (data.success) {
+            alert('Success! ' + (data.results ? data.results.length : bulkCards.length) + ' products saved.');
+            window.location.href = "{{ route('inventoryEntries') }}";
+        } else {
+            alert(data.message || 'Failed to save.');
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check me-1"></i> Save All Products';
+        alert('Save failed: ' + err.message);
+    });
+}
+
+function escapeHtmlBulk(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+}
+function escapeAttrBulk(s) {
+    return String(s == null ? '' : s).replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
 </script>
 @endsection

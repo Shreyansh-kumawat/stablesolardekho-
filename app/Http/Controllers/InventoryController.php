@@ -959,11 +959,12 @@ class InventoryController extends Controller
             'destination_warehouse_id' => 'nullable|exists:warehouses,id',
             'products' => 'required|array|min:1',
             'products.*.product_id' => 'nullable|exists:products,id',
-            'products.*.item_name' => 'required|string|max:255',
-            'products.*.category_id' => 'nullable|exists:product_categories,id',
+            'products.*.item_name' => 'required|string|max:500',
+            'products.*.category_id' => 'required|exists:product_categories,id',
             'products.*.sub_category_id' => 'nullable|exists:product_sub_categories,id',
             'products.*.qty' => 'required|integer|min:1',
             'products.*.unit_price' => 'nullable|numeric|min:0',
+            'products.*.gst_percent' => 'nullable|numeric|min:0|max:100',
             'products.*.serials' => 'required|array|min:1',
             'products.*.serials.*' => 'required|string|max:100',
             'invoice_number' => 'nullable|string|max:100',
@@ -1022,7 +1023,9 @@ class InventoryController extends Controller
                 }
 
                 $qty = (int) $item['qty'];
-                $unitPrice = $item['unit_price'] !== null ? (float) $item['unit_price'] : null;
+                $unitPrice = $item['unit_price'] !== null && $item['unit_price'] !== '' ? (float) $item['unit_price'] : null;
+                $gstPercent = isset($item['gst_percent']) && $item['gst_percent'] !== '' ? (float) $item['gst_percent'] : null;
+                [$gstAmt, $totWithGst] = $this->gstFields($unitPrice, $gstPercent);
                 $txnId = 'BULK-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -5));
 
                 $inventory = ProductInventory::firstOrCreate(
@@ -1036,6 +1039,9 @@ class InventoryController extends Controller
                     'quantity' => $qty,
                     'supplier_name' => $request->supplier_name ?: null,
                     'unit_price' => $unitPrice,
+                    'gst_percent' => $gstPercent,
+                    'gst_amount' => $gstAmt,
+                    'total_with_gst' => $totWithGst,
                     'invoice_number' => $request->invoice_number ?: null,
                     'invoice_date' => $request->invoice_date ?: null,
                     'performed_by' => Auth::id(),
@@ -1065,6 +1071,9 @@ class InventoryController extends Controller
                         'quantity' => $qty,
                         'transfer_type' => 'direct_purchase',
                         'unit_price' => $unitPrice,
+                        'gst_percent' => $gstPercent,
+                        'gst_amount' => $gstAmt,
+                        'total_with_gst' => $totWithGst,
                         'invoice_number' => $request->invoice_number ?: null,
                         'invoice_date' => $request->invoice_date ?: null,
                         'performed_by' => Auth::id(),
@@ -1085,6 +1094,7 @@ class InventoryController extends Controller
                         'warehouse_id' => $whId,
                         'batch_txn_id' => $txnId,
                         'purchase_price' => $unitPrice,
+                        'gst_percent' => $gstPercent,
                         'invoice_number' => $request->invoice_number ?: null,
                         'invoice_date' => $request->invoice_date ?: null,
                         'supplier_name' => $request->supplier_name ?: null,
