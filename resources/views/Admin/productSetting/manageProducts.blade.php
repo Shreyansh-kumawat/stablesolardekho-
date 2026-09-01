@@ -544,23 +544,48 @@
                     <div class="pcard-body">
                         <p class="pcard-name">{{ $product->item_name }}</p>
                         <p class="pcard-code">{{ $product->item_code ?? '—' }}</p>
-                        <div class="pcard-meta">
-                            @if($product->current_sale_price)
-                                <span class="pcard-price">&#8377;{{ $product->current_sale_price }}</span>
-                                @if(!empty($product->last_purchase_price))
-                                    <div style="margin-top:4px; font-size:0.75rem; color:#0369a1; font-weight:600;">
-                                        <i class="fas fa-shopping-cart me-1"></i> Purchase: &#8377;{{ number_format($product->last_purchase_price, 2) }}
-                                        @if(!empty($product->last_gst_percent)) + {{ rtrim(rtrim(number_format($product->last_gst_percent, 2), '0'), '.') }}% GST @endif
-                                    </div>
+                        <div class="pcard-meta" style="display:block;">
+                            {{-- Row 1: Prices --}}
+                            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:8px;">
+                                @if($product->current_sale_price)
+                                    <span class="pcard-price">&#8377;{{ is_numeric($product->current_sale_price) ? number_format((float)$product->current_sale_price, 0) : $product->current_sale_price }}</span>
+                                @else
+                                    <span class="pcard-price-na">Price on request</span>
                                 @endif
-                            @else
-                                <span class="pcard-price-na">Price on request</span>
+                            </div>
+
+                            {{-- Row 2: Qty + UOM chips --}}
+                            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:8px;">
+                                <span class="pcard-chip pcard-chip-qty">
+                                    <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                    Qty: {{ ($product->inventory->available_qty ?? 0) + ($product->warehouseInventoriesSum ?? 0) }}
+                                </span>
+                                <span class="pcard-chip pcard-chip-uom">{{ $product->uom ?? '—' }}</span>
+                            </div>
+
+                            {{-- Row 3: Purchase price + Edit --}}
+                            @if($product->current_sale_price)
+                                <div class="pp-wrap" data-pid="{{ $product->id }}" style="padding-top:8px; border-top:1px dashed #e5e7eb;">
+                                    <div class="pp-display" style="font-size:0.75rem; color:#0369a1; font-weight:600; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                        @if(!empty($product->last_purchase_price))
+                                            <span><i class="fas fa-shopping-cart me-1"></i> Purchase: <strong>&#8377;{{ number_format($product->last_purchase_price, 2) }}</strong>@if(!empty($product->last_gst_percent)) + {{ rtrim(rtrim(number_format($product->last_gst_percent, 2), '0'), '.') }}% GST @endif</span>
+                                        @else
+                                            <span style="color:#94a3b8; font-style:italic;">Purchase price not set</span>
+                                        @endif
+                                        <button type="button" onclick="event.stopPropagation(); togglePpEdit(this)" style="background:#e0f2fe;border:1px solid #7dd3fc;color:#0369a1;padding:1px 6px;border-radius:4px;font-size:.65rem;cursor:pointer;font-weight:600;">
+                                            <i class="fas fa-pencil-alt"></i> Edit
+                                        </button>
+                                    </div>
+                                    <div class="pp-edit" style="display:none; margin-top:4px;">
+                                        <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+                                            <input type="number" step="0.01" min="0" class="pp-price" placeholder="Price" value="{{ $product->last_purchase_price }}" style="width:90px;padding:3px 6px;border:1px solid #7dd3fc;border-radius:4px;font-size:.72rem;" onclick="event.stopPropagation()">
+                                            <input type="number" step="0.01" min="0" max="100" class="pp-gst" placeholder="GST %" value="{{ $product->last_gst_percent }}" style="width:60px;padding:3px 6px;border:1px solid #7dd3fc;border-radius:4px;font-size:.72rem;" onclick="event.stopPropagation()">
+                                            <button type="button" onclick="event.stopPropagation(); savePpEdit(this)" style="background:#059669;color:#fff;border:none;padding:3px 8px;border-radius:4px;font-size:.7rem;font-weight:600;cursor:pointer;">Save</button>
+                                            <button type="button" onclick="event.stopPropagation(); cancelPpEdit(this)" style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db;padding:3px 8px;border-radius:4px;font-size:.7rem;font-weight:600;cursor:pointer;">Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
                             @endif
-                            <span class="pcard-chip pcard-chip-qty">
-                                <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                                Qty: {{ ($product->inventory->available_qty ?? 0) + ($product->warehouseInventoriesSum ?? 0) }}
-                            </span>
-                            <span class="pcard-chip pcard-chip-uom">{{ $product->uom ?? '—' }}</span>
                         </div>
                     </div>
 
@@ -1653,6 +1678,54 @@
                     }
                 }, 500);
             });
+        }
+
+        /* Inline Purchase Price edit on Products cards */
+        function togglePpEdit(btn) {
+            var wrap = btn.closest('.pp-wrap');
+            wrap.querySelector('.pp-display').style.display = 'none';
+            wrap.querySelector('.pp-edit').style.display = '';
+            wrap.querySelector('.pp-price').focus();
+        }
+        function cancelPpEdit(btn) {
+            var wrap = btn.closest('.pp-wrap');
+            wrap.querySelector('.pp-display').style.display = '';
+            wrap.querySelector('.pp-edit').style.display = 'none';
+        }
+        function savePpEdit(btn) {
+            var wrap = btn.closest('.pp-wrap');
+            var pid = wrap.getAttribute('data-pid');
+            var price = wrap.querySelector('.pp-price').value;
+            var gst = wrap.querySelector('.pp-gst').value;
+            var token = document.querySelector('meta[name="csrf-token"]');
+            fetch("{{ url('/admin/product') }}/" + pid + "/update-purchase-price", {
+                method: 'POST',
+                headers: {'Content-Type':'application/json','X-CSRF-TOKEN': token.getAttribute('content'),'Accept':'application/json'},
+                body: JSON.stringify({unit_price: price, gst_percent: gst})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    var disp = wrap.querySelector('.pp-display');
+                    var editBtn = disp.querySelector('button');
+                    var textHtml = '';
+                    if (price) {
+                        textHtml = '<span><i class="fas fa-shopping-cart me-1"></i> Purchase: <strong>&#8377;' + Number(price).toLocaleString('en-IN', {minimumFractionDigits:2}) + '</strong>';
+                        if (gst) textHtml += ' + ' + gst + '% GST';
+                        textHtml += '</span>';
+                    } else {
+                        textHtml = '<span style="color:#94a3b8; font-style:italic;">Purchase price not set</span>';
+                    }
+                    disp.innerHTML = textHtml + editBtn.outerHTML;
+                    // Re-bind onclick since innerHTML replaced
+                    var newBtn = disp.querySelector('button');
+                    newBtn.onclick = function(e){ e.stopPropagation(); togglePpEdit(newBtn); };
+                    cancelPpEdit(btn);
+                } else {
+                    alert(data.message || 'Failed to update');
+                }
+            })
+            .catch(() => alert('Update failed. Check console.'));
         }
     </script>
 @endsection

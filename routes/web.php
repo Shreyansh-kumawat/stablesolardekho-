@@ -181,6 +181,7 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::post('/saveNewProduct', [ProductController::class, 'saveNewProduct'])->name('saveNewProduct');
     Route::post('/updateProduct', [ProductController::class, 'updateProduct'])->name('updateProduct');
     Route::post('/updateProductPrice', [ProductController::class, 'updateProductPrice'])->name('updateProductPrice');
+    Route::post('/product/{id}/update-purchase-price', [ProductController::class, 'updateProductPurchasePrice'])->name('updateProductPurchasePrice');
     Route::post('/products/{id}/toggle-active', [ProductController::class, 'toggleProductActive'])->name('product.toggleActive');
     Route::post('/products/{id}/toggle-featured', [ProductController::class, 'toggleProductFeatured'])->name('product.toggleFeatured');
     Route::get('/products/{id}/images', [ProductController::class, 'getProductImages'])->name('product.images');

@@ -492,6 +492,63 @@ class ProductController extends Controller
         return response()->json(['success' => true, 'is_active' => $product->is_active]);
     }
 
+    /**
+     * Update the LATEST purchase entry for a product from the Products page.
+     * Also propagates change to linked serials + warehouse transactions.
+     */
+    public function updateProductPurchasePrice(Request $request, $id)
+    {
+        abort_unless(auth()->user()->hasAdminPermission('products.edit'), 403);
+        $request->validate([
+            'unit_price' => 'nullable|numeric|min:0',
+            'gst_percent' => 'nullable|numeric|min:0|max:100',
+        ]);
+
+        $latest = \App\Models\ProductInventoryTransaction::where('product_id', $id)
+            ->where('transaction_type', 'IN')
+            ->orderByDesc('created_at')
+            ->first();
+
+        if (!$latest) {
+            return response()->json(['success' => false, 'message' => 'No purchase entry found. Add stock first from Inventory > Add Stock.'], 422);
+        }
+
+        $price = $request->filled('unit_price') ? (float) $request->unit_price : null;
+        $gstPct = $request->filled('gst_percent') ? (float) $request->gst_percent : null;
+        $gstAmt = ($price !== null && $gstPct !== null) ? round($price * $gstPct / 100, 2) : null;
+        $totWithGst = ($price !== null) ? round($price + ($gstAmt ?? 0), 2) : null;
+
+        $latest->unit_price = $price;
+        $latest->gst_percent = $gstPct;
+        $latest->gst_amount = $gstAmt;
+        $latest->total_with_gst = $totWithGst;
+        $latest->save();
+
+        // Propagate to linked serials and warehouse transactions
+        if ($latest->txn_id) {
+            \App\Models\ProductSerial::where('batch_txn_id', $latest->txn_id)->update([
+                'purchase_price' => $price,
+                'gst_percent' => $gstPct,
+            ]);
+            \App\Models\WarehouseInventoryTransaction::where('txn_id', $latest->txn_id)
+                ->where('transaction_type', 'IN')
+                ->update([
+                    'unit_price' => $price,
+                    'gst_percent' => $gstPct,
+                    'gst_amount' => $gstAmt,
+                    'total_with_gst' => $totWithGst,
+                ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'unit_price' => $price,
+            'gst_percent' => $gstPct,
+            'total_with_gst' => $totWithGst,
+            'txn_id' => $latest->txn_id,
+        ]);
+    }
+
     public function toggleProductFeatured(Request $request, $id)
     {
         $product = Product::findOrFail($id);

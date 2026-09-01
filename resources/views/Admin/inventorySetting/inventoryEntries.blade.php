@@ -103,7 +103,7 @@
                     <div class="val">{{ $entry->performer_name ?? '-' }}</div>
                 </div>
                 @if($entry->transaction_type === 'IN')
-                <div class="entry-field price-wrap" data-id="{{ $entry->id }}">
+                <div class="entry-field price-wrap" data-id="{{ $entry->id }}" style="position:relative;">
                     <div class="lbl">Purchase Price
                         <button type="button" onclick="togglePriceEdit(this)" style="background:none;border:none;color:#4A90E2;cursor:pointer;font-size:.72rem;margin-left:6px;">
                             <i class="fas fa-pencil-alt"></i> Edit
@@ -118,16 +118,20 @@
                             <span style="color:#9ca3af;font-style:italic;">Not set</span>
                         @endif
                     </div>
-                    <div class="price-edit-form" style="display:none;">
-                        <div style="display:flex;gap:6px;align-items:center;">
+                    <div class="price-edit-form" style="display:none; position:absolute; top:100%; left:0; z-index:100; background:#fff; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.12); margin-top:4px; min-width:340px;">
+                        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
                             <input type="number" step="0.01" min="0" class="price-input" placeholder="Unit Price"
                                    value="{{ $entry->unit_price }}"
-                                   style="width:100px;padding:4px 8px;border:1.5px solid #4A90E2;border-radius:6px;font-size:.82rem;">
+                                   style="width:100px;padding:5px 8px;border:1.5px solid #4A90E2;border-radius:6px;font-size:.82rem;">
                             <input type="number" step="0.01" min="0" max="100" class="gst-input" placeholder="GST %"
                                    value="{{ $entry->gst_percent }}"
-                                   style="width:70px;padding:4px 8px;border:1.5px solid #4A90E2;border-radius:6px;font-size:.82rem;">
-                            <button type="button" onclick="savePriceEdit(this)" style="background:#059669;color:#fff;border:none;padding:5px 10px;border-radius:5px;font-size:.72rem;font-weight:600;cursor:pointer;">Save</button>
-                            <button type="button" onclick="cancelPriceEdit(this)" style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db;padding:5px 10px;border-radius:5px;font-size:.72rem;font-weight:600;cursor:pointer;">Cancel</button>
+                                   style="width:70px;padding:5px 8px;border:1.5px solid #4A90E2;border-radius:6px;font-size:.82rem;">
+                            <button type="button" onclick="savePriceEdit(this)" style="background:#059669;color:#fff;border:none;padding:6px 12px;border-radius:5px;font-size:.75rem;font-weight:600;cursor:pointer;">
+                                <i class="fas fa-check me-1"></i> Save
+                            </button>
+                            <button type="button" onclick="cancelPriceEdit(this)" style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db;padding:6px 12px;border-radius:5px;font-size:.75rem;font-weight:600;cursor:pointer;">
+                                Cancel
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -176,11 +180,11 @@
                     <span style="font-size:.78rem; font-weight:700; color:#0369a1; text-transform:uppercase; letter-spacing:.05em;">
                         <i class="fas fa-barcode me-1"></i> Serial Numbers ({{ $entry->batch_serials->count() }})
                     </span>
-                    <button type="button" onclick="this.parentElement.nextElementSibling.classList.toggle('collapsed')" style="background:none; border:1px solid #7dd3fc; color:#0369a1; padding:3px 10px; border-radius:5px; font-size:.72rem; font-weight:600; cursor:pointer;">
-                        Toggle
+                    <button type="button" onclick="toggleSerials(this)" style="background:none; border:1px solid #7dd3fc; color:#0369a1; padding:3px 10px; border-radius:5px; font-size:.72rem; font-weight:600; cursor:pointer;">
+                        <i class="fas fa-eye me-1"></i> Show
                     </button>
                 </div>
-                <div class="serial-chip-wrap" style="display:flex; flex-wrap:wrap; gap:5px;">
+                <div class="serial-chip-wrap" style="display:none; flex-wrap:wrap; gap:5px;">
                     @foreach($entry->batch_serials as $sn)
                     <span style="display:inline-flex; align-items:center; gap:4px; background:#fff; border:1px solid #bae6fd; color:#075985; font-family:monospace; font-size:.72rem; padding:3px 8px; border-radius:4px;" title="Status: {{ $sn->status }}">
                         {{ $sn->serial_number }}
@@ -261,6 +265,17 @@ function saveRemark(input) {
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
         body: JSON.stringify({ remarks: val })
     });
+}
+
+function toggleSerials(btn) {
+    var wrap = btn.parentElement.nextElementSibling;
+    if (wrap.style.display === 'none') {
+        wrap.style.display = 'flex';
+        btn.innerHTML = '<i class="fas fa-eye-slash me-1"></i> Hide';
+    } else {
+        wrap.style.display = 'none';
+        btn.innerHTML = '<i class="fas fa-eye me-1"></i> Show';
+    }
 }
 
 function togglePriceEdit(btn) {
