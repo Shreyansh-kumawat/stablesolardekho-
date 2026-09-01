@@ -727,15 +727,47 @@ class InventoryController extends Controller
             ->orderByDesc('product_inventory_transactions.created_at')
             ->get();
 
-        // Attach batch serials (serials created in same txn_id as this entry)
-        $batchTxns = $entries->pluck('txn_id')->filter()->unique()->values()->toArray();
-        $batchSerials = ProductSerial::whereIn('batch_txn_id', $batchTxns)
+        // Attach related serials for each entry (works for BOTH IN and OUT)
+        $txnIds = $entries->pluck('txn_id')->filter()->unique()->values()->toArray();
+
+        // 1) Serials from original purchase batch (matches IN entries)
+        $batchSerials = ProductSerial::whereIn('batch_txn_id', $txnIds)
             ->get()
             ->groupBy(function ($s) { return $s->batch_txn_id . '_' . $s->product_id; });
 
+        // 2) Serial IDs referenced directly by transaction rows (matches OUT / transfer entries)
+        $mainTxnSerialLinks = ProductInventoryTransaction::whereIn('txn_id', $txnIds)
+            ->whereNotNull('serial_id')
+            ->get(['txn_id', 'product_id', 'serial_id']);
+        $whTxnSerialLinks = WarehouseInventoryTransaction::whereIn('txn_id', $txnIds)
+            ->whereNotNull('serial_id')
+            ->get(['txn_id', 'product_id', 'serial_id']);
+
+        $allLinkedSerialIds = $mainTxnSerialLinks->pluck('serial_id')
+            ->merge($whTxnSerialLinks->pluck('serial_id'))
+            ->unique()->filter()->values()->toArray();
+        $linkedSerialsById = !empty($allLinkedSerialIds)
+            ? ProductSerial::whereIn('id', $allLinkedSerialIds)->get()->keyBy('id')
+            : collect();
+
+        // Group serial_ids by (txn_id + product_id)
+        $linkedSerialsGrouped = collect();
+        foreach ($mainTxnSerialLinks->concat($whTxnSerialLinks) as $link) {
+            $key = ($link->txn_id ?? '') . '_' . ($link->product_id ?? '');
+            if (!$linkedSerialsGrouped->has($key)) {
+                $linkedSerialsGrouped->put($key, collect());
+            }
+            $sn = $linkedSerialsById->get($link->serial_id);
+            if ($sn) $linkedSerialsGrouped->get($key)->push($sn);
+        }
+
         foreach ($entries as $entry) {
             $key = ($entry->txn_id ?? '') . '_' . ($entry->product_id ?? '');
-            $entry->batch_serials = $batchSerials->get($key, collect())->values();
+            $batch = $batchSerials->get($key, collect());
+            $linked = $linkedSerialsGrouped->get($key, collect());
+            // Merge + dedupe by serial id
+            $merged = $batch->concat($linked)->unique('id')->values();
+            $entry->batch_serials = $merged;
         }
 
         return view('Admin.inventorySetting.inventoryEntries', compact('entries'));
