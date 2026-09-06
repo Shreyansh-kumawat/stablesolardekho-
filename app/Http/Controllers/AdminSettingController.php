@@ -46,6 +46,63 @@ class AdminSettingController extends Controller
         return response()->json(['success' => true]);
     }
 
+    /**
+     * Move a pinned member up/down within the pinned list.
+     * Swaps sort_order with the adjacent pinned member.
+     */
+    public function movePinTeam(Request $request, $id)
+    {
+        $direction = $request->input('direction'); // 'up' or 'down'
+        if (!in_array($direction, ['up', 'down'], true)) {
+            return response()->json(['success' => false, 'message' => 'Invalid direction'], 422);
+        }
+
+        $member = SolarTeam::findOrFail($id);
+        if (!$member->is_pinned) {
+            return response()->json(['success' => false, 'message' => 'Member is not pinned'], 422);
+        }
+
+        // Ensure sort_order is set for all pinned rows (defensive: assign sequential values if missing)
+        $pinned = SolarTeam::where('is_pinned', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+        foreach ($pinned as $i => $p) {
+            if ($p->sort_order === null || $p->sort_order !== $i) {
+                $p->sort_order = $i;
+                $p->save();
+            }
+        }
+
+        // Reload after normalization
+        $member->refresh();
+        $currentOrder = (int) $member->sort_order;
+
+        if ($direction === 'up') {
+            $swap = SolarTeam::where('is_pinned', true)
+                ->where('sort_order', '<', $currentOrder)
+                ->orderByDesc('sort_order')
+                ->first();
+        } else {
+            $swap = SolarTeam::where('is_pinned', true)
+                ->where('sort_order', '>', $currentOrder)
+                ->orderBy('sort_order')
+                ->first();
+        }
+
+        if (!$swap) {
+            return response()->json(['success' => false, 'message' => 'Already at ' . ($direction === 'up' ? 'top' : 'bottom')], 422);
+        }
+
+        $swapOrder = (int) $swap->sort_order;
+        $member->sort_order = $swapOrder;
+        $swap->sort_order = $currentOrder;
+        $member->save();
+        $swap->save();
+
+        return response()->json(['success' => true]);
+    }
+
     public function storeTeam(Request $request)
     {
         $request->validate([

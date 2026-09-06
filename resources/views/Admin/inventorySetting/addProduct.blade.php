@@ -308,15 +308,22 @@
                 <p class="sec-label">Product Information</p>
                 <div class="row g-3">
                     <div class="col-md-8">
-                        <label class="form-label">Product Name <span class="req">*</span></label>
+                        <label class="form-label">
+                            Product Name <span class="req">*</span>
+                            <small style="color:var(--txt2); font-weight:400;">(select from category list OR type new name)</small>
+                        </label>
                         <div style="position:relative;">
-                            <input type="text" class="form-control" name="product_name" id="npProductName" required placeholder="Select category first, or type new name" maxlength="100" value="{{ old('product_name') }}" autocomplete="off"
-                                   oninput="npProductNameInput()" onfocus="npShowProductSuggestions()">
-                            <div id="npProductSuggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #e5e7eb; border-radius:8px; margin-top:2px; max-height:280px; overflow-y:auto; z-index:100; box-shadow:0 8px 20px rgba(0,0,0,0.08);"></div>
+                            <input type="text" class="form-control" name="product_name" id="npProductName" required placeholder="Select category first, then choose existing or type new name" maxlength="100" value="{{ old('product_name') }}" autocomplete="off"
+                                   oninput="npProductNameInput()" onfocus="npShowProductSuggestions()" onclick="npShowProductSuggestions()">
+                            <div id="npProductSuggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #e5e7eb; border-radius:8px; margin-top:2px; max-height:320px; overflow-y:auto; z-index:100; box-shadow:0 8px 20px rgba(0,0,0,0.12);"></div>
                             <div id="npMatchedProductHint" style="display:none; margin-top:6px; padding:8px 12px; background:#fef3c7; border:1px solid #fde68a; border-radius:6px; font-size:.8rem; color:#78350f;">
                                 <i class="fas fa-info-circle me-1"></i>
                                 <span id="npMatchedProductMsg"></span>
                                 <button type="button" onclick="npSwitchToExisting()" style="margin-left:8px; background:#f97316; color:#fff; border:none; padding:3px 10px; border-radius:5px; font-size:.72rem; font-weight:600; cursor:pointer;">Switch to Existing</button>
+                            </div>
+                            <div id="npNewNameHint" style="display:none; margin-top:6px; padding:6px 10px; background:#ecfdf5; border:1px solid #86efac; border-radius:6px; font-size:.75rem; color:#065f46;">
+                                <i class="fas fa-plus-circle me-1"></i>
+                                <span id="npNewNameMsg">This name doesn't exist — will be created as a new product.</span>
                             </div>
                         </div>
                     </div>
@@ -708,11 +715,25 @@ document.getElementById('categorySelect').addEventListener('change', function() 
     });
     // Load products in this category for smart name suggestions
     npCategoryProducts = [];
+    var input = document.getElementById('npProductName');
     if (this.value) {
+        input.placeholder = 'Loading products...';
         fetch("{{ url('/admin/inventory/products-by-category') }}/" + this.value)
             .then(r => r.json())
-            .then(data => { npCategoryProducts = data || []; })
-            .catch(() => { npCategoryProducts = []; });
+            .then(data => {
+                npCategoryProducts = data || [];
+                input.placeholder = 'Click to choose existing or type new name (' + npCategoryProducts.length + ' existing products)';
+                // Auto-open suggestions once loaded — admin can see available products immediately
+                if (document.activeElement === input) {
+                    npShowProductSuggestions();
+                }
+            })
+            .catch(() => {
+                npCategoryProducts = [];
+                input.placeholder = 'Type product name';
+            });
+    } else {
+        input.placeholder = 'Select category first, then choose existing or type new name';
     }
 });
 
@@ -720,34 +741,69 @@ var npCategoryProducts = [];
 function npShowProductSuggestions() {
     var input = document.getElementById('npProductName');
     var box = document.getElementById('npProductSuggestions');
+    var catId = document.getElementById('categorySelect').value;
     var q = (input.value || '').toLowerCase();
-    if (!npCategoryProducts.length) { box.style.display = 'none'; return; }
+
+    // If category not selected yet — helpful hint in dropdown
+    if (!catId) {
+        box.innerHTML = '<div style="padding:12px; text-align:center; color:#94a3b8; font-size:.85rem;"><i class="fas fa-info-circle me-1"></i> Select a category first to see existing products</div>';
+        box.style.display = 'block';
+        return;
+    }
+
+    if (!npCategoryProducts.length) {
+        box.innerHTML = '<div style="padding:12px; text-align:center; color:#94a3b8; font-size:.85rem;"><i class="fas fa-info-circle me-1"></i> No products yet in this category. Type a name to create the first one.</div>';
+        box.style.display = 'block';
+        return;
+    }
+
     var matches = npCategoryProducts.filter(function(p) {
         return !q || (p.item_name || '').toLowerCase().includes(q) || (p.item_code || '').toLowerCase().includes(q);
     });
-    if (!matches.length) { box.style.display = 'none'; return; }
-    box.innerHTML = matches.slice(0, 20).map(function(p) {
-        return '<div style="padding:8px 12px; cursor:pointer; border-bottom:1px solid #f3f4f6; font-size:.85rem;" onmouseenter="this.style.background=\'#f1f5fb\'" onmouseleave="this.style.background=\'\'" onclick="npPickProduct(' + p.id + ', ' + JSON.stringify(p.item_name).replace(/"/g,'&quot;') + ')">'
-             + '<strong>' + escapeHtmlInline(p.item_name) + '</strong>'
-             + (p.item_code ? '<span style="color:#6b7280; font-size:.75rem; margin-left:6px;">(' + escapeHtmlInline(p.item_code) + ')</span>' : '')
+
+    var html = '<div style="padding:6px 10px; background:#f9fafb; font-size:.7rem; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid #e5e7eb; position:sticky; top:0;">'
+             + 'Existing products in this category (' + matches.length + ')'
              + '</div>';
-    }).join('');
+
+    if (matches.length === 0) {
+        html += '<div style="padding:10px 12px; color:#94a3b8; font-size:.82rem; font-style:italic;">No match — press Enter or click outside to create "<strong>' + escapeHtmlInline(input.value) + '</strong>" as a new product.</div>';
+    } else {
+        html += matches.slice(0, 30).map(function(p) {
+            return '<div style="padding:8px 12px; cursor:pointer; border-bottom:1px solid #f3f4f6; font-size:.85rem;" onmouseenter="this.style.background=\'#f1f5fb\'" onmouseleave="this.style.background=\'\'" onclick="npPickProduct(' + p.id + ', ' + JSON.stringify(p.item_name).replace(/"/g,'&quot;') + ')">'
+                 + '<strong>' + escapeHtmlInline(p.item_name) + '</strong>'
+                 + (p.item_code ? '<span style="color:#6b7280; font-size:.75rem; margin-left:6px;">(' + escapeHtmlInline(p.item_code) + ')</span>' : '')
+                 + '</div>';
+        }).join('');
+    }
+
+    box.innerHTML = html;
     box.style.display = 'block';
 }
+
 function npProductNameInput() {
     npShowProductSuggestions();
-    // Check exact match => hint switch to Existing
     var input = document.getElementById('npProductName');
-    var val = (input.value || '').trim().toLowerCase();
-    var match = npCategoryProducts.find(function(p) { return (p.item_name || '').toLowerCase() === val; });
+    var val = (input.value || '').trim();
+    var lower = val.toLowerCase();
+    var match = npCategoryProducts.find(function(p) { return (p.item_name || '').toLowerCase() === lower; });
     var hint = document.getElementById('npMatchedProductHint');
+    var newHint = document.getElementById('npNewNameHint');
+
     if (match) {
-        document.getElementById('npMatchedProductMsg').textContent = 'A product with this name already exists in this category. Switch to "Existing Product" tab to add stock.';
+        document.getElementById('npMatchedProductMsg').textContent = 'A product with this name already exists in this category. Click "Switch to Existing" to add stock to it, OR change the name to create as new.';
         hint.style.display = '';
         hint.dataset.matchId = match.id;
+        newHint.style.display = 'none';
     } else {
         hint.style.display = 'none';
         hint.dataset.matchId = '';
+        // Only show "new name" hint if there's a value AND category is selected AND products list has been loaded
+        if (val.length > 0 && document.getElementById('categorySelect').value) {
+            document.getElementById('npNewNameMsg').innerHTML = 'This name is new — will create <strong>"' + escapeHtmlInline(val) + '"</strong> as a new product in this category.';
+            newHint.style.display = '';
+        } else {
+            newHint.style.display = 'none';
+        }
     }
 }
 function npPickProduct(id, name) {

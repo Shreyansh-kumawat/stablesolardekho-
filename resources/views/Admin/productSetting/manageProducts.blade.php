@@ -566,15 +566,42 @@
                             {{-- Row 3: Purchase price + Edit --}}
                             @if($product->current_sale_price)
                                 <div class="pp-wrap" data-pid="{{ $product->id }}" style="padding-top:8px; border-top:1px dashed #e5e7eb;">
-                                    <div class="pp-display" style="font-size:0.75rem; color:#0369a1; font-weight:600; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                    <div class="pp-display" style="font-size:0.75rem; color:#0369a1;">
                                         @if(!empty($product->last_purchase_price))
-                                            <span><i class="fas fa-shopping-cart me-1"></i> Purchase: <strong>&#8377;{{ number_format($product->last_purchase_price, 2) }}</strong>@if(!empty($product->last_gst_percent)) + {{ rtrim(rtrim(number_format($product->last_gst_percent, 2), '0'), '.') }}% GST @endif</span>
+                                            @php
+                                                $pp = (float) $product->last_purchase_price;
+                                                $gp = !empty($product->last_gst_percent) ? (float) $product->last_gst_percent : 0;
+                                                $gstAmt = round($pp * $gp / 100, 2);
+                                                $ppTotal = round($pp + $gstAmt, 2);
+                                                $gstPctLabel = rtrim(rtrim(number_format($gp, 2), '0'), '.');
+                                            @endphp
+                                            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                                <span style="font-weight:600;">
+                                                    <i class="fas fa-shopping-cart me-1"></i> Purchase Price
+                                                </span>
+                                                <button type="button" onclick="event.stopPropagation(); togglePpEdit(this)" style="background:#e0f2fe;border:1px solid #7dd3fc;color:#0369a1;padding:1px 6px;border-radius:4px;font-size:.65rem;cursor:pointer;font-weight:600;">
+                                                    <i class="fas fa-pencil-alt"></i> Edit
+                                                </button>
+                                            </div>
+                                            <div style="display:flex; align-items:baseline; gap:6px; margin-top:2px; flex-wrap:wrap;">
+                                                <strong style="font-size:.95rem; color:#075985;">&#8377;{{ number_format($pp, 2) }}</strong>
+                                                @if($gp > 0)
+                                                    <span style="color:#64748b; font-weight:500;">+ GST {{ $gstPctLabel }}% (&#8377;{{ number_format($gstAmt, 2) }})</span>
+                                                @endif
+                                            </div>
+                                            @if($gp > 0)
+                                                <div style="margin-top:2px; font-size:.72rem; color:#059669; font-weight:700;">
+                                                    Total (incl. GST): &#8377;{{ number_format($ppTotal, 2) }}
+                                                </div>
+                                            @endif
                                         @else
-                                            <span style="color:#94a3b8; font-style:italic;">Purchase price not set</span>
+                                            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                                <span style="color:#94a3b8; font-style:italic; font-weight:500;">Purchase price not set</span>
+                                                <button type="button" onclick="event.stopPropagation(); togglePpEdit(this)" style="background:#e0f2fe;border:1px solid #7dd3fc;color:#0369a1;padding:1px 6px;border-radius:4px;font-size:.65rem;cursor:pointer;font-weight:600;">
+                                                    <i class="fas fa-pencil-alt"></i> Edit
+                                                </button>
+                                            </div>
                                         @endif
-                                        <button type="button" onclick="event.stopPropagation(); togglePpEdit(this)" style="background:#e0f2fe;border:1px solid #7dd3fc;color:#0369a1;padding:1px 6px;border-radius:4px;font-size:.65rem;cursor:pointer;font-weight:600;">
-                                            <i class="fas fa-pencil-alt"></i> Edit
-                                        </button>
                                     </div>
                                     <div class="pp-edit" style="display:none; margin-top:4px;">
                                         <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
@@ -1707,19 +1734,33 @@
             .then(data => {
                 if (data.success) {
                     var disp = wrap.querySelector('.pp-display');
-                    var editBtn = disp.querySelector('button');
-                    var textHtml = '';
+                    var editBtnHtml = '<button type="button" onclick="event.stopPropagation(); togglePpEdit(this)" style="background:#e0f2fe;border:1px solid #7dd3fc;color:#0369a1;padding:1px 6px;border-radius:4px;font-size:.65rem;cursor:pointer;font-weight:600;"><i class="fas fa-pencil-alt"></i> Edit</button>';
+                    var newHtml = '';
                     if (price) {
-                        textHtml = '<span><i class="fas fa-shopping-cart me-1"></i> Purchase: <strong>&#8377;' + Number(price).toLocaleString('en-IN', {minimumFractionDigits:2}) + '</strong>';
-                        if (gst) textHtml += ' + ' + gst + '% GST';
-                        textHtml += '</span>';
+                        var pp = parseFloat(price) || 0;
+                        var gp = parseFloat(gst) || 0;
+                        var gstAmt = +(pp * gp / 100).toFixed(2);
+                        var ppTotal = +(pp + gstAmt).toFixed(2);
+                        var gstLbl = gp % 1 === 0 ? gp.toString() : gp.toFixed(2).replace(/\.?0+$/, '');
+
+                        newHtml =
+                            '<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">'
+                          + '  <span style="font-weight:600;"><i class="fas fa-shopping-cart me-1"></i> Purchase Price</span>'
+                          + '  ' + editBtnHtml
+                          + '</div>'
+                          + '<div style="display:flex; align-items:baseline; gap:6px; margin-top:2px; flex-wrap:wrap;">'
+                          + '  <strong style="font-size:.95rem; color:#075985;">₹' + pp.toLocaleString('en-IN', {minimumFractionDigits:2}) + '</strong>'
+                          + (gp > 0 ? '  <span style="color:#64748b; font-weight:500;">+ GST ' + gstLbl + '% (₹' + gstAmt.toLocaleString('en-IN', {minimumFractionDigits:2}) + ')</span>' : '')
+                          + '</div>'
+                          + (gp > 0 ? '<div style="margin-top:2px; font-size:.72rem; color:#059669; font-weight:700;">Total (incl. GST): ₹' + ppTotal.toLocaleString('en-IN', {minimumFractionDigits:2}) + '</div>' : '');
                     } else {
-                        textHtml = '<span style="color:#94a3b8; font-style:italic;">Purchase price not set</span>';
+                        newHtml =
+                            '<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">'
+                          + '  <span style="color:#94a3b8; font-style:italic; font-weight:500;">Purchase price not set</span>'
+                          + '  ' + editBtnHtml
+                          + '</div>';
                     }
-                    disp.innerHTML = textHtml + editBtn.outerHTML;
-                    // Re-bind onclick since innerHTML replaced
-                    var newBtn = disp.querySelector('button');
-                    newBtn.onclick = function(e){ e.stopPropagation(); togglePpEdit(newBtn); };
+                    disp.innerHTML = newHtml;
                     cancelPpEdit(btn);
                 } else {
                     alert(data.message || 'Failed to update');

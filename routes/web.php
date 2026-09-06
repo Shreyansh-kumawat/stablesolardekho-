@@ -276,6 +276,7 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::post('/update-team', [AdminSettingController::class, 'updateTeam'])->name('updateTeam');
     Route::delete('/delete-team/{id}', [AdminSettingController::class, 'deleteTeamMember'])->name('deleteTeamMember');
     Route::post('/team/{id}/toggle-pin', [AdminSettingController::class, 'togglePinTeam'])->name('togglePinTeam');
+    Route::post('/team/{id}/move', [AdminSettingController::class, 'movePinTeam'])->name('movePinTeam');
     Route::post('/team/reorder', [AdminSettingController::class, 'reorderTeam'])->name('reorderTeam');
     Route::get('/new-installations-story', [AdminSettingController::class, 'newInstallationStory'])->name('newInstallationStory');
     Route::post('/store-story', [AdminSettingController::class, 'storeStory'])->name('storeStory');

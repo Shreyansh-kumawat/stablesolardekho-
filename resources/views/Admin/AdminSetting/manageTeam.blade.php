@@ -406,6 +406,22 @@
 
                                 <td>
                                     <div class="d-flex gap-2 align-items-center">
+                                        @if($teamMember->is_pinned)
+                                            <div class="btn-group-vertical" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                                        style="line-height:1;font-size:.7rem;"
+                                                        onclick="moveMember({{ $teamMember->id }}, 'up')"
+                                                        title="Move up in pinned list">
+                                                    <i class="fas fa-chevron-up"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                                        style="line-height:1;font-size:.7rem;"
+                                                        onclick="moveMember({{ $teamMember->id }}, 'down')"
+                                                        title="Move down in pinned list">
+                                                    <i class="fas fa-chevron-down"></i>
+                                                </button>
+                                            </div>
+                                        @endif
                                         <button type="button" class="btn btn-sm {{ $teamMember->is_pinned ? 'btn-warning' : 'btn-outline-warning' }}"
                                                 onclick="togglePinMember({{ $teamMember->id }}, this)"
                                                 title="{{ $teamMember->is_pinned ? 'Unpin from top' : 'Pin to top' }}">
@@ -845,6 +861,25 @@
             .then(r => r.json())
             .then(data => { if (data.success) location.reload(); })
             .catch(() => alert('Failed to update pin state.'));
+        }
+
+        function moveMember(id, direction) {
+            var token = document.querySelector('meta[name="csrf-token"]');
+            fetch("{{ url('/admin/team') }}/" + id + "/move", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token ? token.getAttribute('content') : '',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ direction: direction })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) location.reload();
+                else alert(data.message || 'Failed to move.');
+            })
+            .catch(() => alert('Failed to reorder.'));
         }
     </script>
 @endsection
