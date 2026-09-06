@@ -36,7 +36,7 @@
             <div class="ref-grid">
                 {{-- Left: Image + Trust Points --}}
                 <div>
-                    <img src="{{ asset('stable/images/grand-combo-offer.jpg') }}" alt="Grand Combo Offer - Goa & Thailand Trip" style="width:100%;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.12);margin-bottom:24px;">
+                    <img src="{{ asset('stable/images/grand-combo-offer.jpg') }}?v=1" alt="Grand Combo Offer - Goa & Thailand Trip" style="width:100%;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.12);margin-bottom:24px;">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
                         @foreach([
                             ['icon'=>'M12 21c-4.97 0-9-4.03-9-9 0-3.87 2.44-7.16 5.86-8.42C10.11 4.5 12 6 12 6s1.89-1.5 3.14-2.42C18.56 4.84 21 8.13 21 12c0 4.97-4.03 9-9 9z','title'=>'Goa Trip FREE','desc'=>'On billing of Rs 30 Lakh (GST included) - 4 Days / 3 Nights'],
