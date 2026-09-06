@@ -27,7 +27,11 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'mobile_number' => ['nullable', 'string', 'max:20', 'unique:' . User::class . ',mobile_number'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'mobile_number.unique' => 'This mobile number is already registered. Please use a different number or log in.',
+            'email.unique' => 'This email is already registered. Please use a different email or log in.',
         ]);
 
         $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -87,14 +91,32 @@ class RegisteredUserController extends Controller
             return back()->with('error', 'OTP expired. Please register again.');
         }
 
-        $user = User::create([
-            'name' => $regData['name'],
-            'email' => $regData['email'],
-            'password' => Hash::make($regData['password']),
-            'mobile_number' => $regData['mobile_number'] ?? null,
-            'role_id' => 3,
-            'email_verified_at' => now(),
-        ]);
+        // Defense-in-depth: someone may have registered with the same email/mobile
+        // during the OTP window, so re-check before insert to avoid a 500.
+        if (User::where('email', $regData['email'])->exists()) {
+            $otpRecord->delete();
+            session()->forget('reg_data');
+            return redirect()->route('register')->with('error', 'This email is already registered. Please log in instead.');
+        }
+        if (!empty($regData['mobile_number']) && User::where('mobile_number', $regData['mobile_number'])->exists()) {
+            $otpRecord->delete();
+            session()->forget('reg_data');
+            return redirect()->route('register')->with('error', 'This mobile number is already registered. Please use a different number or log in.');
+        }
+
+        try {
+            $user = User::create([
+                'name' => $regData['name'],
+                'email' => $regData['email'],
+                'password' => Hash::make($regData['password']),
+                'mobile_number' => $regData['mobile_number'] ?? null,
+                'role_id' => 3,
+                'email_verified_at' => now(),
+            ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Registration failed: ' . $e->getMessage());
+            return redirect()->route('register')->with('error', 'Registration failed due to a conflict. Please try again with different details.');
+        }
 
         $otpRecord->delete();
         session()->forget('reg_data');
