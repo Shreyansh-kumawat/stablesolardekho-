@@ -15,6 +15,7 @@ class LeadController extends Controller
             'bill' => 'required|string|max:50',
             'pin' => 'required|string|max:10',
             'city' => 'nullable|string|max:100',
+            'combo_interest' => 'nullable|string|max:100',
             'selfie_image' => 'nullable|image|max:5120',
         ]);
 
@@ -22,6 +23,10 @@ class LeadController extends Controller
         if ($request->hasFile('selfie_image')) {
             $imagePath = $request->file('selfie_image')->store('lead-selfies', 'public');
         }
+
+        $remarks = $request->filled('combo_interest')
+            ? 'Interested Package: ' . $request->combo_interest
+            : null;
 
         SolarLead::create([
             'lead_id' => 'LEAD' . time() . rand(100, 999),
@@ -33,6 +38,7 @@ class LeadController extends Controller
             'city' => $request->city,
             'selfie_image' => $imagePath,
             'lead_status' => 0,
+            'remarks' => $remarks,
         ]);
 
         return redirect()->back()->with('success', 'Your quote request has been submitted successfully.');

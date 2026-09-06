@@ -126,7 +126,7 @@
                                       onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='#e2e8f0'">{{ old('address') }}</textarea>
                         </div>
 
-                        <div style="margin-bottom:18px;">
+                        <div style="margin-bottom:14px;">
                             <label style="display:block;color:#374151;font-size:0.75rem;font-weight:600;margin-bottom:5px;">Interested System Size</label>
                             <select name="system_size"
                                     style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.88rem;color:#1e293b;background:#fff;box-sizing:border-box;outline:none;transition:border-color .15s;"
@@ -139,6 +139,28 @@
                                 <option value="8kW" {{ old('system_size')=='8kW'?'selected':'' }}>8 kW</option>
                                 <option value="10kW" {{ old('system_size')=='10kW'?'selected':'' }}>10 kW</option>
                                 <option value="10kW+" {{ old('system_size')=='10kW+'?'selected':'' }}>10 kW+</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom:18px;">
+                            <label style="display:block;color:#374151;font-size:0.75rem;font-weight:600;margin-bottom:5px;">Interested Package <span style="color:#94a3b8;font-weight:400;">(optional)</span></label>
+                            <select name="combo_interest"
+                                    style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.88rem;color:#1e293b;background:#fff;box-sizing:border-box;outline:none;transition:border-color .15s;"
+                                    onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='#e2e8f0'">
+                                <option value="">Select a combo / part</option>
+                                <optgroup label="🇮🇳 Goa Combo (Rs 30 Lakh)">
+                                    <option value="Goa - Part 1" {{ old('combo_interest')=='Goa - Part 1'?'selected':'' }}>Goa - Part 1</option>
+                                    <option value="Goa - Part 2" {{ old('combo_interest')=='Goa - Part 2'?'selected':'' }}>Goa - Part 2</option>
+                                    <option value="Goa - Part 3" {{ old('combo_interest')=='Goa - Part 3'?'selected':'' }}>Goa - Part 3</option>
+                                    <option value="Goa - Full Combo" {{ old('combo_interest')=='Goa - Full Combo'?'selected':'' }}>Goa - Full Combo (Part 1+2+3)</option>
+                                </optgroup>
+                                <optgroup label="🇹🇭 Thailand-Pattaya Combo (Rs 70 Lakh)">
+                                    <option value="Thailand - Part 1" {{ old('combo_interest')=='Thailand - Part 1'?'selected':'' }}>Thailand-Pattaya - Part 1</option>
+                                    <option value="Thailand - Part 2" {{ old('combo_interest')=='Thailand - Part 2'?'selected':'' }}>Thailand-Pattaya - Part 2</option>
+                                    <option value="Thailand - Part 3" {{ old('combo_interest')=='Thailand - Part 3'?'selected':'' }}>Thailand-Pattaya - Part 3</option>
+                                    <option value="Thailand - Full Combo" {{ old('combo_interest')=='Thailand - Full Combo'?'selected':'' }}>Thailand-Pattaya - Full Combo (Part 1+2+3)</option>
+                                </optgroup>
+                                <option value="Not Sure Yet" {{ old('combo_interest')=='Not Sure Yet'?'selected':'' }}>Not sure yet - Please advise</option>
                             </select>
                         </div>
 
