@@ -20,9 +20,9 @@
                 <svg width="16" height="16" fill="none" stroke="#f97316" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"/></svg>
                 <span style="color:#f97316;font-size:.82rem;font-weight:600;">Referred by {{ $referrer->name }}</span>
             </div>
-            <p style="color:#f97316;font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 8px;">Book a Free Solar Consultation</p>
-            <h1 style="color:#1e293b;font-size:2rem;font-weight:900;margin:0 0 10px;line-height:1.2;">Get your free solar quote today</h1>
-            <p style="color:#64748b;font-size:0.92rem;margin:0 auto 36px;max-width:520px;">Share a few details and our solar expert will call you back with a customised solution and savings estimate.</p>
+            <p style="color:#f97316;font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 8px;">Grand Combo Offer &middot; Total 6 Parts</p>
+            <h1 style="color:#1e293b;font-size:2rem;font-weight:900;margin:0 0 10px;line-height:1.2;">Sales Bhi &middot; Seva Bhi &middot; Safar Bhi</h1>
+            <p style="color:#64748b;font-size:0.92rem;margin:0 auto 36px;max-width:640px;">Complete your billing target and win a FREE Goa or Thailand-Pattaya trip. Offer valid 7 September - 30 September 2026. Register below to join.</p>
         </div>
 
         {{-- Main grid --}}
@@ -36,13 +36,13 @@
             <div class="ref-grid">
                 {{-- Left: Image + Trust Points --}}
                 <div>
-                    <img src="{{ asset('stable/images/offer.jpeg') }}" alt="Solar Consultation Offer" style="width:100%;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.12);margin-bottom:24px;">
+                    <img src="{{ asset('stable/images/grand-combo-offer.jpg') }}" alt="Grand Combo Offer - Goa & Thailand Trip" style="width:100%;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.12);margin-bottom:24px;">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
                         @foreach([
-                            ['icon'=>'M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z','title'=>'Guaranteed Savings','desc'=>'Save up to 90% on electricity bills with solar energy'],
-                            ['icon'=>'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z','title'=>'Subsidy Assistance','desc'=>'Complete help with government subsidy applications'],
-                            ['icon'=>'M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z','title'=>'No Hidden Charges','desc'=>'Transparent pricing with no surprise costs'],
-                            ['icon'=>'M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z','title'=>'Certified Team','desc'=>'Installation by trained & certified professionals']
+                            ['icon'=>'M12 21c-4.97 0-9-4.03-9-9 0-3.87 2.44-7.16 5.86-8.42C10.11 4.5 12 6 12 6s1.89-1.5 3.14-2.42C18.56 4.84 21 8.13 21 12c0 4.97-4.03 9-9 9z','title'=>'Goa Trip FREE','desc'=>'On billing of Rs 30 Lakh (GST included) - 4 Days / 3 Nights'],
+                            ['icon'=>'M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z','title'=>'Thailand-Pattaya FREE','desc'=>'On billing of Rs 70 Lakh (GST included) - 3 Nights / 4 Days'],
+                            ['icon'=>'M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z','title'=>'1% Extra Discount','desc'=>'Buy the full combo material together and save even more'],
+                            ['icon'=>'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5','title'=>'Offer Period','desc'=>'Valid from 7 September to 30 September 2026 only']
                         ] as $tp)
                         <div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0;">
                             <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#fff7ed,#fed7aa);display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
@@ -53,12 +53,15 @@
                         </div>
                         @endforeach
                     </div>
+                    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:12px 14px;font-size:.78rem;color:#92400e;line-height:1.5;margin-bottom:24px;">
+                        <strong>Note:</strong> Both trips cannot be availed together. Whoever completes the target will get one trip only. GST included &middot; Material in 3 parts allowed &middot; Transport extra.
+                    </div>
                 </div>
 
                 {{-- Right: Form --}}
                 <div style="background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:28px;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
-                    <h3 style="font-size:1.1rem;font-weight:800;color:#1e293b;margin:0 0 4px;">Book a FREE Solar Consultation</h3>
-                    <p style="font-size:0.78rem;color:#64748b;margin:0 0 20px;">And save up to &#8377;78,000 with subsidy</p>
+                    <h3 style="font-size:1.1rem;font-weight:800;color:#1e293b;margin:0 0 4px;">Register for Grand Combo Offer</h3>
+                    <p style="font-size:0.78rem;color:#64748b;margin:0 0 20px;">Get a FREE Goa or Thailand-Pattaya trip on your solar order</p>
 
                     <form action="{{ route('referral.submit', $referralCode->code) }}" method="POST" enctype="multipart/form-data">
                         @csrf

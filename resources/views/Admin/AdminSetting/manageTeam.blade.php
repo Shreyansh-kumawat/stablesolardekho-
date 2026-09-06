@@ -383,7 +383,16 @@
                                     @endif
                                     {{ $key + 1 }}
                                 </td>
-                                <td><span class="fw-bold">{{ $teamMember->name ?? 'N/A' }}</span></td>
+                                <td>
+                                    <span class="fw-bold">{{ $teamMember->name ?? 'N/A' }}</span>
+                                    @if(!empty($teamMember->position))
+                                        <div style="margin-top:3px;">
+                                            <span style="display:inline-block; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:2px 8px; border-radius:10px; font-size:.7rem; font-weight:600; letter-spacing:.02em;">
+                                                <i class="fas fa-briefcase me-1" style="font-size:.65rem;"></i>{{ $teamMember->position }}
+                                            </span>
+                                        </div>
+                                    @endif
+                                </td>
                                 <td><small class="text-muted-custom">{{ $teamMember->mobile_number ?? 'N/A' }}</small></td>
                                 <td><small class="text-muted-custom">{{ $teamMember->address ?? 'N/A' }}</small></td>
                                 <td><small class="text-muted-custom">{{ $teamMember->district ?? 'N/A' }}</small></td>
