@@ -6,6 +6,8 @@ use App\Models\CpOrder;
 use App\Models\CustomerOrder;
 use App\Models\CustomerOrderItem;
 use App\Models\Product;
+use App\Models\ProductInventory;
+use App\Models\WarehouseInventory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -80,9 +82,13 @@ class CheckoutController extends Controller
         }
 
         foreach ($items as $item) {
-            $stock = $item['product']->quantity ?? 0;
-            if ($stock < $item['quantity']) {
-                return back()->with('error', $item['product']->item_name . ' has only ' . $stock . ' in stock. Please reduce quantity or remove it.');
+            $pid = $item['product']->id;
+            $mainStock = (int) (ProductInventory::where('product_id', $pid)->value('available_qty') ?? 0);
+            $warehouseStock = (int) WarehouseInventory::where('product_id', $pid)->sum('available_qty');
+            $totalStock = $mainStock + $warehouseStock;
+
+            if ($totalStock < $item['quantity']) {
+                return back()->with('error', $item['product']->item_name . ' has only ' . $totalStock . ' in stock (Main: ' . $mainStock . ', Warehouses: ' . $warehouseStock . '). Please reduce quantity or remove it.');
             }
         }
 
