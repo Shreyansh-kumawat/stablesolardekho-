@@ -238,7 +238,6 @@ class ReferralController extends Controller
             'state' => 'nullable|string|max:100',
             'pin_code' => 'nullable|string|max:10',
             'system_size' => 'nullable|string|max:50',
-            'monthly_bill' => 'nullable|string|max:50',
             'combo_interest' => 'nullable|string|max:100',
             'selfie_image' => 'nullable|image|max:5120',
         ]);
@@ -248,11 +247,6 @@ class ReferralController extends Controller
         } else {
             unset($validated['selfie_image']);
         }
-
-        if (!empty($validated['combo_interest'])) {
-            $validated['admin_remarks'] = 'Interested Package: ' . $validated['combo_interest'];
-        }
-        unset($validated['combo_interest']);
 
         $validated['referrer_id'] = $referralCode->user_id;
 

@@ -191,7 +191,7 @@
             <div class="sec-card">
                 <p class="sec-label">Update Stock</p>
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-4" id="epQtyBlock">
                         <label class="form-label">Current Quantity <small style="color:var(--txt2); font-weight:500;">(Main Inventory only)</small></label>
                         <input type="hidden" id="epQuantity" name="quantity" value="0">
                         <div style="padding:10px 14px; background:var(--light); border:1px solid var(--bdr); border-radius:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--txt);" id="epQtyDisplay">0</div>
@@ -201,6 +201,21 @@
                             <button type="button" class="qty-adj-btn qty-plus" onclick="adjustQty(1)">+</button>
                         </div>
                         <div id="epQtyHint" style="display:none; margin-top:6px; font-size:.78rem; font-weight:600; padding:4px 8px; border-radius:6px;"></div>
+                    </div>
+                    <div class="col-md-8" id="epSerialBlock" style="display:none;">
+                        <label class="form-label">Serial Numbers <span class="req">*</span>
+                            <small style="color:#0369a1; font-weight:500;"> — This product requires serial numbers. Enter one per line.</small>
+                        </label>
+                        <textarea class="form-control" id="epSerialsText" name="serial_numbers" rows="6" placeholder="Paste or type serial numbers here (one per line, or separated by commas/spaces)" oninput="onSerialsTextChange('ep')"></textarea>
+                        <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
+                            <span id="epSerialSummary" style="font-size:.82rem; font-weight:600; color:#6b7280;">0 serial(s) detected</span>
+                            <button type="button" onclick="beautifySerialsText('ep')" style="background:#f3f4f6; border:1px solid #d1d5db; border-radius:6px; padding:3px 10px; font-size:.78rem; cursor:pointer; font-weight:600;">Clean Up</button>
+                            <label style="cursor:pointer; padding:3px 10px; background:#eef3ff; border:1px solid #bfdbfe; border-radius:6px; font-size:.78rem; font-weight:600; color:#2563eb;">
+                                Upload Excel
+                                <input type="file" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleSerialExcelUpload('ep', this)">
+                            </label>
+                        </div>
+                        <div id="epSerialFeedback" style="margin-top:6px; font-size:.8rem;"></div>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Supplier Name</label>
@@ -684,7 +699,15 @@ function onProductSelect() {
                     }
                 }).catch(function(){});
 
-            // Serial section removed from Existing tab — use Bulk Serial Upload tab for serial-tracked products
+            var isSerial = p.is_serialNumber_required == 1;
+            epIsSerialRequired = isSerial;
+            document.getElementById('epQtyBlock').style.display = isSerial ? 'none' : '';
+            document.getElementById('epSerialBlock').style.display = isSerial ? '' : 'none';
+            if (isSerial) {
+                document.getElementById('epSerialsText').value = '';
+                document.getElementById('epSerialSummary').textContent = '0 serial(s) detected';
+                document.getElementById('epSerialFeedback').innerHTML = '';
+            }
         })
         .catch(() => {
             document.getElementById('existingProductLoading').style.display = 'none';
@@ -852,6 +875,18 @@ document.getElementById('galleryInput').addEventListener('change', function() {
 });
 
 var epOriginalQty = 0;
+var epIsSerialRequired = false;
+
+document.getElementById('existingStockForm').addEventListener('submit', function(e) {
+    if (epIsSerialRequired) {
+        var serials = parseSerialsFromText(document.getElementById('epSerialsText').value);
+        if (serials.length === 0) {
+            e.preventDefault();
+            alert('This product requires serial numbers. Please enter at least one serial number.');
+            return false;
+        }
+    }
+});
 function adjustQty(dir) {
     var adj = parseInt(document.getElementById('epAdjustQty').value) || 0;
     if (adj <= 0) return;
@@ -1018,6 +1053,11 @@ function onSerialsTextChange(prefix) {
     summaryEl.textContent = serials.length + ' serial(s) detected';
     summaryEl.style.color = serials.length > 0 ? '#059669' : '#6b7280';
 
+    if (prefix === 'ep') {
+        var newQty = epOriginalQty + serials.length;
+        document.getElementById('epQuantity').value = newQty;
+    }
+
     var msgs = [];
     if (localDupes.length) {
         msgs.push('<span style="color:#dc2626;font-weight:600;">Duplicates in your input: ' + localDupes.slice(0,5).join(', ') + (localDupes.length > 5 ? ' +' + (localDupes.length-5) + ' more' : '') + '</span>');
@@ -1035,18 +1075,148 @@ function checkSerialsAgainstDb(prefix, serials) {
     var feedbackEl = document.getElementById(prefix + 'SerialFeedback');
     var token = document.querySelector('meta[name="csrf-token"]');
     var csrf = token ? token.getAttribute('content') : '';
+
+    var forProductId = null;
+    if (prefix === 'ep') {
+        forProductId = document.getElementById('productSelector').value || null;
+    }
+
+    var payload = {serials: serials};
+    if (forProductId) payload.for_product_id = forProductId;
+
     fetch("{{ route('inventorySerialsCheckDuplicates') }}", {
         method: 'POST',
         headers: {'Content-Type':'application/json','X-CSRF-TOKEN':csrf,'Accept':'application/json'},
-        body: JSON.stringify({serials: serials})
+        body: JSON.stringify(payload)
     })
     .then(function(r){ return r.json(); })
     .then(function(data){
-        if (data.duplicates && data.duplicates.length) {
-            var current = feedbackEl.innerHTML;
+        var current = feedbackEl.innerHTML;
+        var msgs = [];
+
+        if (data.same_product && data.same_product.length) {
+            var snList = data.same_product.map(function(d){ return d.serial; });
+            msgs.push('<div style="background:#fef3c7;border:1px solid #fde68a;color:#92400e;padding:10px 12px;border-radius:6px;margin-top:6px;">'
+                + '<strong>Same product duplicate' + (snList.length > 1 ? 's' : '') + ' (' + snList.length + '):</strong> These serial numbers already exist on this product.<br>'
+                + '<span style="font-family:monospace;font-size:.78rem;">' + snList.slice(0,8).join(', ') + (snList.length > 8 ? ' +' + (snList.length-8) + ' more' : '') + '</span>'
+                + '<div style="margin-top:8px;">'
+                + '<button type="button" onclick="autoSuffixDuplicates(\'' + prefix + '\')" style="background:#f59e0b;color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:.78rem;font-weight:600;cursor:pointer;">Auto-rename with (2), (3)...</button>'
+                + ' <small style="color:#78350f;">or manually fix them above</small>'
+                + '</div></div>');
+        }
+
+        if (data.cross_product && data.cross_product.length) {
+            var grouped = {};
+            data.cross_product.forEach(function(d) {
+                var key = d.product_name + (d.product_code ? ' (' + d.product_code + ')' : '');
+                if (!grouped[key]) grouped[key] = [];
+                grouped[key].push(d.serial);
+            });
+            var cpHtml = '<div style="background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:10px 12px;border-radius:6px;margin-top:6px;">'
+                + '<strong>Cross-product conflict' + (data.cross_product.length > 1 ? 's' : '') + ' (' + data.cross_product.length + '):</strong> These serials already belong to a different product!';
+            Object.keys(grouped).forEach(function(prodName) {
+                cpHtml += '<div style="margin-top:6px;padding:6px 8px;background:#fff5f5;border-radius:4px;">'
+                    + '<strong>' + prodName + ':</strong> '
+                    + '<span style="font-family:monospace;font-size:.78rem;">' + grouped[prodName].slice(0,5).join(', ') + (grouped[prodName].length > 5 ? ' +' + (grouped[prodName].length-5) + ' more' : '') + '</span>'
+                    + '</div>';
+            });
+            cpHtml += '</div>';
+            msgs.push(cpHtml);
+        }
+
+        if (msgs.length) {
+            feedbackEl.innerHTML = current ? current + msgs.join('') : msgs.join('');
+        } else if (data.duplicates && data.duplicates.length) {
             var dbDupeMsg = '<span style="color:#dc2626;font-weight:600;">Already in database: ' + data.duplicates.slice(0,5).join(', ') + (data.duplicates.length > 5 ? ' +' + (data.duplicates.length-5) + ' more' : '') + '</span>';
             feedbackEl.innerHTML = current ? current + '<br>' + dbDupeMsg : dbDupeMsg;
         }
+    })
+    .catch(function(){});
+}
+
+function autoSuffixDuplicates(prefix) {
+    var textEl = document.getElementById(prefix + 'SerialsText');
+    if (!textEl) return;
+    var lines = textEl.value.split(/[\n]/);
+    var seen = {};
+
+    fetch("{{ route('inventorySerialsCheckDuplicates') }}", {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),'Accept':'application/json'},
+        body: JSON.stringify({serials: parseSerialsFromText(textEl.value)})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+        var dbSerials = {};
+        (data.duplicates || []).forEach(function(s){ dbSerials[s.toUpperCase()] = true; });
+
+        var serials = parseSerialsFromText(textEl.value);
+        var result = [];
+        var localSeen = {};
+        serials.forEach(function(sn) {
+            var key = sn.toUpperCase();
+            if (dbSerials[key] || localSeen[key]) {
+                var suffix = 2;
+                var newSn = sn + '(' + suffix + ')';
+                while (dbSerials[newSn.toUpperCase()] || localSeen[newSn.toUpperCase()]) {
+                    suffix++;
+                    newSn = sn + '(' + suffix + ')';
+                }
+                result.push(newSn);
+                localSeen[newSn.toUpperCase()] = true;
+            } else {
+                result.push(sn);
+                localSeen[key] = true;
+            }
+        });
+
+        textEl.value = result.join('\n');
+        onSerialsTextChange(prefix);
+    })
+    .catch(function(){});
+}
+
+function autoSuffixBulkDuplicates(idx) {
+    var c = bulkCards.find(function(x){ return x.idx === idx; });
+    if (!c) return;
+    var textEl = document.getElementById('bulkSerText_' + idx);
+    if (!textEl) return;
+
+    var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    fetch("{{ route('inventorySerialsCheckDuplicates') }}", {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRF-TOKEN': token,'Accept':'application/json'},
+        body: JSON.stringify({serials: c.serials})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+        var dbSerials = {};
+        (data.duplicates || []).forEach(function(s){ dbSerials[s.toUpperCase()] = true; });
+
+        var serials = parseSerialsFromText(textEl.value);
+        var result = [];
+        var localSeen = {};
+        serials.forEach(function(sn) {
+            var key = sn.toUpperCase();
+            if (dbSerials[key] || localSeen[key]) {
+                var suffix = 2;
+                var newSn = sn + '(' + suffix + ')';
+                while (dbSerials[newSn.toUpperCase()] || localSeen[newSn.toUpperCase()]) {
+                    suffix++;
+                    newSn = sn + '(' + suffix + ')';
+                }
+                result.push(newSn);
+                localSeen[newSn.toUpperCase()] = true;
+            } else {
+                result.push(sn);
+                localSeen[key] = true;
+            }
+        });
+
+        c.serials = result;
+        textEl.value = result.join('\n');
+        renderBulkCardStats(idx);
+        checkBulkSerialsDb(idx);
     })
     .catch(function(){});
 }
@@ -1166,6 +1336,9 @@ function addBulkCard(data) {
         skipped_text: data.skipped_text || '',
         warnings: data.warnings || [],
         db_duplicates: data.db_duplicates || [],
+        db_dup_details: [],
+        db_same_product: [],
+        db_cross_product: [],
         suggested_product: data.suggested_product || null,
         product_id: data.suggested_product ? data.suggested_product.id : null,
         category_id: data.suggested_product ? data.suggested_product.category_id : '',
@@ -1260,18 +1433,27 @@ function checkBulkSerialsDb(idx) {
     if (!c) return;
     if (!c.serials.length) {
         c.db_duplicates = [];
+        c.db_dup_details = [];
+        c.db_same_product = [];
+        c.db_cross_product = [];
         updateBulkDupWarning(idx);
         return;
     }
     var token = document.querySelector('meta[name="csrf-token"]');
+    var payload = {serials: c.serials};
+    if (c.product_id) payload.for_product_id = c.product_id;
+
     fetch("{{ route('inventorySerialsCheckDuplicates') }}", {
         method: 'POST',
         headers: {'Content-Type':'application/json', 'X-CSRF-TOKEN': token.getAttribute('content'), 'Accept':'application/json'},
-        body: JSON.stringify({serials: c.serials})
+        body: JSON.stringify(payload)
     })
     .then(r => r.json())
     .then(data => {
         c.db_duplicates = data.duplicates || [];
+        c.db_dup_details = data.details || [];
+        c.db_same_product = data.same_product || [];
+        c.db_cross_product = data.cross_product || [];
         updateBulkDupWarning(idx);
     })
     .catch(() => {});
@@ -1307,13 +1489,14 @@ function updateBulkDupWarning(idx) {
     });
 
     var dbDupes = c.db_duplicates || [];
+    var sameProductDupes = c.db_same_product || [];
+    var crossProductDupes = c.db_cross_product || [];
     var allSkipCount = dbDupes.length + crossCardDupes.length + inCardDupes.length;
     var effectiveSave = Math.max(0, c.serials.length - dbDupes.length - crossCardDupes.length);
 
     if (allSkipCount === 0) {
         dupBox.innerHTML = '';
         dupBox.style.display = 'none';
-        // Update count badge
         var badge = document.getElementById('bulkSerCnt_' + idx);
         if (badge) badge.textContent = c.serials.length + ' serials';
         calcBulkGst(idx);
@@ -1323,22 +1506,50 @@ function updateBulkDupWarning(idx) {
     var html = '<div style="background:#fff7ed;border:1px solid #fdba74;color:#9a3412;padding:10px 12px;border-radius:6px;font-size:.78rem;">';
     html += '<strong><i class="fas fa-info-circle me-1"></i> ' + allSkipCount + ' duplicate(s) detected — will be auto-skipped on save:</strong>';
 
-    if (dbDupes.length) {
+    if (sameProductDupes.length) {
+        var snList = sameProductDupes.map(function(d){ return d.serial; });
+        html += '<div style="margin-top:6px;background:#fefce8;border:1px solid #fde68a;padding:8px;border-radius:4px;">'
+              + '<strong style="color:#92400e;">Same product duplicate' + (snList.length > 1 ? 's' : '') + ' (' + snList.length + '):</strong> Already on this product'
+              + '<div style="font-family:monospace;font-size:.72rem;">' + escapeHtmlBulk(snList.slice(0,8).join(', ')) + (snList.length > 8 ? ' +' + (snList.length-8) + ' more' : '') + '</div>'
+              + '<div style="margin-top:6px;">'
+              + '<button type="button" onclick="autoSuffixBulkDuplicates(' + idx + ')" style="background:#f59e0b;color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:.75rem;font-weight:600;cursor:pointer;">Auto-rename with (2), (3)...</button>'
+              + ' <small>or manually fix above</small></div></div>';
+    }
+
+    if (crossProductDupes.length) {
+        var grouped = {};
+        crossProductDupes.forEach(function(d) {
+            var key = escapeHtmlBulk(d.product_name) + (d.product_code ? ' (' + escapeHtmlBulk(d.product_code) + ')' : '');
+            if (!grouped[key]) grouped[key] = [];
+            grouped[key].push(d.serial);
+        });
+        html += '<div style="margin-top:6px;background:#fee2e2;border:1px solid #fca5a5;padding:8px;border-radius:4px;">'
+              + '<strong style="color:#991b1b;">Cross-product conflict' + (crossProductDupes.length > 1 ? 's' : '') + ' (' + crossProductDupes.length + '):</strong> These serials belong to a different product!';
+        Object.keys(grouped).forEach(function(prodName) {
+            html += '<div style="margin-top:4px;padding:4px 6px;background:#fff5f5;border-radius:3px;">'
+                  + '<strong>' + prodName + ':</strong> '
+                  + '<span style="font-family:monospace;font-size:.72rem;">' + escapeHtmlBulk(grouped[prodName].slice(0,5).join(', ')) + (grouped[prodName].length > 5 ? ' +' + (grouped[prodName].length-5) + ' more' : '') + '</span></div>';
+        });
+        html += '</div>';
+    }
+
+    if (dbDupes.length && !sameProductDupes.length && !crossProductDupes.length) {
         html += '<div style="margin-top:6px;"><strong style="color:#7c2d12;">Already in database (' + dbDupes.length + '):</strong>'
-              + '<div style="font-family:monospace; font-size:.72rem;">' + escapeHtmlBulk(dbDupes.slice(0,10).join(', '))
+              + '<div style="font-family:monospace;font-size:.72rem;">' + escapeHtmlBulk(dbDupes.slice(0,10).join(', '))
               + (dbDupes.length > 10 ? ' +' + (dbDupes.length-10) + ' more' : '') + '</div></div>';
     }
+
     if (crossCardDupes.length) {
         html += '<div style="margin-top:6px;"><strong style="color:#7c2d12;">Also in another product card (' + crossCardDupes.length + '):</strong>'
-              + '<div style="font-family:monospace; font-size:.72rem;">' + escapeHtmlBulk(crossCardDupes.slice(0,10).join(', '))
+              + '<div style="font-family:monospace;font-size:.72rem;">' + escapeHtmlBulk(crossCardDupes.slice(0,10).join(', '))
               + (crossCardDupes.length > 10 ? ' +' + (crossCardDupes.length-10) + ' more' : '') + '</div></div>';
     }
     if (inCardDupes.length) {
         html += '<div style="margin-top:6px;"><strong style="color:#7c2d12;">Repeated within this card (' + inCardDupes.length + '):</strong>'
-              + '<div style="font-family:monospace; font-size:.72rem;">' + escapeHtmlBulk(inCardDupes.slice(0,10).join(', '))
+              + '<div style="font-family:monospace;font-size:.72rem;">' + escapeHtmlBulk(inCardDupes.slice(0,10).join(', '))
               + (inCardDupes.length > 10 ? ' +' + (inCardDupes.length-10) + ' more' : '') + '</div></div>';
     }
-    html += '<div style="margin-top:6px; font-weight:700;">Effective save: ' + effectiveSave + ' new serial(s) (qty will be ' + effectiveSave + ')</div>';
+    html += '<div style="margin-top:6px;font-weight:700;">Effective save: ' + effectiveSave + ' new serial(s) (qty will be ' + effectiveSave + ')</div>';
     html += '</div>';
 
     dupBox.innerHTML = html;

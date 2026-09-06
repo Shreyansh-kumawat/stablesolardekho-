@@ -90,7 +90,7 @@
                         <th>#</th>
                         <th>Name</th>
                         <th>Phone</th>
-                        <th>Bill Range</th>
+                        <th>Package</th>
                         <th>PIN</th>
                         <th>City</th>
                         <th>Date</th>
@@ -104,7 +104,7 @@
                         <td>{{ $loop->iteration }}</td>
                         <td><span class="fl-name">{{ $lead->customer_name }}</span></td>
                         <td><span class="fl-phone">{{ $lead->mobile_number ?? '-' }}</span></td>
-                        <td><span class="fl-bill">{{ $lead->monthly_bill ?? '-' }}</span></td>
+                        <td><span class="fl-bill">{{ $lead->combo_interest ?? '-' }}</span></td>
                         <td>{{ $lead->pin_code ?? '-' }}</td>
                         <td>{{ $lead->city ?? '-' }}</td>
                         <td><span class="fl-date">{{ $lead->created_at ? $lead->created_at->format('d M Y, h:i A') : '-' }}</span></td>

@@ -347,8 +347,11 @@ class InventoryController extends Controller
             );
             $oldQty = $inventory->available_qty;
 
-            // Serial handling removed from this flow — use "Bulk Serial Upload" tab for serial-tracked products
-            $serialsInput = [];
+            $serialsInput = $this->parseSerialsInput($request->serial_numbers);
+
+            if ($product->is_serialNumber_required && !empty($serialsInput)) {
+                $qty = $oldQty + count($serialsInput);
+            }
 
             if ($warehouseId) {
                 $addQty = $qty - $oldQty;
@@ -985,8 +988,36 @@ class InventoryController extends Controller
         $serials = $request->input('serials', []);
         if (!is_array($serials)) $serials = [];
         $serials = array_values(array_filter(array_map('trim', $serials)));
-        $existing = ProductSerial::whereIn('serial_number', $serials)->pluck('serial_number')->toArray();
-        return response()->json(['duplicates' => $existing]);
+        $existing = ProductSerial::whereIn('serial_number', $serials)
+            ->with('product:id,item_name,item_code')
+            ->get(['serial_number', 'product_id']);
+
+        $duplicates = $existing->pluck('serial_number')->toArray();
+        $details = $existing->map(fn($s) => [
+            'serial' => $s->serial_number,
+            'product_id' => $s->product_id,
+            'product_name' => $s->product?->item_name ?? 'Unknown',
+            'product_code' => $s->product?->item_code ?? '',
+        ])->toArray();
+
+        $forProductId = $request->input('for_product_id');
+
+        $sameProduct = [];
+        $crossProduct = [];
+        foreach ($details as $d) {
+            if ($forProductId && $d['product_id'] == $forProductId) {
+                $sameProduct[] = $d;
+            } else {
+                $crossProduct[] = $d;
+            }
+        }
+
+        return response()->json([
+            'duplicates' => $duplicates,
+            'details' => $details,
+            'same_product' => $sameProduct,
+            'cross_product' => $crossProduct,
+        ]);
     }
 
     public function bulkStoreFromExcel(Request $request)

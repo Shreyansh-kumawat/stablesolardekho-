@@ -192,7 +192,80 @@ class OrderController extends Controller
     public function viewSingleOrder($id)
     {
         $order = CpOrder::with('channelPartner')->findOrFail($id);
-        return view('Admin.orders.viewSIngleOrderAdmin', compact('order'));
+        $warehouses = Warehouse::where('is_active', true)->orderBy('name')->get();
+
+        $products = $order->products;
+        if (is_string($products)) $products = json_decode($products, true);
+        if (!is_array($products)) $products = [];
+
+        $stockInfo = [];
+        foreach ($products as $idx => $prod) {
+            $pid = $prod['product_id'] ?? null;
+            if (!$pid) continue;
+
+            $product = Product::find($pid);
+            $mainQty = (int) (ProductInventory::where('product_id', $pid)->value('available_qty') ?? 0);
+            $whStocks = WarehouseInventory::where('product_id', $pid)->get()->keyBy('warehouse_id');
+
+            $orderRef = $order->order_id;
+            $fulfilledMain = (int) ProductInventoryTransaction::where('product_id', $pid)
+                ->where('transaction_type', 'OUT')
+                ->where('remarks', 'like', '%CP Order #' . $orderRef . '%')
+                ->where('remarks', 'like', '%[from Main Inventory]%')
+                ->sum('quantity');
+
+            $fulfilledWh = [];
+            foreach ($warehouses as $wh) {
+                $fulfilledWh[$wh->id] = (int) WarehouseInventoryTransaction::where('product_id', $pid)
+                    ->where('warehouse_id', $wh->id)
+                    ->where('transaction_type', 'OUT')
+                    ->where('remarks', 'like', '%CP Order #' . $orderRef . '%')
+                    ->sum('quantity');
+            }
+
+            $totalFulfilled = $fulfilledMain + array_sum($fulfilledWh);
+            $qty = (int) ($prod['quantity'] ?? 0);
+
+            $isSerialTracked = (bool) ($product->is_serialNumber_required ?? false);
+            $availableSerials = [];
+            $assignedSerials = [];
+            if ($isSerialTracked) {
+                $availableSerials['main'] = ProductSerial::where('product_id', $pid)
+                    ->where('status', 'in_stock')->where('current_location', 'main')
+                    ->orderBy('created_at')->pluck('serial_number');
+                foreach ($warehouses as $wh) {
+                    $availableSerials['wh:' . $wh->id] = ProductSerial::where('product_id', $pid)
+                        ->where('status', 'in_stock')->where('current_location', 'warehouse')
+                        ->where('warehouse_id', $wh->id)
+                        ->orderBy('created_at')->pluck('serial_number');
+                }
+                $assignedSerials = ProductSerial::where('cp_order_id', $order->id)
+                    ->where('product_id', $pid)
+                    ->pluck('serial_number')->toArray();
+            }
+
+            $lastInTxn = ProductInventoryTransaction::where('product_id', $pid)
+                ->where('transaction_type', 'IN')
+                ->whereNotNull('unit_price')
+                ->where('unit_price', '>', 0)
+                ->orderByDesc('created_at')
+                ->first();
+
+            $stockInfo[$idx] = [
+                'main' => $mainQty,
+                'warehouses' => $whStocks,
+                'fulfilled_main' => $fulfilledMain,
+                'fulfilled_wh' => $fulfilledWh,
+                'total_fulfilled' => $totalFulfilled,
+                'remaining' => max(0, $qty - $totalFulfilled),
+                'is_serial_tracked' => $isSerialTracked,
+                'available_serials' => $availableSerials,
+                'assigned_serials' => $assignedSerials,
+                'cost_price' => $lastInTxn->unit_price ?? null,
+            ];
+        }
+
+        return view('Admin.orders.viewSIngleOrderAdmin', compact('order', 'warehouses', 'stockInfo'));
     }
 
     public function saveOrderPricing(Request $request)
@@ -388,6 +461,283 @@ class OrderController extends Controller
         }
 
         return redirect()->back()->with('success', 'Order marked as delivered and inventory updated.');
+    }
+
+    public function updateCpOrderPrice(Request $request, $id)
+    {
+        $order = CpOrder::findOrFail($id);
+        $products = $order->products;
+        if (is_string($products)) $products = json_decode($products, true);
+        if (!is_array($products)) return response()->json(['error' => 'Invalid products data'], 400);
+
+        $idx = (int) $request->input('product_index');
+        $newPrice = (float) $request->input('price');
+
+        if (!isset($products[$idx])) return response()->json(['error' => 'Product not found'], 404);
+
+        $products[$idx]['price'] = $newPrice;
+
+        $grandTotal = 0;
+        foreach ($products as $p) {
+            $prodModel = Product::find($p['product_id'] ?? null);
+            $price = $p['price'] ?? ($prodModel ? $prodModel->current_sale_price : 0) ?? 0;
+            $grandTotal += $price * (int) ($p['quantity'] ?? 0);
+        }
+
+        DB::table('cp_orders')->where('id', $id)->update([
+            'products' => json_encode($products),
+            'grand_total' => $grandTotal,
+        ]);
+
+        return response()->json(['success' => true, 'grand_total' => $grandTotal]);
+    }
+
+    public function fulfillCpOrder(Request $request, $id)
+    {
+        $order = CpOrder::findOrFail($id);
+        $products = $order->products;
+        if (is_string($products)) $products = json_decode($products, true);
+        if (!is_array($products)) {
+            return redirect()->back()->with('error', 'Invalid products data.');
+        }
+
+        $productIndex = (int) $request->input('product_index');
+        if (!isset($products[$productIndex])) {
+            return redirect()->back()->with('error', 'Product not found in order.');
+        }
+
+        $prod = $products[$productIndex];
+        $pid = $prod['product_id'];
+        $product = Product::find($pid);
+        if (!$product) {
+            return redirect()->back()->with('error', 'Product not found.');
+        }
+
+        $sourcesRaw = $request->input('sources', []);
+        $sources = array_filter($sourcesRaw, function ($s) {
+            return isset($s['source']) && $s['source'] !== '' && (int)($s['qty'] ?? 0) > 0;
+        });
+
+        if (empty($sources)) {
+            return redirect()->back()->with('error', 'Please add at least one source with a quantity.');
+        }
+
+        $totalAlloc = array_sum(array_map(fn($s) => (int) $s['qty'], $sources));
+        $orderRef = $order->order_id;
+
+        $fulfilledMain = (int) ProductInventoryTransaction::where('product_id', $pid)
+            ->where('transaction_type', 'OUT')
+            ->where('remarks', 'like', '%CP Order #' . $orderRef . '%')
+            ->where('remarks', 'like', '%[from Main Inventory]%')
+            ->sum('quantity');
+        $fulfilledWhTotal = (int) WarehouseInventoryTransaction::where('product_id', $pid)
+            ->where('transaction_type', 'OUT')
+            ->where('remarks', 'like', '%CP Order #' . $orderRef . '%')
+            ->sum('quantity');
+        $alreadyFulfilled = $fulfilledMain + $fulfilledWhTotal;
+        $orderedQty = (int) ($prod['quantity'] ?? 0);
+        $remaining = $orderedQty - $alreadyFulfilled;
+
+        if ($totalAlloc > $remaining) {
+            return redirect()->back()->with('error', 'Allocated qty (' . $totalAlloc . ') exceeds remaining (' . $remaining . ').');
+        }
+
+        $salePrice = $prod['price'] ?? ($product->current_sale_price ?? 0);
+        $isSerial = $product->is_serialNumber_required;
+
+        try {
+            DB::beginTransaction();
+
+            $serialsPerSource = $request->input('serials', []);
+            if ($isSerial) {
+                foreach ($sources as $idx => $s) {
+                    $ser = $serialsPerSource[$idx] ?? [];
+                    $ser = array_values(array_filter(array_map('trim', is_array($ser) ? $ser : [])));
+                    if (count($ser) !== (int) $s['qty']) {
+                        throw new \Exception('Source ' . ($idx + 1) . ': need ' . $s['qty'] . ' serials but got ' . count($ser) . '.');
+                    }
+                }
+            }
+
+            foreach ($sources as $idx => $s) {
+                $src = $s['source'];
+                $qty = (int) $s['qty'];
+                $selectedSerials = $isSerial ? array_values(array_filter($serialsPerSource[$idx] ?? [])) : [];
+
+                if ($src === 'main') {
+                    $inv = ProductInventory::where('product_id', $pid)->first();
+                    $available = $inv ? $inv->available_qty : 0;
+                    if ($qty > $available) {
+                        throw new \Exception('Main Inventory has only ' . $available . ' available.');
+                    }
+                    if ($inv) {
+                        $inv->available_qty = $inv->available_qty - $qty;
+                        $inv->save();
+                    }
+                    Product::where('id', $pid)->update(['quantity' => $inv ? $inv->available_qty : 0]);
+                    $txnId = $this->getTxnId();
+
+                    if ($isSerial && !empty($selectedSerials)) {
+                        foreach ($selectedSerials as $sn) {
+                            $serial = ProductSerial::where('product_id', $pid)
+                                ->where('serial_number', $sn)
+                                ->where('status', 'in_stock')
+                                ->where('current_location', 'main')
+                                ->first();
+                            if (!$serial) throw new \Exception("Serial '{$sn}' not available in Main Inventory.");
+                            $serial->update([
+                                'status' => 'sold',
+                                'current_location' => 'cp',
+                                'cp_order_id' => $order->id,
+                                'warehouse_id' => null,
+                            ]);
+                            ProductInventoryTransaction::create([
+                                'product_id' => $pid,
+                                'serial_id' => $serial->id,
+                                'transaction_type' => 'OUT',
+                                'quantity' => 1,
+                                'unit_price' => $salePrice,
+                                'performed_by' => Auth::id(),
+                                'txn_id' => $txnId,
+                                'remarks' => 'CP Order #' . $orderRef . ' fulfilled [from Main Inventory]',
+                            ]);
+                        }
+                    } else {
+                        ProductInventoryTransaction::create([
+                            'product_id' => $pid,
+                            'transaction_type' => 'OUT',
+                            'quantity' => $qty,
+                            'unit_price' => $salePrice,
+                            'performed_by' => Auth::id(),
+                            'txn_id' => $txnId,
+                            'remarks' => 'CP Order #' . $orderRef . ' fulfilled [from Main Inventory]',
+                        ]);
+                    }
+                } else {
+                    $whId = (int) str_replace('wh:', '', $src);
+                    $whInv = WarehouseInventory::where('warehouse_id', $whId)->where('product_id', $pid)->first();
+                    $available = $whInv ? $whInv->available_qty : 0;
+                    if ($qty > $available) {
+                        $whName = Warehouse::where('id', $whId)->value('name') ?? ('Warehouse ' . $whId);
+                        throw new \Exception($whName . ' has only ' . $available . ' available.');
+                    }
+                    $whInv->decrement('available_qty', $qty);
+                    $whName = Warehouse::where('id', $whId)->value('name') ?? ('Warehouse ' . $whId);
+                    $txnId = $this->getTxnId();
+
+                    if ($isSerial && !empty($selectedSerials)) {
+                        foreach ($selectedSerials as $sn) {
+                            $serial = ProductSerial::where('product_id', $pid)
+                                ->where('serial_number', $sn)
+                                ->where('status', 'in_stock')
+                                ->where('current_location', 'warehouse')
+                                ->where('warehouse_id', $whId)
+                                ->first();
+                            if (!$serial) throw new \Exception("Serial '{$sn}' not available in {$whName}.");
+                            $serial->update([
+                                'status' => 'sold',
+                                'current_location' => 'cp',
+                                'cp_order_id' => $order->id,
+                                'warehouse_id' => null,
+                            ]);
+                            WarehouseInventoryTransaction::create([
+                                'warehouse_id' => $whId,
+                                'product_id' => $pid,
+                                'serial_id' => $serial->id,
+                                'transaction_type' => 'OUT',
+                                'quantity' => 1,
+                                'unit_price' => $salePrice,
+                                'performed_by' => Auth::id(),
+                                'txn_id' => $txnId,
+                                'remarks' => 'CP Order #' . $orderRef . ' fulfilled [from ' . $whName . ']',
+                            ]);
+                        }
+                    } else {
+                        WarehouseInventoryTransaction::create([
+                            'warehouse_id' => $whId,
+                            'product_id' => $pid,
+                            'transaction_type' => 'OUT',
+                            'quantity' => $qty,
+                            'unit_price' => $salePrice,
+                            'performed_by' => Auth::id(),
+                            'txn_id' => $txnId,
+                            'remarks' => 'CP Order #' . $orderRef . ' fulfilled [from ' . $whName . ']',
+                        ]);
+                    }
+                }
+            }
+
+            $cpInv = \App\Models\CpProductInventory::firstOrCreate(
+                ['cp_id' => $order->cp_id, 'product_id' => $pid],
+                ['available_qty' => 0]
+            );
+            $cpInv->available_qty += $totalAlloc;
+            $cpInv->save();
+
+            \App\Models\CpProductInventoryTransaction::create([
+                'cp_id' => $order->cp_id,
+                'product_id' => $pid,
+                'transaction_type' => 'IN',
+                'quantity' => $totalAlloc,
+                'performed_by' => Auth::id(),
+                'txn_id' => 'DEL' . date('Ymd') . strtoupper(substr(uniqid(), -4)),
+                'remarks' => 'Fulfilled from CP Order #' . $orderRef,
+            ]);
+
+            CpMaterialLedger::create([
+                'cp_id' => $order->cp_id,
+                'material_name' => $product->item_name,
+                'quantity' => $totalAlloc,
+                'unit' => $product->uom ?? 'Piece',
+                'rate' => $salePrice,
+                'total_amount' => $salePrice * $totalAlloc,
+                'entry_date' => now()->format('Y-m-d'),
+                'added_by' => Auth::id(),
+                'remarks' => 'CP Order #' . $orderRef . ' fulfilled',
+                'source' => 'order_delivery',
+            ]);
+
+            $allFullyFulfilled = true;
+            foreach ($products as $pi => $p) {
+                $pqty = (int) ($p['quantity'] ?? 0);
+                $ppid = $p['product_id'] ?? null;
+                if (!$ppid || $pqty <= 0) continue;
+                $fMain = (int) ProductInventoryTransaction::where('product_id', $ppid)
+                    ->where('transaction_type', 'OUT')
+                    ->where('remarks', 'like', '%CP Order #' . $orderRef . '%')
+                    ->sum('quantity');
+                $fWh = (int) WarehouseInventoryTransaction::where('product_id', $ppid)
+                    ->where('transaction_type', 'OUT')
+                    ->where('remarks', 'like', '%CP Order #' . $orderRef . '%')
+                    ->sum('quantity');
+                if (($fMain + $fWh) < $pqty) {
+                    $allFullyFulfilled = false;
+                    break;
+                }
+            }
+
+            if ($allFullyFulfilled) {
+                DB::table('cp_orders')->where('id', $id)->update(['status' => 'delivered']);
+            } elseif ($order->status === 'pending') {
+                DB::table('cp_orders')->where('id', $id)->update(['status' => 'confirmed']);
+            }
+
+            $orderGrandTotal = 0;
+            foreach ($products as $p) {
+                $pm = Product::find($p['product_id'] ?? null);
+                $pr = $p['price'] ?? ($pm ? $pm->current_sale_price : 0) ?? 0;
+                $orderGrandTotal += $pr * (int)($p['quantity'] ?? 0);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('cp_orders', 'grand_total')) {
+                DB::table('cp_orders')->where('id', $id)->update(['grand_total' => $orderGrandTotal]);
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Stock allocated for ' . $product->item_name . '.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 
     public function rejectCpPayment($id)

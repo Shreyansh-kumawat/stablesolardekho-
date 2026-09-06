@@ -16,6 +16,8 @@
     .doc-btn-primary:hover { background: var(--blue-dark); }
     .doc-btn-danger { background: var(--red); color: #fff; }
     .doc-btn-danger:hover { background: #b91c1c; }
+    .doc-btn-green { background: var(--green); color: #fff; }
+    .doc-btn-green:hover { background: #15803d; }
     .doc-btn-sm { padding: 5px 12px; font-size: 0.76rem; }
 
     .doc-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem; }
@@ -23,7 +25,6 @@
     .doc-stat-label { font-size: 0.72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; }
     .doc-stat-value { font-size: 1.3rem; font-weight: 700; color: var(--text); margin-top: 2px; }
 
-    /* Upload Form */
     .upload-section { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
     .upload-title { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
     .upload-sub { font-size: 0.78rem; color: var(--muted); margin-bottom: 16px; }
@@ -36,14 +37,21 @@
     .doc-file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-bottom: 14px; }
     .doc-file-item { border: 1px dashed var(--border); border-radius: 8px; padding: 10px 12px; background: #f8fafc; }
     .doc-file-item label { font-size: 0.76rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
-    .doc-file-item .req-badge { font-size: 0.6rem; color: var(--red); font-weight: 700; }
-    .doc-file-item .opt-badge { font-size: 0.6rem; color: var(--muted); font-weight: 600; }
     .doc-file-item input[type="file"] { font-size: 0.75rem; width: 100%; }
+
+    .other-docs-section { margin-bottom: 14px; }
+    .other-doc-row { display: flex; gap: 8px; align-items: end; margin-bottom: 8px; }
+    .other-doc-row .field-group { flex: 1; }
+    .other-doc-row .field-group.file-field { flex: 1.5; }
+    .remove-other-btn { background: none; border: none; color: var(--red); cursor: pointer; padding: 4px; margin-bottom: 6px; font-size: 1.1rem; }
+
+    .payment-section { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px; }
+    .payment-section .section-label { font-size: 0.82rem; font-weight: 700; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .payment-fields { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
 
     .remarks-row { margin-bottom: 14px; }
     .remarks-row textarea { resize: vertical; min-height: 36px; }
 
-    /* Client Cards */
     .clients-section { margin-bottom: 1.5rem; }
     .clients-title { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
     .client-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
@@ -70,15 +78,34 @@
     .del-btn { background: none; border: none; color: var(--red); cursor: pointer; padding: 2px; }
     .del-btn:hover { color: #991b1b; }
 
+    .payment-table { width: 100%; font-size: 0.78rem; border-collapse: collapse; margin-top: 8px; }
+    .payment-table th { text-align: left; font-size: 0.68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; padding: 5px 8px; border-bottom: 1px solid var(--border); }
+    .payment-table td { padding: 5px 8px; border-bottom: 1px solid #f1f5f9; }
+    .payment-summary { display: flex; gap: 16px; align-items: center; margin-top: 10px; padding: 10px 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; flex-wrap: wrap; }
+    .payment-summary.has-remaining { background: #fefce8; border-color: #fde68a; }
+    .payment-summary .ps-item { }
+    .payment-summary .ps-label { color: var(--muted); font-size: 0.7rem; }
+    .payment-summary .ps-value { color: var(--text); font-size: 0.95rem; font-weight: 700; }
+    .ps-value.text-green { color: var(--green); }
+    .ps-value.text-orange { color: var(--orange); }
+
+    .add-payment-form { margin-top: 12px; padding: 12px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; }
+    .add-payment-form .payment-fields { grid-template-columns: 1fr 1fr 1fr auto; }
+
     .no-clients { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.85rem; background: var(--white); border: 1px solid var(--border); border-radius: 10px; }
 
     @media (max-width: 768px) {
         .client-fields { grid-template-columns: 1fr; }
         .doc-file-grid { grid-template-columns: 1fr 1fr; }
         .doc-stats { grid-template-columns: repeat(2, 1fr); }
+        .payment-fields { grid-template-columns: 1fr 1fr; }
+        .other-doc-row { flex-wrap: wrap; }
+        .add-payment-form .payment-fields { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 480px) {
         .doc-file-grid { grid-template-columns: 1fr; }
+        .payment-fields { grid-template-columns: 1fr; }
+        .add-payment-form .payment-fields { grid-template-columns: 1fr; }
     }
 </style>
 @endsection
@@ -129,8 +156,8 @@
 
             <div class="client-fields">
                 <div class="field-group">
-                    <label>Client Name *</label>
-                    <input type="text" name="client_name" required placeholder="e.g. Rajesh Kumar">
+                    <label>Client Name</label>
+                    <input type="text" name="client_name" placeholder="e.g. Rajesh Kumar">
                 </div>
                 <div class="field-group">
                     <label>Client Phone</label>
@@ -146,20 +173,46 @@
             <div class="doc-file-grid">
                 @foreach($docTypes as $key => $label)
                 <div class="doc-file-item">
-                    <label>
-                        {{ $label }}
-                        @if(in_array($key, $compulsoryTypes))
-                            <span class="req-badge">Required</span>
-                        @elseif($key !== 'other')
-                            <span class="opt-badge">Optional</span>
-                        @endif
-                    </label>
+                    <label>{{ $label }}</label>
                     <input type="file" name="doc_{{ $key }}">
                 </div>
                 @endforeach
             </div>
 
-            <div class="remarks-row field-group">
+            <!-- Dynamic Other Documents -->
+            <div class="other-docs-section">
+                <div style="font-size:0.78rem; font-weight:600; color:var(--text); margin-bottom:8px;">Additional Documents</div>
+                <div id="otherDocsContainer"></div>
+                <button type="button" class="doc-btn doc-btn-sm" style="background:#e2e8f0; color:var(--text);" onclick="addOtherDoc()">+ Add Document</button>
+            </div>
+
+            <!-- Payment Section -->
+            <div class="payment-section">
+                <div class="section-label">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+                    Payment Details
+                </div>
+                <div class="payment-fields">
+                    <div class="field-group">
+                        <label>Total Receivable Amount</label>
+                        <input type="number" name="total_receivable" placeholder="e.g. 100000" step="0.01" min="0">
+                    </div>
+                    <div class="field-group">
+                        <label>First Instalment Amount</label>
+                        <input type="number" name="instalment_amount" placeholder="e.g. 20000" step="0.01" min="0">
+                    </div>
+                    <div class="field-group">
+                        <label>Payment Date</label>
+                        <input type="date" name="instalment_date" value="{{ date('Y-m-d') }}">
+                    </div>
+                    <div class="field-group">
+                        <label>Payment Remarks</label>
+                        <input type="text" name="instalment_remarks" placeholder="e.g. Cash / UPI">
+                    </div>
+                </div>
+            </div>
+
+            <div class="remarks-row field-group" style="margin-top:14px;">
                 <label>Remarks</label>
                 <textarea name="remarks" rows="1" placeholder="Optional notes for this client"></textarea>
             </div>
@@ -188,15 +241,26 @@
         @endif
 
         @foreach($grouped as $batchId => $batchDocs)
-        @php $firstDoc = $batchDocs->first(); @endphp
+        @php
+            $firstDoc = $batchDocs->first();
+            $batchPayments = $payments[$batchId] ?? collect();
+            $totalReceivable = $firstDoc->total_receivable ?? 0;
+            $totalPaid = $batchPayments->sum('amount');
+            $remaining = $totalReceivable > 0 ? $totalReceivable - $totalPaid : 0;
+        @endphp
         <div class="client-card">
             <div class="client-card-header" onclick="toggleClient(this)">
                 <div class="client-info">
-                    <h3>{{ $firstDoc->client_name ?? 'Unknown Client' }}</h3>
+                    <h3>{{ $firstDoc->client_name ?: 'Client' }}</h3>
                     <p>{{ $firstDoc->client_phone ?? '' }}{{ $firstDoc->client_phone && $firstDoc->client_address ? ' &bull; ' : '' }}{{ $firstDoc->client_address ?? '' }}</p>
                 </div>
                 <div class="client-meta">
                     <span class="client-doc-count">{{ $batchDocs->count() }} doc(s)</span>
+                    @if($totalReceivable > 0)
+                        <span style="font-size:0.7rem; font-weight:600; padding:3px 8px; border-radius:5px; {{ $remaining <= 0 ? 'background:#f0fdf4; color:var(--green);' : 'background:#fefce8; color:var(--orange);' }}">
+                            {{ $remaining <= 0 ? 'Fully Paid' : '₹' . number_format($remaining, 0) . ' due' }}
+                        </span>
+                    @endif
                     <span style="font-size:0.72rem; color:var(--muted);">{{ $firstDoc->created_at->format('d M Y') }}</span>
                     <span class="client-toggle">&#9660;</span>
                 </div>
@@ -209,7 +273,7 @@
                     <tbody>
                         @foreach($batchDocs as $doc)
                         <tr>
-                            <td><span class="doc-type-badge">{{ $docTypes[$doc->document_type] ?? $doc->document_type }}</span></td>
+                            <td><span class="doc-type-badge">{{ $docTypes[$doc->document_type] ?? $doc->title }}</span></td>
                             <td><a href="{{ url('serve/' . $doc->file_path) }}" target="_blank" class="doc-file-link">{{ Str::limit($doc->file_name, 30) }}</a></td>
                             <td><span class="doc-size">{{ number_format($doc->file_size / 1024, 0) }} KB</span></td>
                             <td>
@@ -222,10 +286,118 @@
                         @endforeach
                     </tbody>
                 </table>
-                <div style="margin-top:10px; text-align:right;">
+
+                @if($firstDoc->remarks)
+                <div style="margin-top:8px; font-size:0.75rem; color:var(--muted);">Remarks: {{ $firstDoc->remarks }}</div>
+                @endif
+
+                <!-- Payment History -->
+                @if($totalReceivable > 0 || $batchPayments->isNotEmpty())
+                <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border);">
+                    <div style="font-size:0.82rem; font-weight:700; color:var(--text); margin-bottom:8px;">Payment History</div>
+
+                    <div class="payment-summary {{ $remaining > 0 ? 'has-remaining' : '' }}">
+                        <div class="ps-item">
+                            <div class="ps-label">Total Receivable</div>
+                            <div class="ps-value">₹{{ number_format($totalReceivable, 0) }}</div>
+                        </div>
+                        <div class="ps-item">
+                            <div class="ps-label">Total Received</div>
+                            <div class="ps-value text-green">₹{{ number_format($totalPaid, 0) }}</div>
+                        </div>
+                        <div class="ps-item">
+                            <div class="ps-label">Remaining</div>
+                            <div class="ps-value {{ $remaining > 0 ? 'text-orange' : 'text-green' }}">₹{{ number_format($remaining, 0) }}</div>
+                        </div>
+                    </div>
+
+                    @if($batchPayments->isNotEmpty())
+                    <table class="payment-table">
+                        <thead>
+                            <tr><th>#</th><th>Date</th><th>Amount</th><th>Remarks</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach($batchPayments as $idx => $pmt)
+                            <tr>
+                                <td>{{ $idx + 1 }}</td>
+                                <td>{{ $pmt->payment_date->format('d M Y') }}</td>
+                                <td style="font-weight:700; color:var(--green);">₹{{ number_format($pmt->amount, 0) }}</td>
+                                <td style="color:var(--muted);">{{ $pmt->remarks ?? '-' }}</td>
+                                <td>
+                                    <form method="POST" action="{{ route('cpDocumentDeletePayment', $pmt->id) }}" class="d-inline delete-doc-form">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="del-btn" title="Delete"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    @endif
+                </div>
+                @endif
+
+                <!-- Add More Documents / Payment -->
+                <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+                    <button type="button" class="doc-btn doc-btn-sm doc-btn-primary" onclick="toggleUpdateForm('{{ $batchId }}')">+ Add Documents / Payment</button>
                     <form method="POST" action="{{ route('cpDocumentDeleteBatch', $batchId) }}" class="d-inline delete-batch-form">
                         @csrf @method('DELETE')
-                        <button type="submit" class="doc-btn doc-btn-danger doc-btn-sm">Delete All for this Client</button>
+                        <button type="submit" class="doc-btn doc-btn-danger doc-btn-sm">Delete All</button>
+                    </form>
+                </div>
+
+                <!-- Update Form (hidden) -->
+                <div id="update-{{ $batchId }}" style="display:none; margin-top:12px;">
+                    <form method="POST" action="{{ route('cpDocumentStore') }}" enctype="multipart/form-data">
+                        @csrf
+                        <input type="hidden" name="batch_id" value="{{ $batchId }}">
+                        <input type="hidden" name="client_name" value="{{ $firstDoc->client_name }}">
+                        <input type="hidden" name="client_phone" value="{{ $firstDoc->client_phone }}">
+                        <input type="hidden" name="client_address" value="{{ $firstDoc->client_address }}">
+
+                        <div class="doc-file-grid" style="margin-bottom:10px;">
+                            @foreach($docTypes as $key => $label)
+                            <div class="doc-file-item">
+                                <label>{{ $label }}</label>
+                                <input type="file" name="doc_{{ $key }}">
+                            </div>
+                            @endforeach
+                        </div>
+
+                        <div class="other-docs-section" style="margin-bottom:10px;">
+                            <div id="otherDocsContainer-{{ $batchId }}"></div>
+                            <button type="button" class="doc-btn doc-btn-sm" style="background:#e2e8f0; color:var(--text);" onclick="addOtherDoc('{{ $batchId }}')">+ Add Document</button>
+                        </div>
+
+                        <div class="add-payment-form">
+                            <div style="font-size:0.78rem; font-weight:700; color:var(--text); margin-bottom:8px;">Add Payment Instalment</div>
+                            <div class="payment-fields">
+                                @if(!$totalReceivable)
+                                <div class="field-group">
+                                    <label>Total Receivable</label>
+                                    <input type="number" name="total_receivable" placeholder="e.g. 100000" step="0.01" min="0">
+                                </div>
+                                @else
+                                <input type="hidden" name="total_receivable" value="{{ $totalReceivable }}">
+                                @endif
+                                <div class="field-group">
+                                    <label>Amount</label>
+                                    <input type="number" name="instalment_amount" placeholder="Amount" step="0.01" min="0">
+                                </div>
+                                <div class="field-group">
+                                    <label>Date</label>
+                                    <input type="date" name="instalment_date" value="{{ date('Y-m-d') }}">
+                                </div>
+                                <div class="field-group">
+                                    <label>Remarks</label>
+                                    <input type="text" name="instalment_remarks" placeholder="Cash / UPI">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="doc-btn doc-btn-green doc-btn-sm" style="margin-top:10px;">
+                            Save
+                        </button>
                     </form>
                 </div>
             </div>
@@ -274,6 +446,36 @@
 
 @section('js')
 <script>
+let otherDocCount = 0;
+
+function addOtherDoc(batchId) {
+    const container = batchId
+        ? document.getElementById('otherDocsContainer-' + batchId)
+        : document.getElementById('otherDocsContainer');
+
+    const existing = container.querySelectorAll('.other-doc-row').length;
+    if (existing >= 10) {
+        Swal.fire('Limit Reached', 'You can add up to 10 additional documents.', 'info');
+        return;
+    }
+
+    const idx = otherDocCount++;
+    const row = document.createElement('div');
+    row.className = 'other-doc-row';
+    row.innerHTML = `
+        <div class="field-group">
+            <label>Document Name</label>
+            <input type="text" name="other_names[]" placeholder="e.g. Aadhaar Card">
+        </div>
+        <div class="field-group file-field">
+            <label>File</label>
+            <input type="file" name="other_files[]">
+        </div>
+        <button type="button" class="remove-other-btn" onclick="this.parentElement.remove()">&times;</button>
+    `;
+    container.appendChild(row);
+}
+
 function toggleClient(header) {
     const body = header.nextElementSibling;
     const arrow = header.querySelector('.client-toggle');
@@ -281,13 +483,18 @@ function toggleClient(header) {
     arrow.classList.toggle('open');
 }
 
+function toggleUpdateForm(batchId) {
+    const el = document.getElementById('update-' + batchId);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
 document.querySelectorAll('.delete-doc-form, .delete-batch-form').forEach(f => {
     f.addEventListener('submit', function(e) {
         e.preventDefault();
         const isBatch = f.classList.contains('delete-batch-form');
         Swal.fire({
-            title: isBatch ? 'Delete all documents for this client?' : 'Delete Document?',
-            text: 'This will permanently remove the file(s).',
+            title: isBatch ? 'Delete all documents for this client?' : 'Delete this entry?',
+            text: 'This action cannot be undone.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc2626',

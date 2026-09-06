@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ChannelPartner;
+use App\Models\CpClientPayment;
 use App\Models\CpDocument;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,10 +18,7 @@ class CpDocumentController extends Controller
         'stamp_paper' => 'Stamp Paper',
         'warranty_card' => 'Warranty Card',
         'bank_invoice' => 'Bank Invoice',
-        'other' => 'Other',
     ];
-
-    private const COMPULSORY_TYPES = ['bill', 'dcr', 'stamp_paper', 'warranty_card'];
 
     public function adminIndex(Request $request)
     {
@@ -40,10 +38,12 @@ class CpDocumentController extends Controller
 
         $documents = $query->orderByDesc('created_at')->get();
         $docTypes = self::DOC_TYPES;
-        $compulsoryTypes = self::COMPULSORY_TYPES;
+
+        $batchIds = $documents->whereNotNull('batch_id')->pluck('batch_id')->unique();
+        $payments = CpClientPayment::whereIn('batch_id', $batchIds)->orderBy('payment_date')->get()->groupBy('batch_id');
 
         try { \App\Models\AdminLastSeen::markSeen(auth()->id(), 'cp_documents'); } catch (\Exception $e) {}
-        return view('Admin.documents.index', compact('documents', 'cps', 'docTypes', 'compulsoryTypes'));
+        return view('Admin.documents.index', compact('documents', 'cps', 'docTypes', 'payments'));
     }
 
     public function adminStore(Request $request)
@@ -96,7 +96,6 @@ class CpDocumentController extends Controller
 
         $documents = $query->orderByDesc('created_at')->get();
         $docTypes = self::DOC_TYPES;
-        $compulsoryTypes = self::COMPULSORY_TYPES;
         $clients = CpDocument::where('cp_id', $cpId)
             ->whereNotNull('batch_id')
             ->select('batch_id', 'client_name', 'client_phone', 'client_address')
@@ -104,22 +103,29 @@ class CpDocumentController extends Controller
             ->latest()
             ->get();
 
-        return view('channelPartner.documents.index', compact('documents', 'docTypes', 'compulsoryTypes', 'clients'));
+        $batchIds = $documents->whereNotNull('batch_id')->pluck('batch_id')->unique();
+        $payments = CpClientPayment::whereIn('batch_id', $batchIds)->orderBy('payment_date')->get()->groupBy('batch_id');
+
+        return view('channelPartner.documents.index', compact('documents', 'docTypes', 'clients', 'payments'));
     }
 
     public function cpStore(Request $request)
     {
         $request->validate([
-            'client_name' => 'required|string|max:255',
+            'client_name' => 'nullable|string|max:255',
             'client_phone' => 'nullable|string|max:20',
             'client_address' => 'nullable|string|max:500',
             'remarks' => 'nullable|string|max:500',
+            'total_receivable' => 'nullable|numeric|min:0',
+            'instalment_amount' => 'nullable|numeric|min:0',
+            'instalment_date' => 'nullable|date',
         ]);
 
-        $batchId = Str::uuid()->toString();
+        $batchId = $request->input('batch_id') ?: Str::uuid()->toString();
         $cpId = Auth::user()->cp_id;
         $uploadedBy = Auth::id();
         $count = 0;
+        $isUpdate = (bool) $request->input('batch_id');
 
         foreach (self::DOC_TYPES as $key => $label) {
             if ($request->hasFile('doc_' . $key)) {
@@ -130,23 +136,107 @@ class CpDocumentController extends Controller
                     'client_phone' => $request->client_phone,
                     'client_address' => $request->client_address,
                     'batch_id' => $batchId,
-                    'title' => $label . ' - ' . $request->client_name,
+                    'title' => $label . ($request->client_name ? ' - ' . $request->client_name : ''),
                     'document_type' => $key,
                     'file_path' => $file->store('cp-documents', 'public'),
                     'file_name' => $file->getClientOriginalName(),
                     'file_size' => $file->getSize(),
                     'uploaded_by' => $uploadedBy,
                     'remarks' => $request->remarks,
+                    'total_receivable' => $request->total_receivable,
                 ]);
                 $count++;
             }
         }
 
-        if ($count === 0) {
+        $otherNames = $request->input('other_names', []);
+        $otherFiles = $request->file('other_files', []);
+        foreach ($otherFiles as $i => $file) {
+            if ($file && $file->isValid()) {
+                $customName = trim($otherNames[$i] ?? '');
+                if (!$customName) $customName = 'Document ' . ($i + 1);
+                CpDocument::create([
+                    'cp_id' => $cpId,
+                    'client_name' => $request->client_name,
+                    'client_phone' => $request->client_phone,
+                    'client_address' => $request->client_address,
+                    'batch_id' => $batchId,
+                    'title' => $customName . ($request->client_name ? ' - ' . $request->client_name : ''),
+                    'document_type' => 'other',
+                    'file_path' => $file->store('cp-documents', 'public'),
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_size' => $file->getSize(),
+                    'uploaded_by' => $uploadedBy,
+                    'remarks' => $request->remarks,
+                    'total_receivable' => $request->total_receivable,
+                ]);
+                $count++;
+            }
+        }
+
+        if ($request->filled('total_receivable') && $isUpdate) {
+            CpDocument::where('batch_id', $batchId)->update(['total_receivable' => $request->total_receivable]);
+        }
+
+        if ($request->filled('instalment_amount') && $request->filled('instalment_date')) {
+            CpClientPayment::create([
+                'batch_id' => $batchId,
+                'cp_id' => $cpId,
+                'amount' => $request->instalment_amount,
+                'payment_date' => $request->instalment_date,
+                'remarks' => $request->input('instalment_remarks'),
+                'added_by' => $uploadedBy,
+            ]);
+        }
+
+        if ($count === 0 && !$isUpdate) {
+            if ($request->filled('instalment_amount') && $request->filled('instalment_date')) {
+                return redirect()->back()->with('success', 'Payment instalment added.');
+            }
             return redirect()->back()->with('error', 'Please select at least one file to upload.');
         }
 
-        return redirect()->back()->with('success', $count . ' document(s) uploaded for ' . $request->client_name . '.');
+        $msg = $count > 0 ? $count . ' document(s) uploaded' : 'Payment instalment added';
+        if ($request->client_name) $msg .= ' for ' . $request->client_name;
+        return redirect()->back()->with('success', $msg . '.');
+    }
+
+    public function cpAddPayment(Request $request)
+    {
+        $request->validate([
+            'batch_id' => 'required|string',
+            'instalment_amount' => 'required|numeric|min:0.01',
+            'instalment_date' => 'required|date',
+            'instalment_remarks' => 'nullable|string|max:500',
+            'total_receivable' => 'nullable|numeric|min:0',
+        ]);
+
+        $cpId = Auth::user()->cp_id;
+        $batch = CpDocument::where('cp_id', $cpId)->where('batch_id', $request->batch_id)->first();
+        if (!$batch) abort(404);
+
+        if ($request->filled('total_receivable')) {
+            CpDocument::where('batch_id', $request->batch_id)->update(['total_receivable' => $request->total_receivable]);
+        }
+
+        CpClientPayment::create([
+            'batch_id' => $request->batch_id,
+            'cp_id' => $cpId,
+            'amount' => $request->instalment_amount,
+            'payment_date' => $request->instalment_date,
+            'remarks' => $request->instalment_remarks,
+            'added_by' => Auth::id(),
+        ]);
+
+        return redirect()->back()->with('success', 'Payment instalment added.');
+    }
+
+    public function cpDeletePayment($id)
+    {
+        $payment = CpClientPayment::where('cp_id', Auth::user()->cp_id)->findOrFail($id);
+        $payment->delete();
+
+        return redirect()->back()->with('success', 'Payment entry deleted.');
     }
 
     public function cpDelete($id)
@@ -169,6 +259,8 @@ class CpDocumentController extends Controller
             Storage::disk('public')->delete($doc->file_path);
             $doc->delete();
         }
+
+        CpClientPayment::where('batch_id', $batchId)->where('cp_id', $cpId)->delete();
 
         return redirect()->back()->with('success', 'All documents for this client deleted.');
     }

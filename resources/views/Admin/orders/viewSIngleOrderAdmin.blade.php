@@ -13,131 +13,99 @@
         --text-muted: #6c757d;
     }
 
-    body {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        min-height: 100vh;
-    }
-
     .order-card {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 15px;
-        padding: 30px;
-        margin-bottom: 30px;
+        color: white; border-radius: 15px; padding: 30px; margin-bottom: 30px;
         box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
     }
+    .order-detail { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 25px; }
+    .order-detail-item { padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; backdrop-filter: blur(10px); }
+    .order-detail-label { font-weight: 600; opacity: 0.9; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .order-detail-value { font-size: 18px; font-weight: 700; }
 
-    .order-detail {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 25px;
-    }
-
-    .order-detail-item {
-        padding: 15px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        backdrop-filter: blur(10px);
-    }
-
-    .order-detail-label {
-        font-weight: 600;
-        opacity: 0.9;
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 8px;
-    }
-
-    .order-detail-value {
-        font-size: 18px;
-        font-weight: 700;
-    }
-
-    .products-table {
-        background: white;
-        border-radius: 15px;
-        overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        margin-bottom: 30px;
-        border: 1px solid var(--border-color);
-    }
-
+    .products-table { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 30px; border: 1px solid var(--border-color); }
     .products-table table { margin-bottom: 0; width: 100%; border-collapse: collapse; }
-
-    .products-table thead {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-bottom: 2px solid var(--border-color);
-    }
-
-    .products-table th {
-        padding: 18px 15px;
-        font-weight: 700;
-        color: var(--text-dark);
-        border: none;
-        font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .products-table td {
-        padding: 18px 15px;
-        vertical-align: middle;
-        border-bottom: 1px solid var(--border-color);
-    }
-
+    .products-table thead { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 2px solid var(--border-color); }
+    .products-table th { padding: 14px 12px; font-weight: 700; color: var(--text-dark); border: none; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .products-table td { padding: 14px 12px; vertical-align: middle; border-bottom: 1px solid var(--border-color); }
     .products-table tbody tr:hover { background: #f8f9fa; }
 
-    .product-info { display: flex; flex-direction: column; gap: 6px; }
-    .product-name { font-weight: 700; color: var(--text-dark); font-size: 15px; }
-    .product-meta { font-size: 12px; color: var(--text-muted); }
+    .product-info { display: flex; flex-direction: column; gap: 4px; }
+    .product-name { font-weight: 700; color: var(--text-dark); font-size: 14px; }
+    .product-meta { font-size: 11px; color: var(--text-muted); }
 
     .badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
     .badge-status { padding: 10px 18px; border-radius: 25px; font-size: 12px; font-weight: 700; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; }
-    .badge-pending { background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%); color: #856404; box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3); }
-    .badge-completed { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); color: #155724; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3); }
-    .badge-cancelled { background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); color: #721c24; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3); }
-    .badge-confirmed { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3); }
-    .badge-delivered { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46; box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3); }
+    .badge-pending { background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%); color: #856404; }
+    .badge-completed,.badge-confirmed { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; }
+    .badge-cancelled,.badge-rejected { background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); color: #721c24; }
+    .badge-delivered { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46; }
 
-    .remarks-card {
-        background: white;
-        border-radius: 15px;
-        padding: 25px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        margin-bottom: 30px;
-        border: 1px solid var(--border-color);
-    }
-
+    .remarks-card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; border: 1px solid var(--border-color); }
     .remarks-card h5 { color: var(--text-dark); margin-bottom: 15px; font-weight: 700; font-size: 16px; }
-    .remarks-card textarea {
-        width: 100%; padding: 12px 14px; border: 2px solid var(--border-color); border-radius: 8px;
-        font-size: 14px; resize: vertical; min-height: 80px;
-    }
-    .remarks-card textarea:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15); }
+    .remarks-card textarea { width: 100%; padding: 12px 14px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 14px; resize: vertical; min-height: 80px; }
+    .remarks-card textarea:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 4px rgba(102,126,234,0.15); }
 
-    .action-buttons { display: flex; gap: 12px; margin-top: 30px; flex-wrap: wrap; justify-content: flex-end; }
-    .action-buttons .btn {
-        padding: 12px 28px; font-weight: 600; border-radius: 8px; border: none;
-        transition: all 0.3s ease; font-size: 14px; text-transform: uppercase;
-        letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); cursor: pointer;
-        text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
-    }
+    .action-buttons { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; justify-content: flex-end; }
+    .action-buttons .btn { padding: 12px 28px; font-weight: 600; border-radius: 8px; border: none; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
     .btn-approve { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; }
-    .btn-approve:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(40, 167, 69, 0.3); color: white; }
     .btn-cancel-req { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; }
-    .btn-cancel-req:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(220, 53, 69, 0.3); color: white; }
-
-    .back-btn {
-        display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px;
-        background: white; color: var(--text-dark); border-radius: 8px; text-decoration: none;
-        font-weight: 600; border: 2px solid var(--border-color); font-size: 13px;
-    }
+    .back-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: white; color: var(--text-dark); border-radius: 8px; text-decoration: none; font-weight: 600; border: 2px solid var(--border-color); font-size: 13px; }
     .back-btn:hover { background: var(--light-bg); border-color: var(--primary-color); color: var(--primary-color); }
-
     .page-header { margin-bottom: 35px; }
     .page-header h1 { font-size: 28px; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
     .page-header p { color: var(--text-muted); font-size: 15px; }
+
+    .price-input { width: 100px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right; font-weight: 600; }
+    .price-input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102,126,234,0.2); }
+    .price-save-btn { background: #059669; color: #fff; border: none; padding: 4px 10px; border-radius: 5px; font-size: 11px; font-weight: 700; cursor: pointer; margin-left: 4px; }
+    .price-saved { color: #059669; font-size: 11px; font-weight: 600; margin-left: 6px; }
+    .cost-badge { display: inline-block; padding: 2px 8px; background: #fef3c7; color: #92400e; border-radius: 10px; font-size: 10px; font-weight: 600; margin-top: 4px; }
+    .stock-badge { display: inline-block; padding: 2px 8px; background: #dbeafe; color: #1e40af; border-radius: 10px; font-size: 10px; font-weight: 600; }
+
+    /* Fulfillment UI */
+    .oi-card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; margin-bottom:16px; overflow:hidden; }
+    .oi-head { padding:14px 18px; background:#fafbfc; border-bottom:1px solid #eef0f2; display:flex; align-items:center; gap:14px; }
+    .oi-title { font-size:.95rem; font-weight:600; color:#1f2937; }
+    .oi-meta { font-size:.78rem; color:#6b7280; margin-top:2px; }
+    .oi-price { margin-left:auto; text-align:right; }
+    .oi-price .amt { font-size:1rem; font-weight:700; color:#111827; }
+    .stock-row { padding:12px 18px; background:#fff; border-bottom:1px solid #f1f3f5; }
+    .stock-label { font-size:.68rem; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; }
+    .stock-pills { display:flex; flex-wrap:wrap; gap:6px; }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:16px; font-size:.75rem; font-weight:600; }
+    .pill .dot { width:7px; height:7px; border-radius:50%; }
+    .pill.main { background:#d1fae5; color:#047857; } .pill.main .dot { background:#10b981; }
+    .pill.wh { background:#e0e7ff; color:#4338ca; } .pill.wh .dot { background:#6366f1; }
+    .pill.tot { background:#f3f4f6; color:#374151; } .pill.tot .dot { background:#9ca3af; }
+    .pill.zero { opacity:.55; }
+
+    .ff-section { padding:14px 18px; background:#fefce8; border-top:1px solid #fde68a; }
+    .ff-section.done { background:#f0fdf4; border-top-color:#bbf7d0; }
+    .ff-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .ff-title { font-size:.82rem; font-weight:700; color:#78350f; }
+    .ff-section.done .ff-title { color:#166534; }
+    .ff-need { font-size:.78rem; font-weight:600; color:#78350f; }
+
+    .src-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+    .src-row select, .src-row input[type=number] { padding:7px 10px; border:1px solid #d1d5db; border-radius:6px; font-size:.85rem; }
+    .src-row select { flex:1; }
+    .src-row input[type=number] { width:110px; }
+    .src-remove { background:#fee2e2; color:#b91c1c; border:none; width:32px; height:32px; border-radius:6px; cursor:pointer; font-weight:700; display:flex; align-items:center; justify-content:center; }
+    .add-src-btn { background:#4f46e5; color:#fff; border:none; padding:6px 12px; border-radius:6px; font-size:.78rem; font-weight:600; cursor:pointer; }
+    .alloc-status { font-size:.78rem; font-weight:600; margin-top:8px; padding:6px 10px; border-radius:6px; }
+    .alloc-status.ok { background:#d1fae5; color:#065f46; }
+    .alloc-status.warn { background:#fef3c7; color:#92400e; }
+    .alloc-status.err { background:#fee2e2; color:#991b1b; }
+    .ff-submit { margin-top:10px; width:100%; padding:9px; background:#059669; color:#fff; border:none; border-radius:8px; font-weight:700; font-size:.85rem; cursor:pointer; }
+    .ff-submit:hover:not(:disabled) { background:#047857; }
+    .ff-submit:disabled { background:#a7f3d0; cursor:not-allowed; }
+
+    .audit-box { padding:12px 18px; background:#f0fdf4; border-top:1px solid #bbf7d0; }
+    .audit-title { font-size:.72rem; font-weight:700; color:#166534; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; }
+    .audit-log { background:#fff; border:1px solid #d1fae5; border-radius:6px; padding:8px 12px; margin-bottom:8px; }
+    .audit-log-item { font-size:.78rem; color:#374151; padding:2px 0; }
+    .audit-log-item strong { color:#065f46; }
 
     @media (max-width: 768px) {
         .order-detail { grid-template-columns: 1fr; gap: 15px; }
@@ -151,9 +119,9 @@
 @section('content')
 <div class="min-h-screen py-8">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="page-header flex items-center justify-between mb-8">
+        <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;">
             <div>
-                <h1 class="flex items-center gap-3">
+                <h1 style="display:flex;align-items:center;gap:12px;">
                     <i class="bi bi-file-earmark-check" style="color: var(--primary-color);"></i>Inventory Request Details
                 </h1>
                 <p>Review and take action on this inventory request</p>
@@ -162,6 +130,17 @@
                 <i class="bi bi-arrow-left"></i> Back to Requests
             </a>
         </div>
+
+        @if(session('success'))
+        <div style="margin-bottom:16px;padding:14px 18px;background:#d1fae5;border:1px solid #a7f3d0;color:#065f46;border-radius:10px;font-size:.88rem;font-weight:600;">
+            {{ session('success') }}
+        </div>
+        @endif
+        @if(session('error'))
+        <div style="margin-bottom:16px;padding:14px 18px;background:#fee2e2;border:1px solid #fecaca;color:#991b1b;border-radius:10px;font-size:.88rem;font-weight:600;">
+            {{ session('error') }}
+        </div>
+        @endif
 
         @if($order)
         <div class="order-card">
@@ -180,69 +159,237 @@
                 </div>
                 <div class="order-detail-item">
                     <div class="order-detail-label">Status</div>
-                    <div class="badge-status badge-{{ strtolower($order->status) }}">
-                        {{ ucfirst($order->status) }}
-                    </div>
+                    <div class="badge-status badge-{{ strtolower($order->status) }}">{{ ucfirst($order->status) }}</div>
                 </div>
             </div>
         </div>
+
+        {{-- Products Table with Price, Stock, Cost --}}
+        @php
+            $productsArr = $order->products;
+            if (is_string($productsArr)) $productsArr = json_decode($productsArr, true);
+            if (!is_array($productsArr)) $productsArr = [];
+            $orderGrandTotal = 0;
+        @endphp
 
         <div class="products-table">
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 5%;">#</th>
-                        <th style="width: 45%;">Product</th>
-                        <th style="width: 15%; text-align: center;">UOM</th>
-                        <th style="width: 15%; text-align: center;">Quantity</th>
+                        <th style="width:5%;">#</th>
+                        <th style="width:30%;">Product</th>
+                        <th style="text-align:center;">UOM</th>
+                        <th style="text-align:center;">Qty</th>
+                        <th style="text-align:right;">Unit Price</th>
+                        <th style="text-align:right;">Total</th>
+                        <th style="text-align:center;">Stock Left</th>
+                        <th style="text-align:right;">Cost Price</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @php
-                        $products = $order->products;
-                        if (is_string($products)) $products = json_decode($products, true);
-                        if (!is_array($products)) $products = [];
-                        $productIndex = 0;
-                    @endphp
-
-                    @forelse($products as $product)
+                    @forelse($productsArr as $pIdx => $product)
                         @php
-                            $productIndex++;
                             $productDetails = \App\Models\Product::find($product['product_id'] ?? null);
                             $categoryDetails = \App\Models\ProductCategory::find($product['category_id'] ?? null);
-                            $subcategoryDetails = !empty($product['subcategory_id']) ? \App\Models\ProductSubCategory::find($product['subcategory_id']) : null;
+                            $qty = (int)($product['quantity'] ?? 0);
+                            $unitPrice = $product['price'] ?? ($productDetails ? $productDetails->current_sale_price : 0) ?? 0;
+                            $lineTotal = $unitPrice * $qty;
+                            $orderGrandTotal += $lineTotal;
+                            $info = $stockInfo[$pIdx] ?? null;
+                            $totalStock = $info ? ($info['main'] + ($info['warehouses']->sum('available_qty'))) : ($productDetails ? $productDetails->quantity : 0);
+                            $costPrice = $info['cost_price'] ?? null;
                         @endphp
                         <tr>
-                            <td><strong>{{ $productIndex }}</strong></td>
+                            <td><strong>{{ $pIdx + 1 }}</strong></td>
                             <td>
                                 <div class="product-info">
-                                    <span class="product-name">{{ $productDetails ? $productDetails->item_name : 'Unknown Product' }}</span>
+                                    <span class="product-name">{{ $productDetails ? $productDetails->item_name : 'Unknown' }}</span>
                                     <span class="product-meta">
                                         <i class="bi bi-tag"></i> {{ $categoryDetails ? $categoryDetails->category_name : 'N/A' }}
-                                        @if($subcategoryDetails)
-                                            / {{ $subcategoryDetails->sub_category_name }}
+                                        @if($productDetails && $productDetails->item_code)
+                                            &middot; {{ $productDetails->item_code }}
                                         @endif
                                     </span>
                                 </div>
                             </td>
-                            <td style="text-align: center;">
-                                <span class="badge bg-primary">{{ $product['uom'] ?? 'N/A' }}</span>
+                            <td style="text-align:center;">
+                                <span class="badge bg-primary" style="padding:4px 10px;border-radius:12px;font-size:11px;">{{ $product['uom'] ?? ($productDetails->uom ?? 'N/A') }}</span>
                             </td>
-                            <td style="text-align: center;">
-                                <strong>{{ $product['quantity'] ?? 0 }}</strong>
+                            <td style="text-align:center;"><strong>{{ $qty }}</strong></td>
+                            <td style="text-align:right;">
+                                <div class="price-edit-wrap" data-idx="{{ $pIdx }}">
+                                    <input type="number" step="0.01" min="0" class="price-input" id="priceInput{{ $pIdx }}" value="{{ $unitPrice }}" onchange="savePrice({{ $pIdx }})">
+                                    <span class="price-saved" id="priceSaved{{ $pIdx }}" style="display:none;">Saved!</span>
+                                </div>
+                            </td>
+                            <td style="text-align:right;font-weight:700;color:#111827;" id="lineTotal{{ $pIdx }}">
+                                &#8377;{{ number_format($lineTotal, 2) }}
+                            </td>
+                            <td style="text-align:center;">
+                                <span class="stock-badge">{{ $totalStock }} left</span>
+                            </td>
+                            <td style="text-align:right;">
+                                @if($costPrice)
+                                    <span class="cost-badge">&#8377;{{ number_format($costPrice, 2) }}</span>
+                                @else
+                                    <span style="color:#9ca3af;font-size:11px;">N/A</span>
+                                @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                                <i class="bi bi-inbox" style="font-size: 36px; margin-bottom: 12px; display: block;"></i>
-                                <p style="font-size: 15px;">No products in this request</p>
+                            <td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted);">
+                                <i class="bi bi-inbox" style="font-size:36px;display:block;margin-bottom:12px;"></i>
+                                No products in this request
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
+                @if(count($productsArr) > 0)
+                <tfoot>
+                    <tr style="background:#f9fafb;">
+                        <td colspan="5" style="text-align:right;font-weight:700;font-size:14px;padding:16px 12px;">Grand Total</td>
+                        <td style="text-align:right;font-weight:800;font-size:16px;color:#4f46e5;padding:16px 12px;" id="grandTotalDisplay">
+                            &#8377;{{ number_format($orderGrandTotal, 2) }}
+                        </td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+                @endif
             </table>
         </div>
+
+        {{-- Fulfillment Section --}}
+        @if(in_array($order->status, ['confirmed', 'completed', 'pending']))
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:15px;padding:20px;margin-bottom:30px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+            <div style="padding:0 4px 14px;border-bottom:1px solid #f3f4f6;margin-bottom:16px;">
+                <h2 style="font-size:1rem;font-weight:700;color:#1f2937;">Stock Allocation & Fulfillment</h2>
+                <p style="font-size:.78rem;color:#6b7280;margin-top:2px;">Select sources (Main Inventory / Warehouses) to fulfill each product. Serials are required for serial-tracked products.</p>
+            </div>
+
+            @foreach($productsArr as $pIdx => $prod)
+            @php
+                $productDetails = \App\Models\Product::find($prod['product_id'] ?? null);
+                $info = $stockInfo[$pIdx] ?? null;
+                $mainStock = $info ? $info['main'] : 0;
+                $whList = $info ? $info['warehouses'] : collect();
+                $totalStock = $mainStock + ($whList->sum('available_qty'));
+                $qty = (int)($prod['quantity'] ?? 0);
+                $done = $info && $info['remaining'] == 0 && $info['total_fulfilled'] >= $qty;
+                $unitPrice = $prod['price'] ?? ($productDetails ? $productDetails->current_sale_price : 0) ?? 0;
+            @endphp
+            <div class="oi-card">
+                <div class="oi-head">
+                    <div style="flex:1;min-width:0;">
+                        <div class="oi-title">{{ $productDetails ? $productDetails->item_name : 'Unknown' }}</div>
+                        <div class="oi-meta">Ordered: <strong>{{ $qty }}</strong> &middot; &#8377;{{ number_format($unitPrice, 2) }} each</div>
+                    </div>
+                    <div class="oi-price">
+                        <div class="amt">&#8377;{{ number_format($unitPrice * $qty, 2) }}</div>
+                    </div>
+                </div>
+
+                <div class="stock-row">
+                    <div class="stock-label">Current Stock Breakdown</div>
+                    <div class="stock-pills">
+                        <span class="pill main {{ $mainStock == 0 ? 'zero' : '' }}"><span class="dot"></span> Main: {{ $mainStock }}</span>
+                        @foreach($warehouses as $wh)
+                            @php $whQ = optional($whList->get($wh->id))->available_qty ?? 0; @endphp
+                            <span class="pill wh {{ $whQ == 0 ? 'zero' : '' }}"><span class="dot"></span> {{ $wh->name }}: {{ $whQ }}</span>
+                        @endforeach
+                        <span class="pill tot"><span class="dot"></span> Total: {{ $totalStock }}</span>
+                    </div>
+                </div>
+
+                @if($info && $info['total_fulfilled'] > 0)
+                <div class="audit-box">
+                    <div class="audit-title">Fulfillment Log</div>
+                    <div class="audit-log">
+                        @if($info['fulfilled_main'] > 0)
+                            <div class="audit-log-item">&#10003; <strong>Main Inventory:</strong> {{ $info['fulfilled_main'] }} deducted</div>
+                        @endif
+                        @foreach($warehouses as $wh)
+                            @if(($info['fulfilled_wh'][$wh->id] ?? 0) > 0)
+                                <div class="audit-log-item">&#10003; <strong>{{ $wh->name }}:</strong> {{ $info['fulfilled_wh'][$wh->id] }} deducted</div>
+                            @endif
+                        @endforeach
+                    </div>
+                    <div style="font-size:.8rem;color:#166534;font-weight:600;">Fulfilled: {{ $info['total_fulfilled'] }} / {{ $qty }}</div>
+                </div>
+                @endif
+
+                @if(!$done)
+                <div class="ff-section">
+                    <div class="ff-header">
+                        <div class="ff-title">Allocate Stock Sources</div>
+                        <div class="ff-need">Needed: <strong>{{ $info ? $info['remaining'] : $qty }}</strong></div>
+                    </div>
+
+                    @if($totalStock < ($info ? $info['remaining'] : $qty))
+                    <div class="alloc-status err" style="margin-bottom:10px;">
+                        &#9888; Insufficient stock! Available: {{ $totalStock }}, Need: {{ $info ? $info['remaining'] : $qty }}.
+                    </div>
+                    @endif
+
+                    @if($info && ($info['is_serial_tracked'] ?? false))
+                    <div style="margin-bottom:10px;padding:8px 12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;font-size:.82rem;color:#0c4a6e;">
+                        <strong>Serial-tracked product.</strong> Pick specific serial numbers for each source below.
+                    </div>
+                    @endif
+
+                    <form method="POST" action="{{ route('admin.cpOrder.fulfill', $order->id) }}" id="ffForm{{ $pIdx }}" data-pidx="{{ $pIdx }}" data-is-serial="{{ $info && ($info['is_serial_tracked'] ?? false) ? 1 : 0 }}">
+                        @csrf
+                        <input type="hidden" name="product_index" value="{{ $pIdx }}">
+
+                        <div id="srcRows{{ $pIdx }}">
+                            <div class="src-row" data-idx="0">
+                                <select name="sources[0][source]" onchange="onSrcChange({{ $pIdx }}, this, 0)">
+                                    <option value="">-- Select source --</option>
+                                    @if($mainStock > 0)
+                                        <option value="main" data-max="{{ $mainStock }}">Main Inventory ({{ $mainStock }} avail)</option>
+                                    @endif
+                                    @foreach($warehouses as $wh)
+                                        @php $whQ = optional($whList->get($wh->id))->available_qty ?? 0; @endphp
+                                        @if($whQ > 0)
+                                            <option value="wh:{{ $wh->id }}" data-max="{{ $whQ }}">{{ $wh->name }} ({{ $whQ }} avail)</option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                                <input type="number" name="sources[0][qty]" min="1" placeholder="Qty" oninput="onQtyChange({{ $pIdx }}, 0)">
+                            </div>
+                        </div>
+
+                        <div id="serialPickers{{ $pIdx }}" style="display:none;"></div>
+
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <button type="button" class="add-src-btn" onclick="addSrcRow({{ $pIdx }})">+ Add source</button>
+                            <div class="alloc-status warn" id="allocStatus{{ $pIdx }}" style="flex:1;text-align:right;margin-top:0;">Allocated: 0 / {{ $info ? $info['remaining'] : $qty }}</div>
+                        </div>
+
+                        <button type="submit" class="ff-submit" id="ffBtn{{ $pIdx }}" disabled>Deduct Stock & Fulfill</button>
+                    </form>
+                </div>
+
+                @if($info && ($info['is_serial_tracked'] ?? false) && count($info['assigned_serials']) > 0)
+                <div style="margin:0 18px 14px;padding:10px 14px;background:#ecfdf5;border:1px solid #bbf7d0;border-radius:8px;">
+                    <div style="font-size:.78rem;font-weight:700;color:#065f46;margin-bottom:6px;">Serials Allocated:</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:5px;">
+                        @foreach($info['assigned_serials'] as $sn)
+                        <span style="background:#fff;border:1px solid #86efac;color:#065f46;font-family:monospace;font-size:.72rem;padding:3px 8px;border-radius:4px;">{{ $sn }}</span>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                @else
+                <div class="ff-section done">
+                    <div class="ff-title" style="text-align:center;">&#10003; Product fully fulfilled</div>
+                </div>
+                @endif
+            </div>
+            @endforeach
+        </div>
+        @endif
 
         @if($order->order_notes)
         <div class="remarks-card">
@@ -252,24 +399,24 @@
         @endif
 
         @if($order->payment_screenshot)
-        <div class="remarks-card" style="margin-top:20px;">
+        <div class="remarks-card">
             <h5><i class="bi bi-receipt"></i> Payment Receipt</h5>
             <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap;">
                 <div>
-                    <a href="{{ asset('storage/' . $order->payment_screenshot) }}" target="_blank">
-                        <img src="{{ asset('storage/' . $order->payment_screenshot) }}" alt="Payment Receipt" style="max-width:300px;max-height:250px;border-radius:8px;border:1px solid var(--border-color);cursor:pointer;">
+                    <a href="{{ url('serve/' . $order->payment_screenshot) }}" target="_blank">
+                        <img src="{{ url('serve/' . $order->payment_screenshot) }}" alt="Payment Receipt" style="max-width:300px;max-height:250px;border-radius:8px;border:1px solid var(--border-color);cursor:pointer;">
                     </a>
                 </div>
                 <div>
                     <p style="margin:0 0 .5rem;"><strong>Payment Status:</strong>
                         @if($order->payment_status === 'verification_pending')
-                            <span class="badge bg-warning text-dark">Verification Pending</span>
+                            <span class="badge" style="background:#fff3cd;color:#856404;">Verification Pending</span>
                         @elseif($order->payment_status === 'paid')
-                            <span class="badge bg-success">Approved</span>
+                            <span class="badge" style="background:#d1fae5;color:#065f46;">Approved</span>
                         @elseif($order->payment_status === 'failed')
-                            <span class="badge bg-danger">Rejected</span>
+                            <span class="badge" style="background:#fee2e2;color:#991b1b;">Rejected</span>
                         @else
-                            <span class="badge bg-secondary">{{ ucfirst($order->payment_status ?? 'pending') }}</span>
+                            <span class="badge" style="background:#f3f4f6;color:#374151;">{{ ucfirst($order->payment_status ?? 'pending') }}</span>
                         @endif
                     </p>
                     @if($order->payment_reference)
@@ -279,14 +426,14 @@
                     <div style="display:flex;gap:.5rem;margin-top:1rem;">
                         <form method="POST" action="{{ route('approveCpPayment', $order->id) }}">
                             @csrf
-                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirmPaymentApproval(event, this)">
-                                <i class="bi bi-check-circle"></i> Approve Payment
+                            <button type="submit" class="btn btn-approve" style="padding:8px 18px;font-size:12px;" onclick="return confirmPaymentApproval(event, this)">
+                                <i class="bi bi-check-circle"></i> Approve
                             </button>
                         </form>
                         <form method="POST" action="{{ route('rejectCpPayment', $order->id) }}">
                             @csrf
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Reject this payment?')">
-                                <i class="bi bi-x-circle"></i> Reject Payment
+                            <button type="submit" class="btn btn-cancel-req" style="padding:8px 18px;font-size:12px;" onclick="return confirm('Reject this payment?')">
+                                <i class="bi bi-x-circle"></i> Reject
                             </button>
                         </form>
                     </div>
@@ -320,17 +467,6 @@
         </div>
         @endif
 
-        @if($order->status == 'confirmed' || $order->status == 'completed')
-        <div class="action-buttons">
-            <form method="POST" action="{{ route('markCpOrderDelivered', $order->id) }}">
-                @csrf
-                <button type="submit" class="btn btn-approve" onclick="return confirm('Mark this order as delivered?')">
-                    <i class="bi bi-truck"></i> Mark as Delivered
-                </button>
-            </form>
-        </div>
-        @endif
-
         @if($order->admin_remarks)
         <div class="remarks-card" style="margin-top: 20px;">
             <h5><i class="bi bi-shield-check"></i> Admin Remarks</h5>
@@ -339,8 +475,9 @@
         @endif
 
         @else
-        <div class="alert alert-warning" role="alert">
-            <i class="bi bi-exclamation-triangle"></i> Request not found.
+        <div style="padding:40px;text-align:center;color:var(--text-muted);">
+            <i class="bi bi-exclamation-triangle" style="font-size:36px;"></i>
+            <p style="margin-top:12px;">Request not found.</p>
         </div>
         @endif
     </div>
@@ -349,19 +486,247 @@
 
 @section('js')
 <script>
+// Price editing
+function savePrice(idx) {
+    var input = document.getElementById('priceInput' + idx);
+    var price = parseFloat(input.value) || 0;
+    var saved = document.getElementById('priceSaved' + idx);
+
+    fetch('{{ route("admin.cpOrder.updatePrice", $order->id ?? 0) }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ product_index: idx, price: price })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            saved.style.display = 'inline';
+            setTimeout(function() { saved.style.display = 'none'; }, 2000);
+            // Update line total
+            var qty = parseInt(document.querySelectorAll('.products-table tbody tr')[idx].querySelector('td:nth-child(4) strong').textContent) || 0;
+            document.getElementById('lineTotal' + idx).innerHTML = '&#8377;' + (price * qty).toLocaleString('en-IN', {minimumFractionDigits:2,maximumFractionDigits:2});
+            // Update grand total
+            if (data.grand_total !== undefined) {
+                document.getElementById('grandTotalDisplay').innerHTML = '&#8377;' + parseFloat(data.grand_total).toLocaleString('en-IN', {minimumFractionDigits:2,maximumFractionDigits:2});
+            }
+        }
+    });
+}
+
+// Fulfillment allocation JS
+const srcRowCounts = {};
+const itemNeeds = {};
+@foreach($productsArr as $pIdx => $prod)
+    @php $rem = isset($stockInfo[$pIdx]) ? $stockInfo[$pIdx]['remaining'] : (int)($prod['quantity'] ?? 0); @endphp
+    srcRowCounts[{{ $pIdx }}] = 1;
+    itemNeeds[{{ $pIdx }}] = {{ $rem }};
+@endforeach
+
+const availableSerialsByItem = {};
+@foreach($productsArr as $pIdx => $prod)
+    @if(isset($stockInfo[$pIdx]) && ($stockInfo[$pIdx]['is_serial_tracked'] ?? false))
+    availableSerialsByItem[{{ $pIdx }}] = {
+        @foreach($stockInfo[$pIdx]['available_serials'] as $srcKey => $ser)
+        {!! json_encode((string)$srcKey) !!}: {!! json_encode($ser->values()->toArray()) !!},
+        @endforeach
+    };
+    @endif
+@endforeach
+
+const selectedSerialsByRow = {};
+
+function isSerialTrackedItem(pIdx) {
+    var form = document.getElementById('ffForm' + pIdx);
+    return form && form.getAttribute('data-is-serial') === '1';
+}
+
+function addSrcRow(pIdx) {
+    const idx = srcRowCounts[pIdx]++;
+    const wrap = document.getElementById('srcRows' + pIdx);
+    const first = wrap.querySelector('.src-row select');
+    const optionsHtml = first ? first.innerHTML : '';
+    const row = document.createElement('div');
+    row.className = 'src-row';
+    row.setAttribute('data-idx', idx);
+    row.innerHTML = '<select name="sources[' + idx + '][source]" onchange="onSrcChange(' + pIdx + ', this, ' + idx + ')">' + optionsHtml + '</select>'
+        + '<input type="number" name="sources[' + idx + '][qty]" min="1" placeholder="Qty" oninput="onQtyChange(' + pIdx + ', ' + idx + ')">'
+        + '<button type="button" class="src-remove" onclick="removeSrcRow(this, ' + pIdx + ', ' + idx + ')">&times;</button>';
+    wrap.appendChild(row);
+}
+
+function removeSrcRow(btn, pIdx, idx) {
+    btn.parentElement.remove();
+    var picker = document.getElementById('srcSerials_' + pIdx + '_' + idx);
+    if (picker) picker.remove();
+    delete selectedSerialsByRow[pIdx + '_' + idx];
+    recalcAlloc(pIdx);
+    syncSerialInputs(pIdx);
+}
+
+function onSrcChange(pIdx, sel, idx) {
+    recalcAlloc(pIdx);
+    if (!isSerialTrackedItem(pIdx)) return;
+    rebuildSerialPicker(pIdx, idx);
+}
+function onQtyChange(pIdx, idx) {
+    recalcAlloc(pIdx);
+    if (!isSerialTrackedItem(pIdx)) return;
+    rebuildSerialPicker(pIdx, idx);
+}
+
+function rebuildSerialPicker(pIdx, idx) {
+    var wrap = document.getElementById('serialPickers' + pIdx);
+    var row = document.querySelector('#srcRows' + pIdx + ' .src-row[data-idx="' + idx + '"]');
+    if (!row || !wrap) return;
+    var sel = row.querySelector('select');
+    var qtyInput = row.querySelector('input[type=number]');
+    var src = sel.value;
+    var qty = parseInt(qtyInput.value) || 0;
+
+    var existing = document.getElementById('srcSerials_' + pIdx + '_' + idx);
+    if (existing) existing.remove();
+    delete selectedSerialsByRow[pIdx + '_' + idx];
+    if (!src || qty <= 0) { wrap.style.display = wrap.children.length ? '' : 'none'; syncSerialInputs(pIdx); return; }
+
+    var avail = (availableSerialsByItem[pIdx] || {})[src] || [];
+    var preSelected = avail.slice(0, Math.min(qty, avail.length));
+    selectedSerialsByRow[pIdx + '_' + idx] = new Set(preSelected);
+
+    var srcLabel = sel.options[sel.selectedIndex].text.split(' (')[0];
+    var block = document.createElement('div');
+    block.id = 'srcSerials_' + pIdx + '_' + idx;
+    block.style.cssText = 'margin-top:10px;padding:12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;';
+    block.innerHTML =
+        '<div style="display:flex;justify-content:space-between;margin-bottom:8px;align-items:center;flex-wrap:wrap;gap:6px;">'
+      + '<span style="font-weight:600;font-size:.84rem;color:#0c4a6e;">Serials from ' + srcLabel + ' (' + qty + ' needed)</span>'
+      + '<div style="display:flex;gap:6px;">'
+      + '<button type="button" onclick="autoPickSourceSerials(' + pIdx + ',' + idx + ')" style="background:#2563eb;color:#fff;border:none;padding:4px 10px;border-radius:5px;font-size:.75rem;font-weight:600;cursor:pointer;">Auto-Pick</button>'
+      + '<button type="button" onclick="clearSourceSerials(' + pIdx + ',' + idx + ')" style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db;padding:4px 10px;border-radius:5px;font-size:.75rem;font-weight:600;cursor:pointer;">Clear</button>'
+      + '</div></div>'
+      + '<div id="srcSerialList_' + pIdx + '_' + idx + '" style="max-height:180px;overflow-y:auto;background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:6px;"></div>'
+      + '<div style="margin-top:6px;font-size:.78rem;color:#374151;font-weight:600;" id="srcSerialCount_' + pIdx + '_' + idx + '">0 / ' + qty + '</div>';
+    wrap.appendChild(block);
+    wrap.style.display = '';
+    renderSerialCheckboxes(pIdx, idx);
+}
+
+function renderSerialCheckboxes(pIdx, idx) {
+    var row = document.querySelector('#srcRows' + pIdx + ' .src-row[data-idx="' + idx + '"]');
+    var sel = row.querySelector('select');
+    var qty = parseInt(row.querySelector('input[type=number]').value) || 0;
+    var avail = (availableSerialsByItem[pIdx] || {})[sel.value] || [];
+    var selected = selectedSerialsByRow[pIdx + '_' + idx] || new Set();
+    var listEl = document.getElementById('srcSerialList_' + pIdx + '_' + idx);
+    if (!listEl) return;
+    var html = '';
+    avail.forEach(function(sn) {
+        var checked = selected.has(sn) ? 'checked' : '';
+        html += '<label style="display:flex;align-items:center;gap:8px;padding:4px 8px;border-bottom:1px solid #f3f4f6;cursor:pointer;font-family:monospace;font-size:.78rem;">'
+              + '<input type="checkbox" ' + checked + ' value="' + sn + '" onchange="toggleSourceSerial(' + pIdx + ',' + idx + ',this)"> ' + sn
+              + '</label>';
+    });
+    if (!avail.length) html = '<div style="padding:8px;text-align:center;color:#94a3b8;font-size:.82rem;">No serials at this source</div>';
+    listEl.innerHTML = html;
+    var countEl = document.getElementById('srcSerialCount_' + pIdx + '_' + idx);
+    if (countEl) {
+        countEl.textContent = selected.size + ' selected / ' + qty + ' needed';
+        countEl.style.color = (qty > 0 && selected.size === qty) ? '#059669' : '#dc2626';
+    }
+    syncSerialInputs(pIdx);
+    recalcAlloc(pIdx);
+}
+
+function toggleSourceSerial(pIdx, idx, cb) {
+    var key = pIdx + '_' + idx;
+    if (!selectedSerialsByRow[key]) selectedSerialsByRow[key] = new Set();
+    if (cb.checked) selectedSerialsByRow[key].add(cb.value);
+    else selectedSerialsByRow[key].delete(cb.value);
+    renderSerialCheckboxes(pIdx, idx);
+}
+function autoPickSourceSerials(pIdx, idx) {
+    var row = document.querySelector('#srcRows' + pIdx + ' .src-row[data-idx="' + idx + '"]');
+    var sel = row.querySelector('select');
+    var qty = parseInt(row.querySelector('input[type=number]').value) || 0;
+    var avail = (availableSerialsByItem[pIdx] || {})[sel.value] || [];
+    selectedSerialsByRow[pIdx + '_' + idx] = new Set(avail.slice(0, qty));
+    renderSerialCheckboxes(pIdx, idx);
+}
+function clearSourceSerials(pIdx, idx) {
+    selectedSerialsByRow[pIdx + '_' + idx] = new Set();
+    renderSerialCheckboxes(pIdx, idx);
+}
+
+function syncSerialInputs(pIdx) {
+    var form = document.getElementById('ffForm' + pIdx);
+    if (!form) return;
+    form.querySelectorAll('input.serial-hidden').forEach(function(el) { el.remove(); });
+    Object.keys(selectedSerialsByRow).forEach(function(key) {
+        if (!key.startsWith(pIdx + '_')) return;
+        var idx = key.split('_')[1];
+        selectedSerialsByRow[key].forEach(function(sn) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.className = 'serial-hidden';
+            input.name = 'serials[' + idx + '][]';
+            input.value = sn;
+            form.appendChild(input);
+        });
+    });
+}
+
+function recalcAlloc(pIdx) {
+    const wrap = document.getElementById('srcRows' + pIdx);
+    const rows = wrap.querySelectorAll('.src-row');
+    let total = 0, hasError = false, serialMismatch = false;
+    const usedSources = {};
+    const isSerial = isSerialTrackedItem(pIdx);
+    rows.forEach(function(row) {
+        const idx = row.getAttribute('data-idx');
+        const sel = row.querySelector('select');
+        const qtyInput = row.querySelector('input[type=number]');
+        const src = sel.value;
+        const qty = parseInt(qtyInput.value) || 0;
+        if (src && qty > 0) {
+            const opt = sel.options[sel.selectedIndex];
+            const max = parseInt(opt.getAttribute('data-max')) || 0;
+            if (qty > max) { hasError = true; qtyInput.style.borderColor = '#dc2626'; }
+            else { qtyInput.style.borderColor = '#d1d5db'; }
+            if (usedSources[src]) { hasError = true; sel.style.borderColor = '#dc2626'; }
+            else { sel.style.borderColor = '#d1d5db'; usedSources[src] = true; }
+            total += qty;
+            if (isSerial) {
+                var ss = selectedSerialsByRow[pIdx + '_' + idx];
+                if (!ss || ss.size !== qty) serialMismatch = true;
+            }
+        } else {
+            qtyInput.style.borderColor = '#d1d5db';
+            sel.style.borderColor = '#d1d5db';
+        }
+    });
+    const need = itemNeeds[pIdx];
+    const status = document.getElementById('allocStatus' + pIdx);
+    const btn = document.getElementById('ffBtn' + pIdx);
+    status.textContent = 'Allocated: ' + total + ' / ' + need;
+    status.className = 'alloc-status';
+    if (hasError) { status.classList.add('err'); status.textContent += ' (fix errors)'; btn.disabled = true; }
+    else if (total === 0) { status.classList.add('warn'); btn.disabled = true; }
+    else if (total < need) { status.classList.add('warn'); status.textContent += ' (add more)'; btn.disabled = true; }
+    else if (total > need) { status.classList.add('err'); status.textContent += ' (over-allocated)'; btn.disabled = true; }
+    else if (isSerial && serialMismatch) { status.classList.add('warn'); status.textContent += ' (pick serials)'; btn.disabled = true; }
+    else { status.classList.add('ok'); btn.disabled = false; }
+}
+
+// Approve/Cancel actions
 function confirmAction(e, btn, action) {
     var remarks = document.getElementById('adminRemarks') ? document.getElementById('adminRemarks').value : '';
-    document.querySelectorAll('.admin-remarks-input').forEach(function(input) {
-        input.value = remarks;
-    });
-
-    if (action === 'cancel') {
-        return confirm('Are you sure you want to CANCEL this inventory request?');
-    }
-
+    document.querySelectorAll('.admin-remarks-input').forEach(function(input) { input.value = remarks; });
+    if (action === 'cancel') return confirm('Cancel this inventory request?');
     var form = btn.closest('form');
     e.preventDefault();
-
     fetch('{{ route("checkCpOrderStock", $order->id ?? 0) }}', {
         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
     })
@@ -369,32 +734,20 @@ function confirmAction(e, btn, action) {
     .then(function(data) {
         if (data.warnings && data.warnings.length > 0) {
             var msg = 'Stock Warning!\n\n';
-            data.warnings.forEach(function(w) {
-                msg += w.name + ' has only ' + w.available + ' in stock, but ' + w.requested + ' requested.\n';
-            });
-            msg += '\nAvailable stock will become 0. Are you sure you want to approve?';
-            if (confirm(msg)) {
-                form.submit();
-            }
+            data.warnings.forEach(function(w) { msg += w.name + ': ' + w.available + ' available, ' + w.requested + ' requested.\n'; });
+            msg += '\nApprove anyway?';
+            if (confirm(msg)) form.submit();
         } else {
-            if (confirm('Are you sure you want to APPROVE this order?')) {
-                form.submit();
-            }
+            if (confirm('Approve this order?')) form.submit();
         }
     })
-    .catch(function() {
-        if (confirm('Could not check stock. Approve anyway?')) {
-            form.submit();
-        }
-    });
-
+    .catch(function() { if (confirm('Could not check stock. Approve anyway?')) form.submit(); });
     return false;
 }
 
 function confirmPaymentApproval(e, btn) {
     var form = btn.closest('form');
     e.preventDefault();
-
     fetch('{{ route("checkCpOrderStock", $order->id ?? 0) }}', {
         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
     })
@@ -402,25 +755,14 @@ function confirmPaymentApproval(e, btn) {
     .then(function(data) {
         if (data.warnings && data.warnings.length > 0) {
             var msg = 'Stock Warning!\n\n';
-            data.warnings.forEach(function(w) {
-                msg += w.name + ' has only ' + w.available + ' in stock, but ' + w.requested + ' requested.\n';
-            });
-            msg += '\nAvailable stock will become 0. Are you sure you want to approve payment?';
-            if (confirm(msg)) {
-                form.submit();
-            }
+            data.warnings.forEach(function(w) { msg += w.name + ': ' + w.available + ' available, ' + w.requested + ' requested.\n'; });
+            msg += '\nApprove payment anyway?';
+            if (confirm(msg)) form.submit();
         } else {
-            if (confirm('Approve this payment? Stock will be deducted.')) {
-                form.submit();
-            }
+            if (confirm('Approve this payment?')) form.submit();
         }
     })
-    .catch(function() {
-        if (confirm('Could not check stock. Approve payment anyway?')) {
-            form.submit();
-        }
-    });
-
+    .catch(function() { if (confirm('Could not check stock. Approve payment anyway?')) form.submit(); });
     return false;
 }
 </script>

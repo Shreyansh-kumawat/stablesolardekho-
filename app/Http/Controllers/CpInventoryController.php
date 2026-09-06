@@ -106,7 +106,8 @@ class CpInventoryController extends Controller
             $txnId = 'REORD' . time() . rand(1000, 9999);
         }
 
-        CpOrder::create([
+        $salePrice = $product->current_sale_price ?? 0;
+        $orderData = [
             'cp_id' => $user->cp_id,
             'order_id' => $txnId,
             'products' => [
@@ -116,13 +117,18 @@ class CpInventoryController extends Controller
                     'subcategory_id' => $product->sub_category_id,
                     'uom' => $product->uom,
                     'quantity' => $request->quantity,
+                    'price' => $salePrice,
                 ]
             ],
             'order_notes' => 'Re-order from inventory page',
             'status' => 'pending',
             'order_date' => now()->format('Y-m-d'),
             'payment_status' => 'verification_pending',
-        ]);
+        ];
+        if (\Illuminate\Support\Facades\Schema::hasColumn('cp_orders', 'grand_total')) {
+            $orderData['grand_total'] = $salePrice * $request->quantity;
+        }
+        CpOrder::create($orderData);
 
         return redirect()->route('cpInventory')->with('success', 'Re-order placed! Stock will be added after admin approval and delivery.');
     }

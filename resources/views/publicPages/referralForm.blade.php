@@ -111,12 +111,6 @@
                                        style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.88rem;color:#1e293b;background:#fff;box-sizing:border-box;outline:none;transition:border-color .15s;"
                                        onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='#e2e8f0'">
                             </div>
-                            <div>
-                                <label style="display:block;color:#374151;font-size:0.75rem;font-weight:600;margin-bottom:5px;">Monthly Bill</label>
-                                <input type="text" name="monthly_bill" value="{{ old('monthly_bill') }}" placeholder="e.g. 3000"
-                                       style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.88rem;color:#1e293b;background:#fff;box-sizing:border-box;outline:none;transition:border-color .15s;"
-                                       onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='#e2e8f0'">
-                            </div>
                         </div>
 
                         <div style="margin-bottom:14px;">

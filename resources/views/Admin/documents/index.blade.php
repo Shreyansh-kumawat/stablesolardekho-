@@ -3,7 +3,7 @@
 
 @section('css')
 <style>
-    :root { --blue: #2563eb; --blue-dark: #1d4ed8; --text: #1e293b; --muted: #64748b; --border: #e2e8f0; --white: #fff; --red: #dc2626; }
+    :root { --blue: #2563eb; --blue-dark: #1d4ed8; --text: #1e293b; --muted: #64748b; --border: #e2e8f0; --white: #fff; --red: #dc2626; --green: #16a34a; --orange: #ea580c; }
 
     .doc-wrap { padding: 1.25rem; max-width: 1100px; }
     .doc-header { display: flex; align-items: center; gap: 12px; margin-bottom: 1.25rem; }
@@ -46,13 +46,23 @@
     .client-doc-list td { padding: 7px 8px; border-bottom: 1px solid #f1f5f9; color: #374151; vertical-align: middle; }
     .client-doc-list tr:last-child td { border-bottom: none; }
     .doc-type-badge { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: 600; background: #eff6ff; color: var(--blue); }
-    .doc-type-req { background: #fef2f2; color: var(--red); font-size: 0.62rem; font-weight: 700; padding: 1px 5px; border-radius: 4px; margin-left: 4px; }
     .doc-file-link { color: var(--blue); text-decoration: none; font-weight: 600; font-size: 0.78rem; }
     .doc-file-link:hover { text-decoration: underline; }
     .doc-size { color: var(--muted); font-size: 0.72rem; }
     .del-btn { background: none; border: none; color: var(--red); cursor: pointer; padding: 2px; }
     .del-btn:hover { color: #991b1b; }
     .no-docs { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.85rem; background: var(--white); border: 1px solid var(--border); border-radius: 10px; }
+
+    .payment-summary { display: flex; gap: 16px; align-items: center; margin-top: 10px; padding: 10px 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; flex-wrap: wrap; }
+    .payment-summary.has-remaining { background: #fefce8; border-color: #fde68a; }
+    .payment-summary .ps-label { color: var(--muted); font-size: 0.7rem; }
+    .payment-summary .ps-value { color: var(--text); font-size: 0.95rem; font-weight: 700; }
+    .ps-value.text-green { color: var(--green); }
+    .ps-value.text-orange { color: var(--orange); }
+
+    .payment-table { width: 100%; font-size: 0.78rem; border-collapse: collapse; margin-top: 8px; }
+    .payment-table th { text-align: left; font-size: 0.68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; padding: 5px 8px; border-bottom: 1px solid var(--border); }
+    .payment-table td { padding: 5px 8px; border-bottom: 1px solid #f1f5f9; }
 
     @media (max-width: 768px) { .doc-stats { grid-template-columns: repeat(2, 1fr); } }
 </style>
@@ -98,6 +108,7 @@
                 @foreach($docTypes as $key => $label)
                     <option value="{{ $key }}" {{ request('document_type') == $key ? 'selected' : '' }}>{{ $label }}</option>
                 @endforeach
+                <option value="other" {{ request('document_type') == 'other' ? 'selected' : '' }}>Other</option>
             </select>
         </div>
         <button type="submit" class="doc-btn doc-btn-primary doc-btn-sm">Filter</button>
@@ -139,16 +150,27 @@
     @endif
 
     @foreach($grouped as $batchId => $batchDocs)
-    @php $firstDoc = $batchDocs->first(); @endphp
+    @php
+        $firstDoc = $batchDocs->first();
+        $batchPayments = $payments[$batchId] ?? collect();
+        $totalReceivable = $firstDoc->total_receivable ?? 0;
+        $totalPaid = $batchPayments->sum('amount');
+        $remaining = $totalReceivable > 0 ? $totalReceivable - $totalPaid : 0;
+    @endphp
     <div class="client-card">
         <div class="client-card-header" onclick="toggleClient(this)">
             <div class="client-info">
-                <h3>{{ $firstDoc->client_name ?? 'Unknown Client' }}</h3>
+                <h3>{{ $firstDoc->client_name ?: 'Client' }}</h3>
                 <p>{{ $firstDoc->client_phone ?? '' }}{{ $firstDoc->client_phone && $firstDoc->client_address ? ' &bull; ' : '' }}{{ $firstDoc->client_address ?? '' }}</p>
             </div>
             <div class="client-meta">
                 <span class="cp-badge">{{ $firstDoc->channelPartner->cp_name ?? '-' }}</span>
                 <span class="client-doc-count">{{ $batchDocs->count() }} doc(s)</span>
+                @if($totalReceivable > 0)
+                    <span style="font-size:0.7rem; font-weight:600; padding:3px 8px; border-radius:5px; {{ $remaining <= 0 ? 'background:#f0fdf4; color:var(--green);' : 'background:#fefce8; color:var(--orange);' }}">
+                        {{ $remaining <= 0 ? 'Fully Paid' : '₹' . number_format($remaining, 0) . ' due' }}
+                    </span>
+                @endif
                 <span style="font-size:0.72rem; color:var(--muted);">{{ $firstDoc->created_at->format('d M Y') }}</span>
                 <span class="client-toggle">&#9660;</span>
             </div>
@@ -161,10 +183,7 @@
                 <tbody>
                     @foreach($batchDocs as $doc)
                     <tr>
-                        <td>
-                            <span class="doc-type-badge">{{ $docTypes[$doc->document_type] ?? $doc->document_type }}</span>
-                            @if(in_array($doc->document_type, $compulsoryTypes))<span class="doc-type-req">Required</span>@endif
-                        </td>
+                        <td><span class="doc-type-badge">{{ $docTypes[$doc->document_type] ?? $doc->title }}</span></td>
                         <td><a href="{{ url('serve/' . $doc->file_path) }}" target="_blank" class="doc-file-link">{{ Str::limit($doc->file_name, 30) }}</a></td>
                         <td><span class="doc-size">{{ number_format($doc->file_size / 1024, 0) }} KB</span></td>
                         <td style="font-size:0.75rem; color:var(--muted);">{{ $doc->uploadedByUser->name ?? '-' }}</td>
@@ -180,6 +199,46 @@
             </table>
             @if($batchDocs->first()->remarks)
             <div style="margin-top:8px; font-size:0.75rem; color:var(--muted);">Remarks: {{ $batchDocs->first()->remarks }}</div>
+            @endif
+
+            <!-- Payment History -->
+            @if($totalReceivable > 0 || $batchPayments->isNotEmpty())
+            <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border);">
+                <div style="font-size:0.82rem; font-weight:700; color:var(--text); margin-bottom:8px;">Payment History</div>
+
+                <div class="payment-summary {{ $remaining > 0 ? 'has-remaining' : '' }}">
+                    <div>
+                        <div class="ps-label">Total Receivable</div>
+                        <div class="ps-value">₹{{ number_format($totalReceivable, 0) }}</div>
+                    </div>
+                    <div>
+                        <div class="ps-label">Total Received</div>
+                        <div class="ps-value text-green">₹{{ number_format($totalPaid, 0) }}</div>
+                    </div>
+                    <div>
+                        <div class="ps-label">Remaining</div>
+                        <div class="ps-value {{ $remaining > 0 ? 'text-orange' : 'text-green' }}">₹{{ number_format($remaining, 0) }}</div>
+                    </div>
+                </div>
+
+                @if($batchPayments->isNotEmpty())
+                <table class="payment-table">
+                    <thead>
+                        <tr><th>#</th><th>Date</th><th>Amount</th><th>Remarks</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach($batchPayments as $idx => $pmt)
+                        <tr>
+                            <td>{{ $idx + 1 }}</td>
+                            <td>{{ $pmt->payment_date->format('d M Y') }}</td>
+                            <td style="font-weight:700; color:var(--green);">₹{{ number_format($pmt->amount, 0) }}</td>
+                            <td style="color:var(--muted);">{{ $pmt->remarks ?? '-' }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                @endif
+            </div>
             @endif
         </div>
     </div>

@@ -179,12 +179,20 @@
             </div>
             @endif
 
+            @php $reorderProduct = \App\Models\Product::find($item->product_id); @endphp
             <div class="inv-form-inline" id="reorder-form-{{ $item->inv_id }}">
                 <form method="POST" action="{{ route('cpReorder') }}">
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $item->product_id }}">
                     <label>Quantity to request</label>
-                    <input type="number" name="quantity" min="1" required placeholder="Enter quantity">
+                    <input type="number" name="quantity" min="1" required placeholder="Enter quantity"
+                           data-price="{{ $reorderProduct->current_sale_price ?? 0 }}"
+                           oninput="updateInlinePrice(this, 'reorder-price-{{ $item->inv_id }}')">
+                    @if($reorderProduct && $reorderProduct->current_sale_price > 0)
+                    <div id="reorder-price-{{ $item->inv_id }}" style="margin:6px 0 4px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:.82rem;color:#1e40af;font-weight:600;display:none;">
+                        Unit Price: &#8377;{{ number_format($reorderProduct->current_sale_price, 2) }} &middot; Total: <span class="inline-total">&#8377;0</span>
+                    </div>
+                    @endif
                     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
                         <button type="button" class="inv-btn inv-btn-cancel" onclick="toggleForm('reorder-form-{{ $item->inv_id }}')">Cancel</button>
                         <button type="submit" class="inv-btn inv-btn-plus">
@@ -226,12 +234,15 @@
                 </select>
                 <div class="ss-dropdown">
                     @foreach($products as $product)
-                    <div class="ss-option" data-value="{{ $product->id }}" data-text="{{ $product->item_name }} ({{ $product->item_code }})" onclick="ssPick(this)">{{ $product->item_name }} <span style="color:#9ca3af;font-size:.78rem;">{{ $product->item_code }}</span></div>
+                    <div class="ss-option" data-value="{{ $product->id }}" data-text="{{ $product->item_name }} ({{ $product->item_code }})" data-price="{{ $product->current_sale_price ?? 0 }}" onclick="ssPick(this)">{{ $product->item_name }} <span style="color:#9ca3af;font-size:.78rem;">{{ $product->item_code }}</span> @if($product->current_sale_price > 0)<span style="color:#059669;font-size:.78rem;">&#8377;{{ number_format($product->current_sale_price, 2) }}</span>@endif</div>
                     @endforeach
                 </div>
             </div>
             <label>Quantity</label>
-            <input type="number" name="quantity" min="1" required placeholder="Enter quantity">
+            <input type="number" name="quantity" min="1" required placeholder="Enter quantity" id="modalQtyInput" oninput="updateModalPrice()">
+            <div id="modalPriceDisplay" style="margin:-4px 0 10px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:.82rem;color:#1e40af;font-weight:600;display:none;">
+                Unit: <span id="modalUnitPrice">&#8377;0</span> &middot; Total: <span id="modalTotalPrice">&#8377;0</span>
+            </div>
             <div class="inv-modal-actions">
                 <button type="button" class="inv-btn inv-btn-cancel" onclick="document.getElementById('reorderModal').classList.remove('active')">Cancel</button>
                 <button type="submit" class="inv-btn inv-btn-primary">Place Re-Order</button>
@@ -254,13 +265,39 @@ function ssFilter(input) {
     var q = input.value.toLowerCase();
     dd.querySelectorAll('.ss-option').forEach(function(o) { o.classList.toggle('hidden', q.length > 0 && o.getAttribute('data-text').toLowerCase().indexOf(q) === -1); });
 }
+var selectedModalPrice = 0;
 function ssPick(opt) {
     var wrap = opt.closest('.searchable-select');
     var sel = wrap.querySelector('select');
     sel.value = opt.getAttribute('data-value');
     wrap.querySelector('.ss-input').value = opt.getAttribute('data-text');
     wrap.querySelector('.ss-dropdown').classList.remove('open');
+    selectedModalPrice = parseFloat(opt.getAttribute('data-price')) || 0;
+    updateModalPrice();
     sel.dispatchEvent(new Event('change'));
+}
+function updateModalPrice() {
+    var qty = parseInt(document.getElementById('modalQtyInput').value) || 0;
+    var display = document.getElementById('modalPriceDisplay');
+    if (selectedModalPrice > 0 && qty > 0) {
+        document.getElementById('modalUnitPrice').innerHTML = '&#8377;' + selectedModalPrice.toLocaleString('en-IN', {minimumFractionDigits:2});
+        document.getElementById('modalTotalPrice').innerHTML = '&#8377;' + (selectedModalPrice * qty).toLocaleString('en-IN', {minimumFractionDigits:2});
+        display.style.display = '';
+    } else {
+        display.style.display = 'none';
+    }
+}
+function updateInlinePrice(input, targetId) {
+    var qty = parseInt(input.value) || 0;
+    var price = parseFloat(input.getAttribute('data-price')) || 0;
+    var el = document.getElementById(targetId);
+    if (!el) return;
+    if (price > 0 && qty > 0) {
+        el.querySelector('.inline-total').innerHTML = '&#8377;' + (price * qty).toLocaleString('en-IN', {minimumFractionDigits:2});
+        el.style.display = '';
+    } else {
+        el.style.display = 'none';
+    }
 }
 document.addEventListener('click', function(e) { document.querySelectorAll('.ss-dropdown.open').forEach(function(dd) { if (!dd.parentElement.contains(e.target)) dd.classList.remove('open'); }); });
 </script>

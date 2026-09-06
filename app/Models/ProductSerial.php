@@ -14,6 +14,7 @@ class ProductSerial extends Model
         'issue_to',
         'warehouse_id',
         'customer_order_id',
+        'cp_order_id',
         'batch_txn_id',
         'purchase_price',
         'invoice_number',
@@ -39,5 +40,10 @@ class ProductSerial extends Model
     public function customerOrder()
     {
         return $this->belongsTo(CustomerOrder::class, 'customer_order_id');
+    }
+
+    public function cpOrder()
+    {
+        return $this->belongsTo(CpOrder::class, 'cp_order_id');
     }
 }

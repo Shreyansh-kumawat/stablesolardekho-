@@ -304,6 +304,8 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::post('/cp-order/{id}/approve-payment', [OrderController::class, 'approveCpPayment'])->name('approveCpPayment');
     Route::post('/cp-order/{id}/reject-payment', [OrderController::class, 'rejectCpPayment'])->name('rejectCpPayment');
     Route::post('/cp-order/{id}/mark-delivered', [OrderController::class, 'markCpOrderDelivered'])->name('markCpOrderDelivered');
+    Route::post('/cp-order/{id}/fulfill', [OrderController::class, 'fulfillCpOrder'])->name('admin.cpOrder.fulfill');
+    Route::post('/cp-order/{id}/update-price', [OrderController::class, 'updateCpOrderPrice'])->name('admin.cpOrder.updatePrice');
     Route::get('/approveRejectOrders', [OrderController::class, 'approveRejectOrders'])->name('approveRejectOrders');
     Route::get('/customer-orders', [OrderController::class, 'customerOrderList'])->name('customerOrders');
     Route::get('/customer-orders/{id}', [OrderController::class, 'viewCustomerOrder'])->name('viewCustomerOrder');
@@ -410,6 +412,8 @@ Route::prefix('channel-partner')->middleware(['auth', ChannelPartnerMiddleware::
     Route::post('/cp-documents', [CpDocumentController::class, 'cpStore'])->name('cpDocumentStore');
     Route::delete('/cp-documents/batch/{batchId}', [CpDocumentController::class, 'cpDeleteBatch'])->name('cpDocumentDeleteBatch');
     Route::delete('/cp-documents/{id}', [CpDocumentController::class, 'cpDelete'])->name('cpDocumentDelete');
+    Route::post('/cp-documents/add-payment', [CpDocumentController::class, 'cpAddPayment'])->name('cpDocumentAddPayment');
+    Route::delete('/cp-documents/payment/{id}', [CpDocumentController::class, 'cpDeletePayment'])->name('cpDocumentDeletePayment');
     Route::get('/cp-payments', [CpPaymentController::class, 'cpIndex'])->name('cpPayments');
 
     Route::get('/profile', [UserController::class, 'cpProfilePage'])->name('cpProfile');

@@ -276,14 +276,6 @@
     }
     .qinput:focus { border-color: var(--orange); }
     .qlabel { display: block; color: var(--muted); font-size: 0.75rem; font-weight: 600; margin-bottom: 6px; }
-    .bill-chip {
-        display: inline-block; padding: 7px 14px;
-        border-radius: 8px; border: 1px solid var(--border);
-        color: var(--muted); font-size: 0.8rem; font-weight: 600;
-        transition: all 0.18s; user-select: none; background: var(--card2); cursor: pointer;
-    }
-    .bill-chip.active { background: rgba(249,115,22,0.12) !important; color: var(--orange) !important; border-color: rgba(249,115,22,0.4) !important; }
-
     /* ── skeleton ── */
     @keyframes shimmer {
         0%   { background-position: -1000px 0; }
@@ -824,17 +816,6 @@ $catGradients = [
                         <input type="text" name="pin" required placeholder="6-digit PIN" pattern="\d{6}" maxlength="6" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.88rem;color:#1e293b;background:#fff;box-sizing:border-box;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='#e2e8f0'">
                     </div>
                     <div style="margin-bottom:14px;">
-                        <label style="display:block;color:#374151;font-size:0.75rem;font-weight:600;margin-bottom:8px;">Monthly Electricity Bill</label>
-                        <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                            @foreach(['<1500'=>'< ₹1,500','1500-2500'=>'₹1,500–2,500','2500-4000'=>'₹2,500–4,000','4000-8000'=>'₹4,000–8,000','>8000'=>'> ₹8,000'] as $val=>$lbl)
-                            <label style="cursor:pointer;">
-                                <input type="radio" name="bill" value="{{ $val }}" required style="display:none;" class="bill-radio">
-                                <span class="bill-chip" style="border-color:#e2e8f0;color:#374151;background:#fff;">{{ $lbl }}</span>
-                            </label>
-                            @endforeach
-                        </div>
-                    </div>
-                    <div style="margin-bottom:14px;">
                         <label style="display:block;color:#374151;font-size:0.75rem;font-weight:600;margin-bottom:5px;">City</label>
                         <input type="text" name="city" placeholder="Your city" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.88rem;color:#1e293b;background:#fff;box-sizing:border-box;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='#e2e8f0'">
                     </div>
@@ -1082,13 +1063,6 @@ $catGradients = [
 </div>
 
 <script>
-document.querySelectorAll('.bill-radio').forEach(r => {
-    r.addEventListener('change', function() {
-        document.querySelectorAll('.bill-chip').forEach(c => c.classList.remove('active'));
-        this.nextElementSibling.classList.add('active');
-    });
-});
-
 (function(){
     var obs = new IntersectionObserver(function(entries){
         entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('visible'); obs.unobserve(e.target); } });

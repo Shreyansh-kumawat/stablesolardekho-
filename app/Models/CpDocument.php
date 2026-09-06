@@ -9,7 +9,7 @@ class CpDocument extends Model
     protected $fillable = [
         'cp_id', 'client_name', 'client_phone', 'client_address', 'batch_id',
         'title', 'document_type', 'file_path', 'file_name',
-        'file_size', 'uploaded_by', 'remarks',
+        'file_size', 'uploaded_by', 'remarks', 'total_receivable',
     ];
 
     public function channelPartner()
