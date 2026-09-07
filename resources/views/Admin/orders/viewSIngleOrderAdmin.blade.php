@@ -3,61 +3,64 @@
 <link rel="stylesheet" href="/assets/css/bootstrap-icons.min.css">
 <style>
     :root {
-        --primary-color: #667eea;
-        --success-color: #28a745;
-        --danger-color: #dc3545;
-        --warning-color: #ffc107;
-        --light-bg: #f8f9fa;
-        --border-color: #dee2e6;
-        --text-dark: #212529;
-        --text-muted: #6c757d;
+        --primary-color: #2563eb;
+        --success-color: #059669;
+        --danger-color: #dc2626;
+        --warning-color: #d97706;
+        --light-bg: #f9fafb;
+        --border-color: #e5e7eb;
+        --text-dark: #1f2937;
+        --text-muted: #6b7280;
     }
 
     .order-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white; border-radius: 15px; padding: 30px; margin-bottom: 30px;
-        box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        background: #fff; border: 1px solid var(--border-color); border-radius: 12px;
+        padding: 20px; margin-bottom: 20px;
     }
-    .order-detail { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 25px; }
-    .order-detail-item { padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; backdrop-filter: blur(10px); }
-    .order-detail-label { font-weight: 600; opacity: 0.9; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-    .order-detail-value { font-size: 18px; font-weight: 700; }
+    .order-card-head { padding-bottom: 14px; border-bottom: 1px solid #f3f4f6; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .order-card-head h2 { font-size: .85rem; font-weight: 700; color: #374151; margin: 0; text-transform: uppercase; letter-spacing: .04em; }
+    .order-detail { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+    .order-detail-item { }
+    .order-detail-label { font-size: .7rem; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+    .order-detail-value { font-size: .9rem; font-weight: 600; color: var(--text-dark); }
 
-    .products-table { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 30px; border: 1px solid var(--border-color); }
+    .products-table { background: white; border-radius: 12px; overflow: hidden; margin-bottom: 20px; border: 1px solid var(--border-color); }
     .products-table table { margin-bottom: 0; width: 100%; border-collapse: collapse; }
-    .products-table thead { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 2px solid var(--border-color); }
-    .products-table th { padding: 14px 12px; font-weight: 700; color: var(--text-dark); border: none; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .products-table td { padding: 14px 12px; vertical-align: middle; border-bottom: 1px solid var(--border-color); }
-    .products-table tbody tr:hover { background: #f8f9fa; }
+    .products-table thead { background: var(--light-bg); border-bottom: 1px solid var(--border-color); }
+    .products-table th { padding: 10px 12px; font-weight: 700; color: var(--text-muted); border: none; font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; }
+    .products-table td { padding: 12px; vertical-align: middle; border-bottom: 1px solid #f3f4f6; }
+    .products-table tbody tr:hover { background: var(--light-bg); }
 
     .product-info { display: flex; flex-direction: column; gap: 4px; }
-    .product-name { font-weight: 700; color: var(--text-dark); font-size: 14px; }
-    .product-meta { font-size: 11px; color: var(--text-muted); }
+    .product-name { font-weight: 700; color: var(--text-dark); font-size: .88rem; }
+    .product-meta { font-size: .75rem; color: var(--text-muted); }
 
-    .badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
-    .badge-status { padding: 10px 18px; border-radius: 25px; font-size: 12px; font-weight: 700; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; }
-    .badge-pending { background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%); color: #856404; }
-    .badge-completed,.badge-confirmed { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; }
-    .badge-cancelled,.badge-rejected { background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); color: #721c24; }
-    .badge-delivered { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46; }
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+    .badge-status { padding: 4px 12px; border-radius: 20px; font-size: .75rem; font-weight: 700; display: inline-block; text-transform: uppercase; letter-spacing: .03em; }
+    .badge-pending { background: #fef9c3; color: #92400e; }
+    .badge-completed,.badge-confirmed { background: #dbeafe; color: #1e40af; }
+    .badge-cancelled,.badge-rejected { background: #fee2e2; color: #991b1b; }
+    .badge-delivered { background: #d1fae5; color: #065f46; }
 
-    .remarks-card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; border: 1px solid var(--border-color); }
-    .remarks-card h5 { color: var(--text-dark); margin-bottom: 15px; font-weight: 700; font-size: 16px; }
-    .remarks-card textarea { width: 100%; padding: 12px 14px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 14px; resize: vertical; min-height: 80px; }
-    .remarks-card textarea:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 4px rgba(102,126,234,0.15); }
+    .remarks-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border-color); }
+    .remarks-card h5 { color: var(--text-dark); margin-bottom: 12px; font-weight: 700; font-size: .9rem; }
+    .remarks-card textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: .85rem; resize: vertical; min-height: 80px; }
+    .remarks-card textarea:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
 
-    .action-buttons { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; justify-content: flex-end; }
-    .action-buttons .btn { padding: 12px 28px; font-weight: 600; border-radius: 8px; border: none; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-approve { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; }
-    .btn-cancel-req { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; }
-    .back-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: white; color: var(--text-dark); border-radius: 8px; text-decoration: none; font-weight: 600; border: 2px solid var(--border-color); font-size: 13px; }
-    .back-btn:hover { background: var(--light-bg); border-color: var(--primary-color); color: var(--primary-color); }
-    .page-header { margin-bottom: 35px; }
-    .page-header h1 { font-size: 28px; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
-    .page-header p { color: var(--text-muted); font-size: 15px; }
+    .action-buttons { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; justify-content: flex-end; }
+    .action-buttons .btn { padding: 10px 22px; font-weight: 600; border-radius: 8px; border: none; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-approve { background: #059669; color: white; }
+    .btn-approve:hover { background: #047857; }
+    .btn-cancel-req { background: #dc2626; color: white; }
+    .btn-cancel-req:hover { background: #b91c1c; }
+    .back-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; background: white; color: var(--text-dark); border-radius: 8px; text-decoration: none; font-weight: 600; border: 1px solid var(--border-color); font-size: .8rem; transition: all .15s; }
+    .back-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
+    .page-header { margin-bottom: 24px; }
+    .page-header h1 { font-size: 1.3rem; font-weight: 800; color: var(--text-dark); margin-bottom: 4px; }
+    .page-header p { color: var(--text-muted); font-size: .8rem; }
 
     .price-input { width: 100px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; text-align: right; font-weight: 600; }
-    .price-input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102,126,234,0.2); }
+    .price-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
     .price-save-btn { background: #059669; color: #fff; border: none; padding: 4px 10px; border-radius: 5px; font-size: 11px; font-weight: 700; cursor: pointer; margin-left: 4px; }
     .price-saved { color: #059669; font-size: 11px; font-weight: 600; margin-left: 6px; }
     .cost-badge { display: inline-block; padding: 2px 8px; background: #fef3c7; color: #92400e; border-radius: 10px; font-size: 10px; font-weight: 600; margin-top: 4px; }
@@ -119,12 +122,15 @@
 @section('content')
 <div class="min-h-screen py-8">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;">
-            <div>
-                <h1 style="display:flex;align-items:center;gap:12px;">
-                    <i class="bi bi-file-earmark-check" style="color: var(--primary-color);"></i>Inventory Request Details
-                </h1>
-                <p>Review and take action on this inventory request</p>
+        <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+            <div style="display:flex;align-items:center;gap:.75rem;">
+                <div style="width:40px;height:40px;background:var(--primary-color);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.1rem;">
+                    <i class="bi bi-receipt"></i>
+                </div>
+                <div>
+                    <h1>Inventory Request Details</h1>
+                    <p>Review and take action on this request</p>
+                </div>
             </div>
             <a href="{{ route('pendingOrders') }}" class="back-btn">
                 <i class="bi bi-arrow-left"></i> Back to Requests
@@ -144,10 +150,14 @@
 
         @if($order)
         <div class="order-card">
+            <div class="order-card-head">
+                <i class="bi bi-info-circle" style="color:var(--primary-color);"></i>
+                <h2>Order Information</h2>
+            </div>
             <div class="order-detail">
                 <div class="order-detail-item">
                     <div class="order-detail-label">Request ID</div>
-                    <div class="order-detail-value">{{ $order->order_id }}</div>
+                    <div class="order-detail-value" style="font-family:monospace;">{{ $order->order_id }}</div>
                 </div>
                 <div class="order-detail-item">
                     <div class="order-detail-label">Request Date</div>
