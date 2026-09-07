@@ -38,6 +38,8 @@
     .doc-file-item { border: 1px dashed var(--border); border-radius: 8px; padding: 10px 12px; background: #f8fafc; }
     .doc-file-item label { font-size: 0.76rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
     .doc-file-item input[type="file"] { font-size: 0.75rem; width: 100%; }
+    .doc-file-item .replace-link { font-size: 0.72rem; font-weight: 600; color: var(--blue); cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
+    .doc-file-item .replace-link:hover { text-decoration: underline; }
 
     .other-docs-section { margin-bottom: 14px; }
     .other-doc-row { display: flex; gap: 8px; align-items: end; margin-bottom: 8px; }
@@ -274,8 +276,14 @@ if (!function_exists('indNum')) {
                 <div class="client-meta">
                     <span class="client-doc-count">{{ $batchDocs->whereNotNull('file_path')->count() }} doc(s)</span>
                     @if($totalReceivable > 0)
-                        <span style="font-size:0.7rem; font-weight:600; padding:3px 8px; border-radius:5px; {{ $remaining <= 0 ? 'background:#f0fdf4; color:var(--green);' : 'background:#fefce8; color:var(--orange);' }}">
-                            {{ $remaining <= 0 ? 'Fully Paid' : '₹' . indNum($remaining) . ' due' }}
+                        <span style="font-size:0.7rem; font-weight:600; padding:3px 8px; border-radius:5px; {{ $remaining > 0 ? 'background:#fefce8; color:var(--orange);' : 'background:#f0fdf4; color:var(--green);' }}">
+                            @if($remaining > 0)
+                                ₹{{ indNum($remaining) }} due
+                            @elseif($remaining < 0)
+                                ₹{{ indNum(abs($remaining)) }} overpaid
+                            @else
+                                Fully Paid
+                            @endif
                         </span>
                     @endif
                     <span style="font-size:0.72rem; color:var(--muted);">{{ $firstDoc->created_at->format('d M Y') }}</span>
@@ -329,15 +337,15 @@ if (!function_exists('indNum')) {
                             <div class="ps-value text-green">₹{{ indNum($totalPaid) }}</div>
                         </div>
                         <div class="ps-item">
-                            <div class="ps-label">Remaining</div>
-                            <div class="ps-value {{ $remaining > 0 ? 'text-orange' : 'text-green' }}">₹{{ indNum($remaining) }}</div>
+                            <div class="ps-label">{{ $remaining < 0 ? 'Overpaid' : 'Remaining' }}</div>
+                            <div class="ps-value {{ $remaining > 0 ? 'text-orange' : 'text-green' }}">₹{{ indNum(abs($remaining)) }}</div>
                         </div>
                     </div>
 
                     @if($batchPayments->isNotEmpty())
                     <table class="payment-table">
                         <thead>
-                            <tr><th>#</th><th>Date</th><th>Amount</th><th>Remarks</th><th></th></tr>
+                            <tr><th>#</th><th>Date</th><th>Amount</th><th>Remarks</th></tr>
                         </thead>
                         <tbody>
                             @foreach($batchPayments as $idx => $pmt)
@@ -346,12 +354,6 @@ if (!function_exists('indNum')) {
                                 <td>{{ $pmt->payment_date->format('d M Y') }}</td>
                                 <td style="font-weight:700; color:var(--green);">₹{{ indNum($pmt->amount) }}</td>
                                 <td style="color:var(--muted);">{{ $pmt->remarks ?? '-' }}</td>
-                                <td>
-                                    <form method="POST" action="{{ route('cpDocumentDeletePayment', $pmt->id) }}" class="d-inline delete-doc-form">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="del-btn" title="Delete"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
-                                    </form>
-                                </td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -378,16 +380,34 @@ if (!function_exists('indNum')) {
                         <input type="hidden" name="client_phone" value="{{ $firstDoc->client_phone }}">
                         <input type="hidden" name="client_address" value="{{ $firstDoc->client_address }}">
 
+                        @php $uploadedTypes = $batchDocs->whereNotNull('file_path')->pluck('document_type')->toArray(); @endphp
                         <div class="doc-file-grid" style="margin-bottom:10px;">
                             @foreach($docTypes as $key => $label)
                             <div class="doc-file-item">
                                 <label>{{ $label }}</label>
+                                @if(in_array($key, $uploadedTypes))
+                                <div style="font-size:0.72rem; color:var(--green); font-weight:600; margin-bottom:4px;">&#10003; Uploaded</div>
+                                <label class="replace-link">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"/></svg>
+                                    <span>Replace</span>
+                                    <input type="file" name="doc_{{ $key }}" style="display:none;" onchange="showReplaceName(this)">
+                                </label>
+                                @else
                                 <input type="file" name="doc_{{ $key }}">
+                                @endif
                             </div>
                             @endforeach
                         </div>
 
                         <div class="other-docs-section" style="margin-bottom:10px;">
+                            @php $otherDocs = $batchDocs->where('document_type', 'other')->whereNotNull('file_path'); @endphp
+                            @if($otherDocs->isNotEmpty())
+                            <div style="font-size:0.75rem; color:var(--muted); margin-bottom:6px;">
+                                @foreach($otherDocs as $od)
+                                <span style="display:inline-block; background:#f0fdf4; color:var(--green); font-weight:600; padding:2px 8px; border-radius:5px; margin:2px;">{{ $od->title ?: $od->file_name }}</span>
+                                @endforeach
+                            </div>
+                            @endif
                             <div id="otherDocsContainer-{{ $batchId }}"></div>
                             <button type="button" class="doc-btn doc-btn-sm" style="background:#e2e8f0; color:var(--text);" onclick="addOtherDoc('{{ $batchId }}')">+ Add Document</button>
                         </div>
@@ -497,6 +517,13 @@ function indMoneyInput(el) {
     var newLen = el.value.length;
     var newPos = pos + (newLen - oldLen);
     el.setSelectionRange(newPos, newPos);
+}
+
+function showReplaceName(input) {
+    var label = input.closest('.replace-link');
+    var span = label.querySelector('span');
+    span.textContent = input.files[0].name;
+    label.style.color = '#16a34a';
 }
 
 let otherDocCount = 0;

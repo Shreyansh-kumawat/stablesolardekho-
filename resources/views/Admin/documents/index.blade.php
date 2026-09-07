@@ -182,8 +182,8 @@ if (!function_exists('indNum')) {
                 <span class="cp-badge">{{ $firstDoc->channelPartner->cp_name ?? '-' }}</span>
                 <span class="client-doc-count">{{ $batchDocs->whereNotNull('file_path')->count() }} doc(s)</span>
                 @if($totalReceivable > 0)
-                    <span style="font-size:0.7rem; font-weight:600; padding:3px 8px; border-radius:5px; {{ $remaining <= 0 ? 'background:#f0fdf4; color:var(--green);' : 'background:#fefce8; color:var(--orange);' }}">
-                        {{ $remaining <= 0 ? 'Fully Paid' : '₹' . indNum($remaining) . ' due' }}
+                    <span style="font-size:0.7rem; font-weight:600; padding:3px 8px; border-radius:5px; {{ $remaining > 0 ? 'background:#fefce8; color:var(--orange);' : 'background:#f0fdf4; color:var(--green);' }}">
+                        @if($remaining > 0) ₹{{ indNum($remaining) }} due @elseif($remaining < 0) ₹{{ indNum(abs($remaining)) }} overpaid @else Fully Paid @endif
                     </span>
                 @endif
                 <span style="font-size:0.72rem; color:var(--muted);">{{ $firstDoc->created_at->format('d M Y') }}</span>
@@ -237,8 +237,8 @@ if (!function_exists('indNum')) {
                         <div class="ps-value text-green">₹{{ indNum($totalPaid) }}</div>
                     </div>
                     <div>
-                        <div class="ps-label">Remaining</div>
-                        <div class="ps-value {{ $remaining > 0 ? 'text-orange' : 'text-green' }}">₹{{ indNum($remaining) }}</div>
+                        <div class="ps-label">{{ $remaining < 0 ? 'Overpaid' : 'Remaining' }}</div>
+                        <div class="ps-value {{ $remaining > 0 ? 'text-orange' : 'text-green' }}">₹{{ indNum(abs($remaining)) }}</div>
                     </div>
                 </div>
 
