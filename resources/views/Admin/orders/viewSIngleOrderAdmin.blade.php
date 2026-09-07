@@ -453,6 +453,55 @@
         </div>
         @endif
 
+        {{-- Bills Section --}}
+        <div class="remarks-card">
+            <h5><i class="bi bi-file-earmark-text"></i> Bills</h5>
+
+            @php $bills = $order->bills()->with('uploadedBy')->orderByDesc('created_at')->get(); @endphp
+
+            @if($bills->count() > 0)
+            <div style="margin-bottom:16px;">
+                @foreach($bills as $bill)
+                <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--light-bg);border:1px solid var(--border-color);border-radius:8px;margin-bottom:8px;">
+                    <i class="bi bi-file-earmark-pdf" style="font-size:1.4rem;color:var(--danger-color);"></i>
+                    <div style="flex:1;min-width:0;">
+                        <a href="{{ url('serve/' . $bill->file_path) }}" target="_blank" style="font-weight:600;color:var(--primary-color);font-size:.85rem;text-decoration:none;">
+                            {{ $bill->file_name }}
+                        </a>
+                        <div style="font-size:.75rem;color:var(--text-muted);">
+                            {{ $bill->uploadedBy->name ?? 'Admin' }} &middot; {{ $bill->created_at->format('d M Y, h:i A') }}
+                            @if($bill->remarks) &middot; {{ $bill->remarks }} @endif
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ route('admin.cpOrder.deleteBill', $bill->id) }}" style="margin:0;">
+                        @csrf @method('DELETE')
+                        <button type="submit" onclick="return confirm('Delete this bill?')" style="background:none;border:none;color:var(--danger-color);cursor:pointer;font-size:1.1rem;padding:4px;" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </div>
+                @endforeach
+            </div>
+            @endif
+
+            <form method="POST" action="{{ route('admin.cpOrder.uploadBill', $order->id) }}" enctype="multipart/form-data">
+                @csrf
+                <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:200px;">
+                        <label style="display:block;font-size:.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Upload Bill</label>
+                        <input type="file" name="bill_file" required style="font-size:.85rem;width:100%;">
+                    </div>
+                    <div style="flex:1;min-width:200px;">
+                        <label style="display:block;font-size:.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Remarks (optional)</label>
+                        <input type="text" name="bill_remarks" placeholder="e.g. Invoice #123" style="width:100%;padding:6px 10px;border:1px solid var(--border-color);border-radius:6px;font-size:.85rem;">
+                    </div>
+                    <button type="submit" class="btn btn-approve" style="padding:8px 18px;font-size:.78rem;white-space:nowrap;">
+                        <i class="bi bi-upload"></i> Upload
+                    </button>
+                </div>
+            </form>
+        </div>
+
         @if($order->status == 'pending')
         <div class="remarks-card">
             <h5><i class="bi bi-chat-left-text"></i> Admin Remarks (Optional)</h5>
@@ -472,6 +521,17 @@
                 <input type="hidden" name="admin_remarks" class="admin-remarks-input">
                 <button type="submit" class="btn btn-cancel-req" onclick="return confirmAction(event, this, 'cancel')">
                     <i class="bi bi-x-circle"></i> Cancel Request
+                </button>
+            </form>
+        </div>
+        @endif
+
+        @if($order->status === 'confirmed')
+        <div class="action-buttons">
+            <form method="POST" action="{{ route('markCpOrderDelivered', $order->id) }}">
+                @csrf
+                <button type="submit" class="btn btn-approve" onclick="return confirm('Mark this order as delivered?')">
+                    <i class="bi bi-check2-circle"></i> Mark as Delivered
                 </button>
             </form>
         </div>

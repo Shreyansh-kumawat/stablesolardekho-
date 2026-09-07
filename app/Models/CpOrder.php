@@ -47,4 +47,9 @@ class CpOrder extends Model
     {
         return $this->belongsTo(User::class, 'quote_generated_by');
     }
+
+    public function bills()
+    {
+        return $this->hasMany(CpOrderBill::class, 'cp_order_id');
+    }
 }

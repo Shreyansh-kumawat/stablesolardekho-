@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CpMaterialLedger;
 use App\Models\CpOrder;
+use App\Models\CpOrderBill;
 use App\Models\CustomerOrder;
 use App\Models\Product;
 use App\Models\ProductSerial;
@@ -1075,5 +1076,49 @@ class OrderController extends Controller
         $failedCount = $transactions->where('payment_status', 'failed')->count();
 
         return view('Admin.orders.razorpayTransactions', compact('transactions', 'paidTotal', 'paidCount', 'failedCount'));
+    }
+
+    public function adminUploadBill(Request $request, $orderId)
+    {
+        $request->validate([
+            'bill_file' => 'required|file|max:20480',
+            'bill_remarks' => 'nullable|string|max:500',
+        ]);
+
+        $order = CpOrder::findOrFail($orderId);
+        $file = $request->file('bill_file');
+
+        CpOrderBill::create([
+            'cp_order_id' => $order->id,
+            'cp_id' => $order->cp_id,
+            'file_path' => $file->store('cp-order-bills', 'public'),
+            'file_name' => $file->getClientOriginalName(),
+            'file_size' => $file->getSize(),
+            'remarks' => $request->bill_remarks,
+            'uploaded_by' => Auth::id(),
+        ]);
+
+        return redirect()->back()->with('success', 'Bill uploaded successfully.');
+    }
+
+    public function adminDeleteBill($id)
+    {
+        $bill = CpOrderBill::findOrFail($id);
+        \Illuminate\Support\Facades\Storage::disk('public')->delete($bill->file_path);
+        $bill->delete();
+
+        return redirect()->back()->with('success', 'Bill deleted.');
+    }
+
+    public function cpBills()
+    {
+        $cpId = Auth::user()->cp_id;
+
+        $bills = CpOrderBill::where('cp_id', $cpId)
+            ->with(['cpOrder', 'uploadedBy'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('channelPartner.orders.cpBills', compact('bills'));
     }
 }

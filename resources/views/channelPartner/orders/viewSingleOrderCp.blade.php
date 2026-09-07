@@ -261,6 +261,34 @@
                     </div>
                 @endif
             </div>
+
+            {{-- Bills --}}
+            @php $orderBills = $order->bills()->orderByDesc('created_at')->get(); @endphp
+            @if($orderBills->count() > 0)
+            <div class="sov-card">
+                <div class="sov-card-head">
+                    <i class="bi bi-file-earmark-text" style="color:#2563eb;"></i>
+                    <h2>Bills</h2>
+                </div>
+                <div class="sov-card-body" style="padding:0;">
+                    @foreach($orderBills as $bill)
+                    <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6;">
+                        <div style="width:38px;height:38px;background:#fef2f2;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#dc2626;font-size:1.1rem;flex-shrink:0;">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                        </div>
+                        <div style="flex:1;min-width:0;">
+                            <a href="{{ url('serve/' . $bill->file_path) }}" target="_blank" style="font-weight:600;color:#2563eb;font-size:.85rem;text-decoration:none;">{{ $bill->file_name }}</a>
+                            <div style="font-size:.75rem;color:#9ca3af;margin-top:2px;">
+                                {{ $bill->created_at->format('d M Y, h:i A') }}
+                                @if($bill->file_size) &middot; {{ number_format($bill->file_size / 1024, 0) }} KB @endif
+                                @if($bill->remarks) &middot; {{ $bill->remarks }} @endif
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
         @else
             <div class="sov-card">
                 <div class="sov-card-body sov-empty">

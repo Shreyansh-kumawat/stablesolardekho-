@@ -306,6 +306,8 @@ Route::prefix('admin')->middleware(['auth', MasterAdminMiddleware::class])->grou
     Route::post('/cp-order/{id}/mark-delivered', [OrderController::class, 'markCpOrderDelivered'])->name('markCpOrderDelivered');
     Route::post('/cp-order/{id}/fulfill', [OrderController::class, 'fulfillCpOrder'])->name('admin.cpOrder.fulfill');
     Route::post('/cp-order/{id}/update-price', [OrderController::class, 'updateCpOrderPrice'])->name('admin.cpOrder.updatePrice');
+    Route::post('/cp-order/{id}/upload-bill', [OrderController::class, 'adminUploadBill'])->name('admin.cpOrder.uploadBill');
+    Route::delete('/cp-order-bill/{id}', [OrderController::class, 'adminDeleteBill'])->name('admin.cpOrder.deleteBill');
     Route::get('/approveRejectOrders', [OrderController::class, 'approveRejectOrders'])->name('approveRejectOrders');
     Route::get('/customer-orders', [OrderController::class, 'customerOrderList'])->name('customerOrders');
     Route::get('/customer-orders/{id}', [OrderController::class, 'viewCustomerOrder'])->name('viewCustomerOrder');
@@ -390,6 +392,7 @@ Route::prefix('channel-partner')->middleware(['auth', ChannelPartnerMiddleware::
         Route::get('/viewSingleOrderCp/{id}', [OrderController::class, 'viewSingleOrderCp'])->name('viewSingleOrderCp');
         Route::get('/cp-order-payment/{id}', [OrderController::class, 'cpOrderPaymentPage'])->name('cpOrderPayment');
         Route::post('/cp-order-payment/{id}/upload', [OrderController::class, 'uploadCpOrderPayment'])->name('cpOrderPaymentUpload');
+        Route::get('/cp-bills', [OrderController::class, 'cpBills'])->name('cpBills');
     });
 
     Route::get('/product-pricing', [OrderController::class, 'productPricing'])->name(name: 'productPricing')->middleware(ChannelPartnerMiddleware::class.':product_pricing');
