@@ -190,13 +190,29 @@ class CpDocumentController extends Controller
         }
 
         if ($count === 0 && !$isUpdate) {
-            if ($request->filled('instalment_amount') && $request->filled('instalment_date')) {
-                return redirect()->back()->with('success', 'Payment instalment added.');
+            $hasPayment = $request->filled('instalment_amount') && $request->filled('instalment_date');
+            $hasClientInfo = $request->filled('client_name') || $request->filled('total_receivable');
+
+            if (!$hasPayment && !$hasClientInfo) {
+                return redirect()->back()->with('error', 'Please select at least one file to upload or fill in client details.');
             }
-            return redirect()->back()->with('error', 'Please select at least one file to upload.');
+
+            CpDocument::create([
+                'cp_id' => $cpId,
+                'client_name' => $request->client_name,
+                'client_phone' => $request->client_phone,
+                'client_address' => $request->client_address,
+                'batch_id' => $batchId,
+                'title' => $request->client_name ?: 'Client Record',
+                'document_type' => 'record',
+                'uploaded_by' => $uploadedBy,
+                'remarks' => $request->remarks,
+                'total_receivable' => $request->total_receivable,
+            ]);
         }
 
-        $msg = $count > 0 ? $count . ' document(s) uploaded' : 'Payment instalment added';
+        $msg = $count > 0 ? $count . ' document(s) uploaded' : 'Client record created';
+        if ($request->filled('instalment_amount')) $msg .= ' with payment instalment';
         if ($request->client_name) $msg .= ' for ' . $request->client_name;
         return redirect()->back()->with('success', $msg . '.');
     }

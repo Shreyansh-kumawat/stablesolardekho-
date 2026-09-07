@@ -116,7 +116,7 @@
     </form>
 
     @php
-        $totalDocs = $documents->count();
+        $totalDocs = $documents->whereNotNull('file_path')->count();
         $totalSize = $documents->sum('file_size');
         $uniqueCps = $documents->pluck('cp_id')->unique()->count();
         $uniqueClients = $documents->whereNotNull('batch_id')->pluck('batch_id')->unique()->count();
@@ -165,7 +165,7 @@
             </div>
             <div class="client-meta">
                 <span class="cp-badge">{{ $firstDoc->channelPartner->cp_name ?? '-' }}</span>
-                <span class="client-doc-count">{{ $batchDocs->count() }} doc(s)</span>
+                <span class="client-doc-count">{{ $batchDocs->whereNotNull('file_path')->count() }} doc(s)</span>
                 @if($totalReceivable > 0)
                     <span style="font-size:0.7rem; font-weight:600; padding:3px 8px; border-radius:5px; {{ $remaining <= 0 ? 'background:#f0fdf4; color:var(--green);' : 'background:#fefce8; color:var(--orange);' }}">
                         {{ $remaining <= 0 ? 'Fully Paid' : '₹' . number_format($remaining, 0) . ' due' }}
@@ -176,12 +176,14 @@
             </div>
         </div>
         <div class="client-card-body">
+            @if($batchDocs->whereNotNull('file_path')->isNotEmpty())
             <table class="client-doc-list">
                 <thead>
                     <tr><th>Type</th><th>File</th><th>Size</th><th>Uploaded By</th><th></th></tr>
                 </thead>
                 <tbody>
                     @foreach($batchDocs as $doc)
+                    @if($doc->file_path)
                     <tr>
                         <td><span class="doc-type-badge">{{ $docTypes[$doc->document_type] ?? $doc->title }}</span></td>
                         <td><a href="{{ url('serve/' . $doc->file_path) }}" target="_blank" class="doc-file-link">{{ Str::limit($doc->file_name, 30) }}</a></td>
@@ -194,9 +196,13 @@
                             </form>
                         </td>
                     </tr>
+                    @endif
                     @endforeach
                 </tbody>
             </table>
+            @else
+            <div style="font-size:0.78rem; color:var(--muted); padding:6px 0;">No documents uploaded yet.</div>
+            @endif
             @if($batchDocs->first()->remarks)
             <div style="margin-top:8px; font-size:0.75rem; color:var(--muted);">Remarks: {{ $batchDocs->first()->remarks }}</div>
             @endif
