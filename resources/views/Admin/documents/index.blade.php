@@ -68,6 +68,21 @@
 </style>
 @endsection
 
+@php
+if (!function_exists('indNum')) {
+    function indNum($n) {
+        $n = (int) $n;
+        $neg = $n < 0; if ($neg) $n = -$n;
+        $s = (string) $n;
+        if (strlen($s) <= 3) return ($neg ? '-' : '') . $s;
+        $last3 = substr($s, -3);
+        $rest = substr($s, 0, -3);
+        $rest = preg_replace('/\B(?=(\d{2})+(?!\d))/', ',', $rest);
+        return ($neg ? '-' : '') . $rest . ',' . $last3;
+    }
+}
+@endphp
+
 @section('content')
 <div class="doc-wrap">
     <div class="doc-header">
@@ -168,7 +183,7 @@
                 <span class="client-doc-count">{{ $batchDocs->whereNotNull('file_path')->count() }} doc(s)</span>
                 @if($totalReceivable > 0)
                     <span style="font-size:0.7rem; font-weight:600; padding:3px 8px; border-radius:5px; {{ $remaining <= 0 ? 'background:#f0fdf4; color:var(--green);' : 'background:#fefce8; color:var(--orange);' }}">
-                        {{ $remaining <= 0 ? 'Fully Paid' : '₹' . number_format($remaining, 0) . ' due' }}
+                        {{ $remaining <= 0 ? 'Fully Paid' : '₹' . indNum($remaining) . ' due' }}
                     </span>
                 @endif
                 <span style="font-size:0.72rem; color:var(--muted);">{{ $firstDoc->created_at->format('d M Y') }}</span>
@@ -215,15 +230,15 @@
                 <div class="payment-summary {{ $remaining > 0 ? 'has-remaining' : '' }}">
                     <div>
                         <div class="ps-label">Total Receivable</div>
-                        <div class="ps-value">₹{{ number_format($totalReceivable, 0) }}</div>
+                        <div class="ps-value">₹{{ indNum($totalReceivable) }}</div>
                     </div>
                     <div>
                         <div class="ps-label">Total Received</div>
-                        <div class="ps-value text-green">₹{{ number_format($totalPaid, 0) }}</div>
+                        <div class="ps-value text-green">₹{{ indNum($totalPaid) }}</div>
                     </div>
                     <div>
                         <div class="ps-label">Remaining</div>
-                        <div class="ps-value {{ $remaining > 0 ? 'text-orange' : 'text-green' }}">₹{{ number_format($remaining, 0) }}</div>
+                        <div class="ps-value {{ $remaining > 0 ? 'text-orange' : 'text-green' }}">₹{{ indNum($remaining) }}</div>
                     </div>
                 </div>
 
@@ -237,7 +252,7 @@
                         <tr>
                             <td>{{ $idx + 1 }}</td>
                             <td>{{ $pmt->payment_date->format('d M Y') }}</td>
-                            <td style="font-weight:700; color:var(--green);">₹{{ number_format($pmt->amount, 0) }}</td>
+                            <td style="font-weight:700; color:var(--green);">₹{{ indNum($pmt->amount) }}</td>
                             <td style="color:var(--muted);">{{ $pmt->remarks ?? '-' }}</td>
                         </tr>
                         @endforeach

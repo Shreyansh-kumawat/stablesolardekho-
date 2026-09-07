@@ -110,6 +110,21 @@
 </style>
 @endsection
 
+@php
+if (!function_exists('indNum')) {
+    function indNum($n) {
+        $n = (int) $n;
+        $neg = $n < 0; if ($neg) $n = -$n;
+        $s = (string) $n;
+        if (strlen($s) <= 3) return ($neg ? '-' : '') . $s;
+        $last3 = substr($s, -3);
+        $rest = substr($s, 0, -3);
+        $rest = preg_replace('/\B(?=(\d{2})+(?!\d))/', ',', $rest);
+        return ($neg ? '-' : '') . $rest . ',' . $last3;
+    }
+}
+@endphp
+
 @section('content')
 <div class="doc-wrap">
     <div class="doc-header">
@@ -195,11 +210,13 @@
                 <div class="payment-fields">
                     <div class="field-group">
                         <label>Total Receivable Amount</label>
-                        <input type="number" name="total_receivable" placeholder="e.g. 100000" step="0.01" min="0">
+                        <input type="hidden" name="total_receivable">
+                        <input type="text" inputmode="numeric" class="ind-money" placeholder="e.g. 1,00,000" oninput="indMoneyInput(this)">
                     </div>
                     <div class="field-group">
                         <label>First Instalment Amount</label>
-                        <input type="number" name="instalment_amount" placeholder="e.g. 20000" step="0.01" min="0">
+                        <input type="hidden" name="instalment_amount">
+                        <input type="text" inputmode="numeric" class="ind-money" placeholder="e.g. 20,000" oninput="indMoneyInput(this)">
                     </div>
                     <div class="field-group">
                         <label>Payment Date</label>
@@ -258,7 +275,7 @@
                     <span class="client-doc-count">{{ $batchDocs->whereNotNull('file_path')->count() }} doc(s)</span>
                     @if($totalReceivable > 0)
                         <span style="font-size:0.7rem; font-weight:600; padding:3px 8px; border-radius:5px; {{ $remaining <= 0 ? 'background:#f0fdf4; color:var(--green);' : 'background:#fefce8; color:var(--orange);' }}">
-                            {{ $remaining <= 0 ? 'Fully Paid' : '₹' . number_format($remaining, 0) . ' due' }}
+                            {{ $remaining <= 0 ? 'Fully Paid' : '₹' . indNum($remaining) . ' due' }}
                         </span>
                     @endif
                     <span style="font-size:0.72rem; color:var(--muted);">{{ $firstDoc->created_at->format('d M Y') }}</span>
@@ -305,15 +322,15 @@
                     <div class="payment-summary {{ $remaining > 0 ? 'has-remaining' : '' }}">
                         <div class="ps-item">
                             <div class="ps-label">Total Receivable</div>
-                            <div class="ps-value">₹{{ number_format($totalReceivable, 0) }}</div>
+                            <div class="ps-value">₹{{ indNum($totalReceivable) }}</div>
                         </div>
                         <div class="ps-item">
                             <div class="ps-label">Total Received</div>
-                            <div class="ps-value text-green">₹{{ number_format($totalPaid, 0) }}</div>
+                            <div class="ps-value text-green">₹{{ indNum($totalPaid) }}</div>
                         </div>
                         <div class="ps-item">
                             <div class="ps-label">Remaining</div>
-                            <div class="ps-value {{ $remaining > 0 ? 'text-orange' : 'text-green' }}">₹{{ number_format($remaining, 0) }}</div>
+                            <div class="ps-value {{ $remaining > 0 ? 'text-orange' : 'text-green' }}">₹{{ indNum($remaining) }}</div>
                         </div>
                     </div>
 
@@ -327,7 +344,7 @@
                             <tr>
                                 <td>{{ $idx + 1 }}</td>
                                 <td>{{ $pmt->payment_date->format('d M Y') }}</td>
-                                <td style="font-weight:700; color:var(--green);">₹{{ number_format($pmt->amount, 0) }}</td>
+                                <td style="font-weight:700; color:var(--green);">₹{{ indNum($pmt->amount) }}</td>
                                 <td style="color:var(--muted);">{{ $pmt->remarks ?? '-' }}</td>
                                 <td>
                                     <form method="POST" action="{{ route('cpDocumentDeletePayment', $pmt->id) }}" class="d-inline delete-doc-form">
@@ -381,14 +398,16 @@
                                 @if(!$totalReceivable)
                                 <div class="field-group">
                                     <label>Total Receivable</label>
-                                    <input type="number" name="total_receivable" placeholder="e.g. 100000" step="0.01" min="0">
+                                    <input type="hidden" name="total_receivable">
+                                    <input type="text" inputmode="numeric" class="ind-money" placeholder="e.g. 1,00,000" oninput="indMoneyInput(this)">
                                 </div>
                                 @else
                                 <input type="hidden" name="total_receivable" value="{{ $totalReceivable }}">
                                 @endif
                                 <div class="field-group">
                                     <label>Amount</label>
-                                    <input type="number" name="instalment_amount" placeholder="Amount" step="0.01" min="0">
+                                    <input type="hidden" name="instalment_amount">
+                                    <input type="text" inputmode="numeric" class="ind-money" placeholder="e.g. 20,000" oninput="indMoneyInput(this)">
                                 </div>
                                 <div class="field-group">
                                     <label>Date</label>
@@ -452,6 +471,34 @@
 
 @section('js')
 <script>
+function formatIndian(n) {
+    n = Math.floor(n);
+    if (n < 0) return '-' + formatIndian(-n);
+    var s = String(n);
+    if (s.length <= 3) return s;
+    var last3 = s.slice(-3);
+    var rest = s.slice(0, -3);
+    return rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + ',' + last3;
+}
+
+function indMoneyInput(el) {
+    var raw = el.value.replace(/[^0-9]/g, '');
+    var hidden = el.previousElementSibling;
+    if (raw === '') {
+        hidden.value = '';
+        el.value = '';
+        return;
+    }
+    var num = parseInt(raw, 10);
+    hidden.value = num;
+    var pos = el.selectionStart;
+    var oldLen = el.value.length;
+    el.value = formatIndian(num);
+    var newLen = el.value.length;
+    var newPos = pos + (newLen - oldLen);
+    el.setSelectionRange(newPos, newPos);
+}
+
 let otherDocCount = 0;
 
 function addOtherDoc(batchId) {
