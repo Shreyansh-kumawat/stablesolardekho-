@@ -484,21 +484,12 @@
             </div>
             @endif
 
-            <form method="POST" action="{{ route('admin.cpOrder.uploadBill', $order->id) }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ route('admin.cpOrder.uploadBill', $order->id) }}" enctype="multipart/form-data" id="billUploadForm">
                 @csrf
-                <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
-                    <div style="flex:1;min-width:200px;">
-                        <label style="display:block;font-size:.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Upload Bill</label>
-                        <input type="file" name="bill_file" required style="font-size:.85rem;width:100%;">
-                    </div>
-                    <div style="flex:1;min-width:200px;">
-                        <label style="display:block;font-size:.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Remarks (optional)</label>
-                        <input type="text" name="bill_remarks" placeholder="e.g. Invoice #123" style="width:100%;padding:6px 10px;border:1px solid var(--border-color);border-radius:6px;font-size:.85rem;">
-                    </div>
-                    <button type="submit" class="btn btn-approve" style="padding:8px 18px;font-size:.78rem;white-space:nowrap;">
-                        <i class="bi bi-upload"></i> Upload
-                    </button>
-                </div>
+                <label style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--primary-color);color:#fff;border-radius:8px;font-size:.8rem;font-weight:600;cursor:pointer;">
+                    <i class="bi bi-plus-circle"></i> Add Bill
+                    <input type="file" name="bill_file" required style="display:none;" onchange="document.getElementById('billUploadForm').submit();">
+                </label>
             </form>
         </div>
 
