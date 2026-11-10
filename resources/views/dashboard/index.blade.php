@@ -766,22 +766,22 @@ $catGradients = [
     <div class="wrap">
         {{-- Top: Heading centered --}}
         <div style="text-align:center;margin-bottom:36px;">
-            <p style="color:var(--orange);font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 8px;">Diwali Solar Offer &middot; Only for Rajasthan</p>
-            <h2 style="color:#1e293b;font-size:2rem;font-weight:900;margin:0 0 10px;line-height:1.2;">Power Your Home with Solar This Diwali</h2>
-            <p style="color:#64748b;font-size:0.92rem;margin:0 auto;max-width:640px;">Say goodbye to high electricity bills. Get a complete solar system with government subsidy benefits under PM Surya Ghar Yojana. Offer valid till 15 November 2026.</p>
+            <p style="color:var(--orange);font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 8px;">Solar Office Partnership &middot; All of Rajasthan</p>
+            <h2 style="color:#1e293b;font-size:2rem;font-weight:900;margin:0 0 10px;line-height:1.2;">Open Your Own Solar Office with 0 Investment</h2>
+            <p style="color:#64748b;font-size:0.92rem;margin:0 auto;max-width:640px;">Stable Energy Pvt. Ltd. is opening a Solar Office on every PIN code in Rajasthan. Partner with us and build your own B2B and B2C solar business with PM Surya Ghar Phase 2 and Hybrid Solar.</p>
         </div>
 
         {{-- Main grid: Left image + Right form --}}
         <div class="quote-grid">
             {{-- Left: Offer image + trip highlights --}}
             <div>
-                <img src="{{ asset('stable/images/rajasthan-solar-offer.webp') }}?v=1" alt="Diwali Solar Offer - Rajasthan" style="width:100%;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.12);margin-bottom:24px;">
+                <img src="{{ asset('stable/images/rajasthan-solar-office.webp') }}?v=1" alt="Solar Office Partnership - Rajasthan" style="width:100%;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.12);margin-bottom:24px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
                     @foreach([
-                        ['icon'=>'M12 21c-4.97 0-9-4.03-9-9 0-3.87 2.44-7.16 5.86-8.42C10.11 4.5 12 6 12 6s1.89-1.5 3.14-2.42C18.56 4.84 21 8.13 21 12c0 4.97-4.03 9-9 9z','title'=>'3 KW Solar System','desc'=>'₹1,80,000 - complete system, GST included'],
-                        ['icon'=>'M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z','title'=>'5 KW Solar System','desc'=>'₹2,80,000 - complete system, GST included'],
-                        ['icon'=>'M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z','title'=>'Book at Just ₹5,100','desc'=>'No EMI for the first 6 months*'],
-                        ['icon'=>'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5','title'=>'Offer Ends 15 November','desc'=>'Limited period Diwali offer, book your system today']
+                        ['icon'=>'M12 21c-4.97 0-9-4.03-9-9 0-3.87 2.44-7.16 5.86-8.42C10.11 4.5 12 6 12 6s1.89-1.5 3.14-2.42C18.56 4.84 21 8.13 21 12c0 4.97-4.03 9-9 9z','title'=>'0 Investment Partnership','desc'=>'Start your own Solar Office with Stable Energy brand support'],
+                        ['icon'=>'M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z','title'=>'B2B & B2C Business','desc'=>'Bulk supply and retail / home solar in your area'],
+                        ['icon'=>'M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z','title'=>'Full Support','desc'=>'Vendor code, technical and operational support from our team'],
+                        ['icon'=>'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5','title'=>'PM Surya Ghar Phase 2','desc'=>'Coming soon, with a big opportunity in Hybrid Solar Systems']
                     ] as $tp)
                     <div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0;">
                         <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#fff7ed,#fed7aa);display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
@@ -793,13 +793,13 @@ $catGradients = [
                     @endforeach
                 </div>
                 <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:12px 14px;font-size:.78rem;color:#92400e;line-height:1.5;">
-                    <strong>Note:</strong> Offer valid only for customers in Rajasthan. *EMI subject to finance approval and applicable terms. Subsidy as per government eligibility and rules.
+                    Become a partner today and be part of India's solar mission. Call / WhatsApp: <a href="tel:7240700022" style="color:#92400e;font-weight:700;">7240700022</a>
                 </div>
             </div>
 
             {{-- Right: Form --}}
             <div style="background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:28px;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
-                <h3 style="font-size:1.1rem;font-weight:800;color:#1e293b;margin:0 0 4px;">Book Your Solar System</h3>
+                <h3 style="font-size:1.1rem;font-weight:800;color:#1e293b;margin:0 0 4px;">Become a Solar Partner</h3>
                 <p style="font-size:0.78rem;color:#64748b;margin:0 0 20px;">Share your details and our team will call you back</p>
                 <form action="{{ route('userQuoteQuery') }}" method="POST" enctype="multipart/form-data">
                     @csrf
@@ -820,11 +820,13 @@ $catGradients = [
                         <input type="text" name="city" placeholder="Your city" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.88rem;color:#1e293b;background:#fff;box-sizing:border-box;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='#e2e8f0'">
                     </div>
                     <div style="margin-bottom:18px;">
-                        <label style="display:block;color:#374151;font-size:0.75rem;font-weight:600;margin-bottom:5px;">Interested Package <span style="color:#94a3b8;font-weight:400;">(optional)</span></label>
+                        <label style="display:block;color:#374151;font-size:0.75rem;font-weight:600;margin-bottom:5px;">Interested In <span style="color:#94a3b8;font-weight:400;">(optional)</span></label>
                         <select name="combo_interest" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.88rem;color:#1e293b;background:#fff;box-sizing:border-box;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='#e2e8f0'">
-                            <option value="">Select a package</option>
-                            <option value="3 KW Solar System">3 KW Solar System - ₹1,80,000</option>
-                            <option value="5 KW Solar System">5 KW Solar System - ₹2,80,000</option>
+                            <option value="">Select an option</option>
+                            <option value="Solar Office Partnership">Solar Office Partnership</option>
+                            <option value="B2B - Bulk Supply">B2B - Bulk Supply</option>
+                            <option value="B2C - Retail / Home">B2C - Retail / Home</option>
+                            <option value="Hybrid Solar System">Hybrid Solar System</option>
                             <option value="Not Sure Yet">Not sure yet - Please advise</option>
                         </select>
                     </div>
@@ -832,7 +834,7 @@ $catGradients = [
                     <button type="submit"
                             style="width:100%;padding:14px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;font-weight:800;font-size:0.95rem;border:none;border-radius:10px;cursor:pointer;transition:opacity 0.2s;box-shadow:0 4px 14px rgba(249,115,22,0.35);"
                             onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-                        Book a FREE Consultation
+                        Join as a Partner
                     </button>
                 </form>
             </div>
